@@ -11,6 +11,7 @@ public class Zone {
         this.zoneEnd = zoneEnd;
     }
 
+
     public int getZoneId() {
         return zoneId;
     }
@@ -21,5 +22,10 @@ public class Zone {
 
     public Coordinates getZoneEnd() {
         return zoneEnd;
+    }
+
+    @Override
+    public String toString() {
+        return zoneId + "," + zoneStart + "," + zoneEnd;
     }
 }

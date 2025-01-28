@@ -4,30 +4,35 @@ import org.example.FireIncidentSubsystem.Helpers.*;
 
 public class Event {
     private String time;
-    private Zone zone;
+    private int zoneId;
     private final EventType eventType;
-    private Severity severity;
+    private String severityLevel;
 
-    public Event(String time, Zone zone, EventType eventType, Severity severity) {
+    public Event(String time, int zoneId, EventType eventType, String severityLevel) {
         this.time = time;
-        this.zone = zone;
+        this.zoneId = zoneId;
         this.eventType = eventType;
-        this.severity = severity;
+        this.severityLevel = severityLevel;
     }
 
     public String getTime() {
         return time;
     }
 
-    public Zone getZone(){
-        return zone;
+    public int getZoneId(){
+        return zoneId;
     }
 
     public EventType getEventType() {
         return eventType;
     }
 
-    public Severity getSeverity() {
-        return severity;
+    public String getSeverity() {
+        return severityLevel;
+    }
+
+    @Override
+    public String toString() {
+        return time + "," + zoneId + "," + eventType + "," + severityLevel ;
     }
 }
