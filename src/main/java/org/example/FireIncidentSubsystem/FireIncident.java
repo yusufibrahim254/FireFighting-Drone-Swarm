@@ -38,6 +38,7 @@ public class FireIncident {
             reader.close(); // close file
 
             for (Event event : events) { // check to see what events are found
+                // print for now, later implementation will send to scheduler
                 System.out.println(event);
                 Zone foundZone = this.readZone(event.getZoneId(), zoneFile);
                 System.out.println(foundZone);

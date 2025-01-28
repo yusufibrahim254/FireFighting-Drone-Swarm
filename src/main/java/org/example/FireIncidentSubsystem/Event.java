@@ -8,6 +8,13 @@ public class Event {
     private final EventType eventType;
     private String severityLevel;
 
+    /**
+     * Event constructor
+     * @param time the timestamp of the event
+     * @param zoneId the id of the zone where the event is taking place in
+     * @param eventType the type of event occuring
+     * @param severityLevel the severity level
+     */
     public Event(String time, int zoneId, EventType eventType, String severityLevel) {
         this.time = time;
         this.zoneId = zoneId;
@@ -15,18 +22,34 @@ public class Event {
         this.severityLevel = severityLevel;
     }
 
+    /**
+     * Get the timestamp of the event
+     * @return the timestamp of the event
+     */
     public String getTime() {
         return time;
     }
 
+    /**
+     * Get the zone id of the event
+     * @return the zone id of the event
+     */
     public int getZoneId(){
         return zoneId;
     }
 
+    /**
+     * Get the event type of the event
+     * @return the type of event
+     */
     public EventType getEventType() {
         return eventType;
     }
 
+    /**
+     * Get the severity level of the event
+     * @return the severity level
+     */
     public String getSeverity() {
         return severityLevel;
     }
