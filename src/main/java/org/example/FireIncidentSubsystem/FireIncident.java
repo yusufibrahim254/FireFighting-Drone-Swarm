@@ -6,7 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
-public class FireIncident {
+public class FireIncident implements Runnable {
     private final static String eventFile = "Sample_event_file.csv";
     private final static String zoneFile = "sample_zone_file.csv";
 
@@ -83,9 +83,17 @@ public class FireIncident {
         return null;
     }
 
-    // testing main
-    public static void main(String[] args) {
+    @Override
+    public void run() {
+        // testing thread
         FireIncident fire = new FireIncident();
         fire.readEvents(eventFile);
+    }
+
+
+    // testing main
+    public static void main(String[] args) {
+        Thread fireThread = new Thread(new FireIncident());
+        fireThread.start();
     }
 }
