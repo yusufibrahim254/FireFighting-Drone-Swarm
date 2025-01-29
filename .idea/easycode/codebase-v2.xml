@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.obiscr.chatgpt.settings.EasyCodeState">
+    <option name="projectFiles" value="$PROJECT_DIR$/src/main/java/org/example/FireIncidentSubsystem/Helpers/Coordinates.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/FireIncidentSubsystem/Helpers/EventType.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/FireIncidentSubsystem/Helpers/Severity.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/FireIncidentSubsystem/Helpers/Zone.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/FireIncidentSubsystem/Event.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/FireIncidentSubsystem/FireIncident.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/Drone.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/org/example/Scheduler.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/src/main/java/Main.java;/Users/yusufibrahim/Documents/SYSC3303Labs/Project/README.md" />
+  </component>
+</project>
