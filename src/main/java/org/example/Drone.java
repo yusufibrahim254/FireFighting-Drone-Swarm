@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.FireIncidentSubsystem.Event;
+
 public class Drone implements Runnable{
     private final Scheduler scheduler;
 
