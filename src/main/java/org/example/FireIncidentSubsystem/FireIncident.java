@@ -1,6 +1,7 @@
 package org.example.FireIncidentSubsystem;
 
 import org.example.FireIncidentSubsystem.Helpers.*;
+import org.example.Scheduler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -9,9 +10,11 @@ import java.util.ArrayList;
 public class FireIncident implements Runnable {
     private final static String eventFile = "Sample_event_file.csv";
     private final static String zoneFile = "sample_zone_file.csv";
+    private final Scheduler scheduler;
 
-    public FireIncident(){
+    public FireIncident(Scheduler scheduler){
 
+        this.scheduler = scheduler;
     }
 
     public void readEvents(String fileName){
@@ -33,19 +36,25 @@ public class FireIncident implements Runnable {
 
                 // create event
                 Event event = new Event(time, zoneId, eventType, severityLevel);
-                events.add(event);
+                scheduler.addIncident(event);
+
+                extracted(events, event);
             }
             reader.close(); // close file
 
-            for (Event event : events) { // check to see what events are found
-                // print for now, later implementation will send to scheduler
-                System.out.println(event);
-                Zone foundZone = this.readZone(event.getZoneId(), zoneFile);
-                System.out.println(foundZone);
-            }
+//            for (Event event : events) { // check to see what events are found
+//                // print for now, later implementation will send to scheduler
+//                System.out.println(event);
+//                Zone foundZone = this.readZone(event.getZoneId(), zoneFile);
+//                System.out.println(foundZone);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void extracted(ArrayList<Event> events, Event event) {
+        events.add(event);
     }
 
     public Zone readZone(int zoneId, String fileName){
@@ -85,15 +94,19 @@ public class FireIncident implements Runnable {
 
     @Override
     public void run() {
-        // testing thread
-        FireIncident fire = new FireIncident();
-        fire.readEvents(eventFile);
+        synchronized (scheduler) {
+            readEvents(eventFile);
+            System.out.println();
+            System.out.println("FireIncidentSubsystem: Reporting events to Scheduler");
+            System.out.println();
+            scheduler.notifyAll();
+        }
     }
 
 
     // testing main
-    public static void main(String[] args) {
-        Thread fireThread = new Thread(new FireIncident());
-        fireThread.start();
-    }
+//    public static void main(String[] args) {
+//        Thread fireThread = new Thread(new FireIncident());
+//        fireThread.start();
+//    }
 }
