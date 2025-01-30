@@ -14,6 +14,11 @@ public class FireIncident implements Runnable {
 
     }
 
+
+    public synchronized void sendToScheduler(Event event){
+
+    }
+
     public void readEvents(String fileName){
         try {
             // read the sample event file
