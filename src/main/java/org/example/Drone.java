@@ -4,6 +4,8 @@ import org.example.FireIncidentSubsystem.Event;
 
 public class Drone{
 
+    private int id;
+    private int battery;
     private double agentCapacity;
     private final double maxAgentCapacity;
     private boolean bayDoorOpen;
@@ -11,7 +13,9 @@ public class Drone{
 
 
 
-    public Drone(double initialCapacity) {
+    public Drone(int id, double initialCapacity) {
+        this.id = id;
+        this.battery = 100;
         this.agentCapacity = initialCapacity;
         this.maxAgentCapacity = initialCapacity;
         this.bayDoorOpen = false;

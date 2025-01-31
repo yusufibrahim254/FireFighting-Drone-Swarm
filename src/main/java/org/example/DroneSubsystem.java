@@ -13,8 +13,8 @@ public class DroneSubsystem implements Runnable {
         this.scheduler = scheduler;
         this.drones = new ArrayList<>();
 
-        for (int i = 0; i < 10; i++) {
-            drones.add(new Drone(15));
+        for (int i = 1; i <= 10; i++) {
+            drones.add(new Drone(i,15));
         }
     }
 
