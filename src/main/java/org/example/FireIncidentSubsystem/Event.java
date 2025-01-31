@@ -8,10 +8,6 @@ public class Event {
     private final EventType eventType;
     private final String severityLevel;
 
-    private static final int LOW_SEVERITY = 10;
-    private static final int MODERATE_SEVERITY = 20;
-    private static final int HIGH_SEVERITY = 30;
-
     /**
      * Event constructor
      * @param time the timestamp of the event
@@ -54,13 +50,12 @@ public class Event {
      * Get the severity level of the event
      * @return the severity level
      */
-    public int getSeverity() {
-        return switch (severityLevel) {
-            case "Low" -> LOW_SEVERITY;
-            case "Moderate" -> MODERATE_SEVERITY;
-            case "High" -> HIGH_SEVERITY;
-            default -> 0;
-        };
+    public String getSeverityLevel() {
+        return severityLevel;
+    }
+
+    public int getSeverityWaterAmount(){
+        return new Severity(severityLevel).getWaterAmount();
     }
 
     @Override
