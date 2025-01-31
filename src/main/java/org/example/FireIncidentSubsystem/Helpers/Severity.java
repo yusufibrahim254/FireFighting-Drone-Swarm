@@ -4,6 +4,10 @@ public class Severity {
     private final String level;
     private int waterAmount;
 
+    private static final int LOW_SEVERITY = 10;
+    private static final int MODERATE_SEVERITY = 20;
+    private static final int HIGH_SEVERITY = 30;
+
     /**
      * Severity constructor
      * @param level severity level
@@ -19,16 +23,16 @@ public class Severity {
      */
     public void setWaterAmount(String level){
         switch (level) {
-            case "Low" -> waterAmount = 10;
-            case "Moderate" -> waterAmount = 20;
-            case "High" -> waterAmount = 30;
+            case "Low" -> waterAmount = LOW_SEVERITY;
+            case "Moderate" -> waterAmount = MODERATE_SEVERITY;
+            case "High" -> waterAmount = HIGH_SEVERITY;
             default -> waterAmount = 0; // invalid value
         }
     }
 
     /**
      * Get the severity level
-     * @return the serverity level
+     * @return the severity level
      */
     public String getLevel() {
         return level;

@@ -6,7 +6,7 @@ public class Event {
     private String time;
     private int zoneId;
     private final EventType eventType;
-    private String severityLevel;
+    private final String severityLevel;
 
     /**
      * Event constructor
@@ -50,8 +50,12 @@ public class Event {
      * Get the severity level of the event
      * @return the severity level
      */
-    public String getSeverity() {
+    public String getSeverityLevel() {
         return severityLevel;
+    }
+
+    public int getSeverityWaterAmount(){
+        return new Severity(severityLevel).getWaterAmount();
     }
 
     @Override
