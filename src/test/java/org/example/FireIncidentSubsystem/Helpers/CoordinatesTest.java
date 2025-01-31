@@ -17,14 +17,13 @@ class CoordinatesTest {
     }
 
     @Test
-    void getX() {
+    void testGetX() {
         assertEquals(100, coordinates.getX());
     }
 
     @Test
-    void getY() {
+    void testGetY() {
         assertEquals(200, coordinates.getY());
-
-       // this is my change
     }
+
 }

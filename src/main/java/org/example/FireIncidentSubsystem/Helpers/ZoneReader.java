@@ -8,7 +8,7 @@ public class ZoneReader {
 
     }
 
-    public Zone readZone(int zoneId, String fileName){
+    public static Zone readZone(int zoneId, String fileName){
         // using the zone id, find the zone info
         try {
             // read the sample event file

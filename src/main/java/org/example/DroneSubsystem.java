@@ -20,9 +20,9 @@ public class DroneSubsystem implements Runnable {
 
     public void assignDroneToEvent(Event event) {
         for (Drone drone : drones) {
-            if (drone.getState() == Drone.DroneState.IDLE) {
+            if (drone.getState() == DroneState.IDLE) {
                 System.out.println("Assigning drone to event: ");
-                drone.setState(Drone.DroneState.EN_ROUTE);
+                drone.setState(DroneState.EN_ROUTE);
                 System.out.println("Drone state set to EN_ROUTE");
 
                 try {

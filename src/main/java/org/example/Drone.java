@@ -9,9 +9,7 @@ public class Drone{
     private boolean bayDoorOpen;
     private DroneState state;
 
-    public enum DroneState {
-        IDLE, EN_ROUTE, DROPPING_AGENT, REFILLING, FAULTED
-    }
+
 
     public Drone(double initialCapacity) {
         this.agentCapacity = initialCapacity;
@@ -42,7 +40,7 @@ public class Drone{
     }
 
     public void refill() {
-        state = Drone.DroneState.REFILLING;
+        state = DroneState.REFILLING;
         System.out.println("Drone is refilling");
         agentCapacity = maxAgentCapacity;
     }
@@ -57,5 +55,9 @@ public class Drone{
 
     public void setState(DroneState state) {
         this.state = state;
+    }
+
+    public boolean isBayDoorOpen() {
+        return bayDoorOpen;
     }
 }

@@ -17,29 +17,30 @@ class ZoneTest {
     }
 
     @Test
-    void getZoneId() {
+    void testGetZoneId() {
         assertEquals(1, zone.getZoneId(), "Zone ID should be 1");
     }
 
     @Test
-    void getZoneStart() {
+    void testGetZoneStart() {
         assertEquals(start, zone.getZoneStart(), "Zone start should be (100, 200)");
     }
 
     @Test
-    void getZoneEnd() {
+    void testGetZoneEnd() {
         assertEquals(end, zone.getZoneEnd(), "Zone end should be (400, 500)");
     }
 
     @Test
-    void zoneStartCoords(){
+    void testZoneStartCoords(){
         assertEquals(start.getX(), zone.getZoneStart().getX(), "Zone start X coords should be 100");
         assertEquals(start.getY(), zone.getZoneStart().getY(), "Zone start Y coords should be 200");
     }
 
     @Test
-    void zoneEndCoords(){
+    void testZoneEndCoords(){
         assertEquals(end.getX(), zone.getZoneEnd().getX(), "Zone end X coords should be 400");
         assertEquals(end.getY(), zone.getZoneEnd().getY(), "Zone end Y coords should be 500");
     }
+
 }
