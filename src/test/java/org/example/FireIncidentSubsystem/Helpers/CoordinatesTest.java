@@ -24,5 +24,7 @@ class CoordinatesTest {
     @Test
     void getY() {
         assertEquals(200, coordinates.getY());
+
+       // this is my change
     }
 }
