@@ -19,11 +19,19 @@ public class Drone{
     }
 
 
-    public void processEvent(Event event) {
+    public double processEvent(Event event, double waterNeeded) {
         state = DroneState.DROPPING_AGENT;
-        System.out.println("Drone released water agent, " + event.getSeverityWaterAmount() + " litres released");
-        agentCapacity = agentCapacity - event.getSeverityWaterAmount();
+        if (agentCapacity > waterNeeded){
+            agentCapacity = agentCapacity - waterNeeded;
+            System.out.println("Drone released water agent, " + waterNeeded + " litres released");
+            state = DroneState.IDLE;
+            return 0.0;
+        }
+        System.out.println("Drone released water agent, " + agentCapacity + " litres released");
+        waterNeeded = waterNeeded - agentCapacity;
+        agentCapacity = 0.0;
         state = DroneState.IDLE;
+        return waterNeeded;
         //I need to wait to see what is going on to see if i need this
     }
 

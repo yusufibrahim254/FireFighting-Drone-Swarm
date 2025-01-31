@@ -18,7 +18,7 @@ class DroneTest {
     @Test
     void processEvent() {
         Event event = new Event("20:00", 1, EventType.FIRE_DETECTED, "High");
-        drone.processEvent(event);
+        drone.processEvent(event, 10);
         assertEquals(70.0, drone.getAgentCapacity(), "Agent capacity should decrease by 50L");
         assertEquals(DroneState.IDLE, drone.getState(), "DroneState should return to IDLE after processing is complete");
     }
@@ -40,7 +40,7 @@ class DroneTest {
 
     @Test
     void refill() {
-        drone.processEvent(new Event("20:00", 1, EventType.FIRE_DETECTED, "High"));
+        drone.processEvent(new Event("20:00", 1, EventType.FIRE_DETECTED, "High"), 10);
         drone.refill();
         assertEquals(100.0, drone.getAgentCapacity(), "Drone should be refilled to max capacity");
         assertEquals(DroneState.REFILLING, drone.getState(), "Drone state should be 'REFILLING' during refill");

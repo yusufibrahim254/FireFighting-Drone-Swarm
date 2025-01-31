@@ -19,6 +19,7 @@ public class DroneSubsystem implements Runnable {
     }
 
     public void assignDroneToEvent(Event event) {
+        double waterNeeded = event.getSeverityWaterAmount();
         for (Drone drone : drones) {
             if (drone.getState() == DroneState.IDLE) {
                 System.out.println("Assigning drone to event: ");
@@ -31,8 +32,8 @@ public class DroneSubsystem implements Runnable {
                     System.out.println("Error opening bay doors: " + e.getMessage());
                     throw new RuntimeException(e);
                 }
-
-                drone.processEvent(event);
+                waterNeeded = drone.processEvent(event, waterNeeded);
+                System.out.println("Water needed to finish off fire " + waterNeeded);
 
                 try {
                     drone.closeBayDoors();
@@ -45,7 +46,10 @@ public class DroneSubsystem implements Runnable {
                     System.out.println("Drone needs to refill.");
                     drone.refill();
                 }
-                return;
+
+                if (waterNeeded <= 0){
+                    return;
+                }
             }
 
             System.out.println("no available drones");
