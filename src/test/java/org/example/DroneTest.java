@@ -12,7 +12,7 @@ class DroneTest {
 
     @BeforeEach
     void setUp() {
-        drone = new Drone(100.00);
+        drone = new Drone(1,100.00);
     }
 
     @Test
