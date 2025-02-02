@@ -5,34 +5,55 @@ import org.example.FireIncidentSubsystem.Event;
 import java.util.Queue;
 import java.util.LinkedList;
 
-public class Scheduler implements Runnable{
+public class Scheduler implements Runnable {
     private boolean stop;
     private final Queue<Event> incidentQueue;
 
+    /**
+     * Constructs a new Scheduler with an empty incident queue.
+     */
     public Scheduler() {
         this.incidentQueue = new LinkedList<>();
         this.stop = false;
     }
 
+    /**
+     * Checks if the scheduler is stopped.
+     * @return true if the scheduler is stopped, false otherwise.
+     */
     public boolean isStopped() {
         return stop;
     }
 
+    /**
+     * Retrieves and removes the next event from the queue.
+     * @return the next Event, or null if the queue is empty.
+     */
     public synchronized Event getEvent() {
         return incidentQueue.poll();
     }
 
-    public synchronized void addIncident(Event event){
+    /**
+     * Adds a fire incident event to the queue.
+     * @param event the event to be added.
+     */
+    public synchronized void addIncident(Event event) {
         incidentQueue.add(event);
     }
 
-    public boolean isEmpty(){
+    /**
+     * Checks if the incident queue is empty.
+     * @return true if the queue is empty, false otherwise.
+     */
+    public boolean isEmpty() {
         return incidentQueue.isEmpty();
     }
 
+    /**
+     * Runs the scheduler to process fire incidents and notify the DroneSubsystem.
+     */
     @Override
     public void run() {
-
         while (!stop) {
             synchronized (this) {
                 while (incidentQueue.isEmpty()) {
@@ -55,6 +76,9 @@ public class Scheduler implements Runnable{
         }
     }
 
+    /**
+     * Stops the scheduler and notifies all waiting threads.
+     */
     public void stopScheduler() {
         System.out.println("Scheduler stopped.");
         stop = true;
