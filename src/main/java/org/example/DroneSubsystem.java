@@ -9,6 +9,10 @@ public class DroneSubsystem implements Runnable {
     private final List<Drone> drones;
     private final Scheduler scheduler;
 
+    /**
+     * Constructs a DroneSubsystem with a given scheduler and initializes drones.
+     * @param scheduler the scheduler instance used to retrieve fire incidents.
+     */
     public DroneSubsystem(Scheduler scheduler) {
         this.scheduler = scheduler;
         this.drones = new ArrayList<>();
@@ -18,6 +22,10 @@ public class DroneSubsystem implements Runnable {
         }
     }
 
+    /**
+     * Assigns an available drone to a fire incident event.
+     * @param event the fire incident event to be handled.
+     */
     public void assignDroneToEvent(Event event) {
         double waterNeeded = event.getSeverityWaterAmount();
         for (Drone drone : drones) {
@@ -56,6 +64,9 @@ public class DroneSubsystem implements Runnable {
         }
     }
 
+    /**
+     * Runs the DroneSubsystem, processing events from the scheduler and assigning drones.
+     */
     @Override
     public void run() {
         //guarantee it starts after fireincident thread, and since scheduler waits it will ensure fireincident->scheduler->drone
