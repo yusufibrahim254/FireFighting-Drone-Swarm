@@ -1,12 +1,29 @@
+/**
+ * Represents the Drone Subsystem responsible for managing and coordinating multiple drones in the firefighting drone swarm system.
+ * The DroneSubsystem interacts with the Scheduler to assign drones to fire incidents and handle drone operations.
+ */
+
 package org.example;
 
 import org.example.FireIncidentSubsystem.Event;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * The DroneSubsystem class manages a fleet of drones, by assigning them to fire incidents and coordinating their operations,
+ * such as firefighting agent release and refilling, to ensure optimal firefighting performance.
+ */
 public class DroneSubsystem implements Runnable {
 
+    /**
+     * List of drones managed by this subsystem.
+     */
     private final List<Drone> drones;
+
+    /**
+     * The Scheduler instance responsible for coordinating
+     */
     private final Scheduler scheduler;
 
     /**

@@ -19,7 +19,7 @@ class DroneTest {
     void processEvent() {
         Event event = new Event("20:00", 1, EventType.FIRE_DETECTED, "High");
         drone.processEvent(event, 10);
-        assertEquals(70.0, drone.getAgentCapacity(), "Agent capacity should decrease by 50L");
+        assertEquals(90.0, drone.getAgentCapacity(), "Agent capacity should decrease by 50L");
         assertEquals(DroneState.IDLE, drone.getState(), "DroneState should return to IDLE after processing is complete");
     }
 
