@@ -1,7 +1,6 @@
 package org.example;
 
 import org.example.FireIncidentSubsystem.Event;
-
 import java.util.Queue;
 import java.util.LinkedList;
 
@@ -22,11 +21,17 @@ public class Scheduler implements Runnable {
     private final Queue<Event> incidentQueue;
 
     /**
-     * Constructs a new Scheduler with an empty incident queue.
+     * A reference to the DroneSubsystem that will handle each event.
      */
-    public Scheduler() {
+    private final DroneSubsystem droneSubsystem;
+
+    /**
+     * Constructs a new Scheduler with an empty incident queue and a reference to the DroneSubsystem.
+     */
+    public Scheduler(DroneSubsystem droneSubsystem) {
         this.incidentQueue = new LinkedList<>();
         this.stop = false;
+        this.droneSubsystem = droneSubsystem;
     }
 
     /**
@@ -54,6 +59,7 @@ public class Scheduler implements Runnable {
      */
     public synchronized void addIncident(Event event) {
         incidentQueue.add(event);
+        notifyAll(); // Notify the scheduler that a new event has been added
     }
 
     /**
@@ -67,30 +73,44 @@ public class Scheduler implements Runnable {
 
     /**
      * Runs the scheduler to process fire incidents and notify the DroneSubsystem.
-     * The scheduler waits for new events and notifies the drones when incidents are in need of them.
      */
     @Override
     public void run() {
         while (!stop) {
+            Event nextEvent = null;
+
+            // Wait for an event to be added to the queue
             synchronized (this) {
-                while (incidentQueue.isEmpty()) {
+                while (incidentQueue.isEmpty() && !stop) {
                     try {
-                        wait();
-                        System.out.println("Scheduler: Notifying fire incident events to DroneSubsystem");
-                        System.out.println();
-                        wait();
-                        System.out.println();
-                        System.out.println("Scheduler: Confirmed DroneSubsystem processed FireIncidentSubsystem events");
-                        break;
+                        wait();  // Wait until we are notified of a new event
                     } catch (InterruptedException e) {
                         System.out.println("Scheduler interrupted");
                         Thread.currentThread().interrupt();
-                        break;
+                        return; // We were interrupted, exit the run loop
                     }
                 }
-                stopScheduler();
+                // If we were woken up because we were told to stop, exit the run loop
+                if (stop) {
+                    break;
+                }
+                // else we were woken up because there is an event in the queue
+                nextEvent = incidentQueue.poll();
+            }
+
+            // Process the next event if there is one
+            if (nextEvent != null) {
+                System.out.println("Scheduler: Notifying fire incident events to DroneSubsystem");
+
+                // call matching method in DroneSubsystem
+                droneSubsystem.assignDroneToEvent(nextEvent);
+
+                System.out.println("Scheduler: Confirmed DroneSubsystem processed FireIncidentSubsystem event");
+                System.out.println();
             }
         }
+        // Scheduler has stopped
+        System.out.println("Scheduler: Stopped processing fire incident events.");
     }
 
     /**

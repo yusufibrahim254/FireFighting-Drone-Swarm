@@ -22,6 +22,19 @@ public class FireIncident implements Runnable {
             System.out.println();
             scheduler.notifyAll();
         }
+
+        // Wait for the scheduler to process all events
+        while (!scheduler.isEmpty()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        // Stop the scheduler
+        scheduler.stopScheduler();
+        System.out.println("FireIncidentSubsystem: Stopped the Scheduler after processing all events.");
     }
 
 }

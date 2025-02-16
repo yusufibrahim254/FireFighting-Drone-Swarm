@@ -17,17 +17,16 @@ public class Main {
      * @param args Command-line arguments (not used).
      */
     public static void main(String[] args) {
-        Scheduler scheduler = new Scheduler();
+        DroneSubsystem droneSubsystem = new DroneSubsystem();
+        Scheduler scheduler = new Scheduler(droneSubsystem);
         FireIncident fireIncident = new FireIncident(scheduler);
-        DroneSubsystem droneSubsystem = new DroneSubsystem(scheduler);
 
         Thread schedulerThread = new Thread(scheduler);
         Thread fireThread = new Thread(fireIncident);
-        Thread droneThread = new Thread(droneSubsystem);
 
         schedulerThread.start();
         fireThread.start();
-        droneThread.start();
+
 
     }
 }

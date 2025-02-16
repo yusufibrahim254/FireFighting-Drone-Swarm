@@ -1,5 +1,6 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
+import org.example.DroneSubsystem;
 import org.example.FireIncidentSubsystem.Event;
 import org.example.Scheduler;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,8 @@ class EventReaderTest {
 
     @BeforeEach
     void setUp(){
-        scheduler = new Scheduler();
+        DroneSubsystem droneSubsystem = new DroneSubsystem();
+        scheduler = new Scheduler(droneSubsystem);
     }
 
     @Test

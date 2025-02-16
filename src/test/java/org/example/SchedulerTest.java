@@ -13,7 +13,8 @@ class SchedulerTest {
 
     @BeforeEach
     void setUp() {
-        scheduler = new Scheduler();
+        DroneSubsystem droneSubsystem = new DroneSubsystem();
+        scheduler = new Scheduler(droneSubsystem);
         event = new Event("12:12:12", 2, EventType.DRONE_REQUEST, "High");
     }
 
