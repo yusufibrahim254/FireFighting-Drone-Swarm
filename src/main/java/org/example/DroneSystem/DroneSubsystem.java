@@ -3,10 +3,10 @@
  * The DroneSubsystem interacts with the Scheduler to assign drones to fire incidents and handle drone operations.
  */
 
-package org.example;
+package org.example.DroneSystem;
 
 import org.example.FireIncidentSubsystem.Event;
-import java.util.ArrayList;
+
 import java.util.List;
 
 
@@ -15,24 +15,15 @@ import java.util.List;
  * such as firefighting agent release and refilling, to ensure optimal firefighting performance.
  */
 public class DroneSubsystem {
-
-    /**
-     * List of drones managed by this subsystem.
-     */
-    private final List<Drone> drones;
-
-
+    private FleetManager fleetManager = new FleetManager();
+    private final List<Drone> drones = fleetManager.getDrones();
 
     /**
      * Constructs a DroneSubsystem with a given scheduler and initializes drones.
      *
      */
     public DroneSubsystem() {
-        this.drones = new ArrayList<>();
 
-        for (int i = 1; i <= 10; i++) {
-            drones.add(new Drone(i, 15));
-        }
     }
 
     /**
@@ -44,33 +35,29 @@ public class DroneSubsystem {
         double waterNeeded = event.getSeverityWaterAmount();
         boolean assigned = false;
 
+
         for (Drone drone : drones) {
+            DroneEvent droneEvent = new DroneEvent(drone);
             if (drone.getState() == DroneState.IDLE) {
                 assigned = true;
                 System.out.println("Assigning drone to event: ");
                 drone.setState(DroneState.EN_ROUTE);
                 System.out.println("Drone state set to EN_ROUTE");
 
-                try {
-                    drone.openBayDoors();
-                } catch (InterruptedException e) {
-                    System.out.println("Error opening bay doors: " + e.getMessage());
-                    throw new RuntimeException(e);
-                }
-
-                waterNeeded = drone.processEvent(event, waterNeeded);
-                System.out.println("Water needed to finish off fire " + waterNeeded);
 
                 try {
-                    drone.closeBayDoors();
+                    drone.getBayController().openBayDoors();
+                    waterNeeded = droneEvent.processEvent(event, waterNeeded, drone);
+                    System.out.println("Water needed to finish off fire " + waterNeeded);
+                    drone.getBayController().closeBayDoors();
                 } catch (InterruptedException e) {
-                    System.out.println("Error closing bay doors: " + e.getMessage());
+                    System.out.println("Error with bay doors: " + e.getMessage());
                     throw new RuntimeException(e);
                 }
 
                 if (drone.getAgentCapacity() == 0) {
                     System.out.println("Drone needs to refill.");
-                    drone.refill();
+                    droneEvent.refill();
                 }
 
                 if (waterNeeded <= 0) {

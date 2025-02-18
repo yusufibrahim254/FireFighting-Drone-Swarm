@@ -1,4 +1,4 @@
-package org.example;
+package org.example.DroneSystem;
 
 /**
  * Represents the various states a firefighting drone can be in.
