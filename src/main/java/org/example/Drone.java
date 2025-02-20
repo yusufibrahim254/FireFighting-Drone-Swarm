@@ -43,7 +43,6 @@ public class Drone{
      */
     private DroneState state;
 
-
     /**
      * Constructs a Drone with a specified ID and initial agent capacity.
      *
@@ -65,7 +64,7 @@ public class Drone{
      * @param waterNeeded The amount of agent needed to successfully assist in combating the fire.
      * @return The remaining agent needed after the drone's contribution2
      */
-    public double dropAgent(double waterNeeded){
+    public double dropAgent(double waterNeeded) throws InterruptedException {
         // Transition to dropping agent state and handle water amount logic
         return state.dropAgent(this, waterNeeded);
     }
@@ -116,6 +115,15 @@ public class Drone{
      */
     public double getAgentCapacity() {
         return agentCapacity;
+    }
+
+    /**
+     * Gets the maximum amount of firefighting agent the drone can carry.
+     *
+     * @return The maximum firefighting agent capacity in Liters.
+     */
+    public double getMaxAgentCapacity() {
+        return maxAgentCapacity;
     }
 
     /**

@@ -40,7 +40,7 @@ public class DroneSubsystem {
      *
      * @param event the fire incident event to be handled.
      */
-    public void assignDroneToEvent(Event event) {
+    public void assignDroneToEvent(Event event) throws InterruptedException {
         double waterNeeded = event.getSeverityWaterAmount();
         boolean assigned = false;
 
@@ -52,6 +52,9 @@ public class DroneSubsystem {
                 // Dispatch drone to the fire zone
                 drone.getState().dispatch(drone);
 
+                // Transition drone to Dropping Agent State as soon as it arrives
+                drone.getState().arrive(drone);
+
                 try {
                     drone.openBayDoors();
                 } catch (InterruptedException e) {
@@ -59,28 +62,10 @@ public class DroneSubsystem {
                     throw new RuntimeException(e);
                 }
 
-                // Transition drone to DroppingAgentState as soon as it arrives
-                drone.getState().arrive(drone);
-
-                while (waterNeeded > 0) {
-                    waterNeeded = drone.dropAgent(waterNeeded);
-                    System.out.println("Water needed to finish off fire " + waterNeeded);
-
-                    // If the drone runs out of agent then refill is needed
-                    if (drone.getAgentCapacity() == 0) {
-                        drone.refill();
-                    }
-                }
-
-                try {
-                    drone.closeBayDoors();
-                } catch (InterruptedException e) {
-                    System.out.println("Error closing bay doors: " + e.getMessage());
-                    throw new RuntimeException(e);
-                }
+                waterNeeded = drone.dropAgent(waterNeeded);
 
                 if (waterNeeded <= 0) {
-                    // Fire extinguished stop looking for more drones
+                    // Fire extinguished, stop looking for more drones
                     break;
                 }
             }

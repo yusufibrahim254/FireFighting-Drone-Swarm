@@ -6,7 +6,7 @@ package org.example;
 interface DroneState {
     void dispatch(Drone drone);
     void arrive(Drone drone);
-    double dropAgent(Drone drone, double waterNeeded);
+    double dropAgent(Drone drone, double waterNeeded) throws InterruptedException;
     void refill(Drone drone);
     void fault(Drone drone);
     void reset(Drone drone);
@@ -67,7 +67,7 @@ class EnRouteState implements DroneState {
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone has arrived at the fire zone. Transitioning to Dropping Agent state.");
+        System.out.println("Drone arrived and state is set to DROPPING AGENT.");
         drone.setState(new DroppingAgentState());
     }
 
@@ -115,27 +115,24 @@ class DroppingAgentState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) {
+    public double dropAgent(Drone drone, double waterNeeded) throws InterruptedException {
         System.out.println("Dropping agent...");
-        if (drone.getAgentCapacity() >= waterNeeded) {
-            drone.setAgentCapacity(drone.getAgentCapacity() - waterNeeded);
-            waterNeeded = 0.0; // All the required water is dropped
-        } else {
-            waterNeeded -= drone.getAgentCapacity();
-            drone.setAgentCapacity(0.0); // The drone has used all its agent
-        }
 
-        if (waterNeeded == 0.0) {
-            System.out.println("Fire extinguished. Preparing to return.");
+        // Release the minimum of the drone's available water or the amount needed to extinguish the fire
+        double releasedWater = Math.min(drone.getAgentCapacity(), waterNeeded);
+        drone.setAgentCapacity(drone.getAgentCapacity() - releasedWater);
+        waterNeeded -= releasedWater;
 
-            // If agent is also exhausted, transition to refilling state
-            if (drone.getAgentCapacity() == 0.0) {
-                System.out.println("Drone is out of agent.");
-                drone.setState(new RefillingState());
-            } else {
-                // Otherwise, keep the drone in DroppingAgentState to wait for more drops
-                System.out.println("Water remaining to finish off fire: " + waterNeeded);
-            }
+        System.out.println("Drone released water agent, " + releasedWater + " litres released");
+        System.out.println("Water needed to finish off fire " + waterNeeded);
+
+        drone.closeBayDoors();
+
+        // Refill drone if there's more agent needed to extinguish the fire and the drone ran out of agent
+        if (waterNeeded > 0 && drone.getAgentCapacity() == 0) {
+            System.out.println("Drone needs to refill.");
+            drone.setState(new RefillingState());
+            drone.refill();
         }
 
         return waterNeeded;
@@ -186,8 +183,9 @@ class RefillingState implements DroneState {
 
     @Override
     public void refill(Drone drone) {
-        System.out.println("Refilling complete. Returning to Idle state.");
-        drone.setState(new IdleState());
+        // Refill the drone to max capacity
+        drone.setAgentCapacity(drone.getMaxAgentCapacity());
+        System.out.println("REFILLING state complete.");
     }
 
     @Override
