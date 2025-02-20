@@ -15,7 +15,7 @@ import java.util.List;
  * such as firefighting agent release and refilling, to ensure optimal firefighting performance.
  */
 public class DroneSubsystem {
-    private FleetManager fleetManager = new FleetManager();
+    private final FleetManager fleetManager = new FleetManager();
     private final List<Drone> drones = fleetManager.getDrones();
 
     /**

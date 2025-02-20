@@ -5,8 +5,6 @@
  */
 package org.example.DroneSystem;
 
-import org.example.FireIncidentSubsystem.Event;
-
 /**
  * The Drone class models a firefighting drone that assists in fighting fires.
  * It is responsible for interacting with the Scheduler to find and respond to fires, manage firefighting agent, and responding to fires.
@@ -39,7 +37,7 @@ public class Drone{
      */
     private DroneState state;
 
-    private BayController bayController;
+    private final BayController bayController;
 
 
     /**
@@ -88,6 +86,14 @@ public class Drone{
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setBattery(int battery) {
+        this.battery = battery;
     }
 
     public int getBattery() {

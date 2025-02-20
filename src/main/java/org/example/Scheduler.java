@@ -78,7 +78,7 @@ public class Scheduler implements Runnable {
     @Override
     public void run() {
         while (!stop) {
-            Event nextEvent = null;
+            Event nextEvent;
 
             // Wait for an event to be added to the queue
             synchronized (this) {
@@ -102,7 +102,7 @@ public class Scheduler implements Runnable {
             // Process the next event if there is one
             if (nextEvent != null) {
                 System.out.println("Scheduler: Notifying fire incident events to DroneSubsystem");
-                System.out.println("Event taking place: " + nextEvent.toString());
+                System.out.println("Event taking place: " + nextEvent);
 
                 // call matching method in DroneSubsystem
                 try {

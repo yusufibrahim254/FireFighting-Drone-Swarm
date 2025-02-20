@@ -8,21 +8,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DroneEventTest {
-    private DroneEvent droneEvent;
-    private DroneState droneState = new IdleState();
 
 
     private final Drone drone = new Drone(1,100.00);
 
     @BeforeEach
     void setUp() {
-        droneEvent = new DroneEvent(drone);
+        DroneEvent droneEvent = new DroneEvent(drone);
     }
 
     @Test
     void processEvent() throws InterruptedException {
         Event event = new Event("20:00", 1, EventType.FIRE_DETECTED, "High");
-        droneState = new DroppingAgentState();
+        DroneState droneState = new DroppingAgentState();
         drone.setState(droneState);
         drone.setAgentCapacity(10);
         drone.getState().dropAgent(drone,5);
