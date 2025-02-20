@@ -102,11 +102,16 @@ public class Scheduler implements Runnable {
             // Process the next event if there is one
             if (nextEvent != null) {
                 System.out.println("Scheduler: Notifying fire incident events to DroneSubsystem");
+                System.out.println("Event taking place: " + nextEvent.toString());
 
                 // call matching method in DroneSubsystem
-                droneSubsystem.assignDroneToEvent(nextEvent);
+                try {
+                    droneSubsystem.assignDroneToEvent(nextEvent);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
 
-                System.out.println("Scheduler: Confirmed DroneSubsystem processed FireIncidentSubsystem event");
+                System.out.println("Scheduler: Confirmed DroneSubsystem processed FireIncidentSubsystem event\n");
                 System.out.println();
             }
         }

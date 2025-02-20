@@ -54,9 +54,8 @@ public class Drone{
         this.agentCapacity = initialCapacity;
         this.maxAgentCapacity = initialCapacity;
         this.bayController = new BayController();
-        this.state = DroneState.IDLE;
+        this.state = new IdleState();
     }
-
 
     /**
      * Gets the current state of the drone.
@@ -70,10 +69,11 @@ public class Drone{
     /**
      * Sets the state of the drone
      *
-     * @param state The new state of the drone.
+     * @param newState The new state of the drone.
      */
-    public void setState(DroneState state) {
-        this.state = state;
+    public void setState(DroneState newState) {
+        System.out.println("*Transitioning from " + state.getClass().getSimpleName() + " to " + newState.getClass().getSimpleName() + "*");
+        this.state = newState;
     }
 
     /**
@@ -94,13 +94,24 @@ public class Drone{
         return battery;
     }
 
+    /**
+     * Helper methods to manage agent capacity and state
+     *
+     * @param agentCapacity The amount of agent the drone can take
+     */
     public void setAgentCapacity(double agentCapacity) {
         this.agentCapacity = agentCapacity;
     }
 
+    /**
+     * Gets the maximum amount of firefighting agent the drone can carry.
+     *
+     * @return The maximum firefighting agent capacity in Liters.
+     */
     public double getMaxAgentCapacity() {
         return maxAgentCapacity;
     }
+
 
     public BayController getBayController() {
         return bayController;

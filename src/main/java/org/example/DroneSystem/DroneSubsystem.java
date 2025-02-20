@@ -31,37 +31,35 @@ public class DroneSubsystem {
      *
      * @param event the fire incident event to be handled.
      */
-    public void assignDroneToEvent(Event event) {
+    public void assignDroneToEvent(Event event) throws InterruptedException {
         double waterNeeded = event.getSeverityWaterAmount();
         boolean assigned = false;
 
 
         for (Drone drone : drones) {
             DroneEvent droneEvent = new DroneEvent(drone);
-            if (drone.getState() == DroneState.IDLE) {
+            if (drone.getState() instanceof IdleState) {
                 assigned = true;
+                System.out.println();
                 System.out.println("Assigning drone to event: ");
-                drone.setState(DroneState.EN_ROUTE);
-                System.out.println("Drone state set to EN_ROUTE");
 
+                // Dispatch drone to the fire zone
+                drone.getState().dispatch(drone);
+
+                // Transition drone to Dropping Agent State as soon as it arrives
+                drone.getState().arrive(drone);
 
                 try {
                     drone.getBayController().openBayDoors();
-                    waterNeeded = droneEvent.processEvent(event, waterNeeded, drone);
-                    System.out.println("Water needed to finish off fire " + waterNeeded);
-                    drone.getBayController().closeBayDoors();
                 } catch (InterruptedException e) {
-                    System.out.println("Error with bay doors: " + e.getMessage());
+                    System.out.println("Error opening bay doors: " + e.getMessage());
                     throw new RuntimeException(e);
                 }
 
-                if (drone.getAgentCapacity() == 0) {
-                    System.out.println("Drone needs to refill.");
-                    droneEvent.refill();
-                }
+                waterNeeded = droneEvent.dropAgent(waterNeeded);
 
                 if (waterNeeded <= 0) {
-                    // Fire extinguished stop looking for more drones
+                    // Fire extinguished, stop looking for more drones
                     break;
                 }
             }

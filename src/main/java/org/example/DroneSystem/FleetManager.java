@@ -2,6 +2,7 @@ package org.example.DroneSystem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FleetManager {
 
@@ -28,7 +29,7 @@ public class FleetManager {
 
     public boolean hasIdleDrones(){
         for (Drone drone: drones){
-            if (drone.getState() == DroneState.IDLE) return true;
+            if (Objects.equals(drone.getState(), new IdleState())) return true;
         }
         return false;
     }

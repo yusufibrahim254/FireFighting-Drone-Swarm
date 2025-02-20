@@ -1,5 +1,7 @@
 package org.example.DroneSystem;
 
+import org.example.FireIncidentSubsystem.Event;
+import org.example.FireIncidentSubsystem.Helpers.EventType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -7,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DroneTest {
     private Drone drone;
+    private DroneState droneState = new IdleState();
+
 
     @BeforeEach
     void setUp() {
@@ -15,14 +19,16 @@ class DroneTest {
 
     @Test
     void getState() {
-        drone.setState(DroneState.EN_ROUTE);
-        assertEquals(DroneState.EN_ROUTE, drone.getState(), "getState should return the current state.");
+        droneState = new EnRouteState();
+        drone.setState(droneState);
+        assertEquals(droneState, drone.getState(), "getState should return the current state.");
     }
 
     @Test
     void setState() {
-        drone.setState(DroneState.FAULTED);
-        assertEquals(DroneState.FAULTED, drone.getState(), "setState should return the current state.");
+        droneState = new FaultedState();
+        drone.setState(droneState);
+        assertEquals(droneState, drone.getState(), "setState should return the current state.");
     }
     @Test
     void getAgentCapacity() {
@@ -48,4 +54,5 @@ class DroneTest {
     @Test
     void getBayController() {
     }
+
 }
