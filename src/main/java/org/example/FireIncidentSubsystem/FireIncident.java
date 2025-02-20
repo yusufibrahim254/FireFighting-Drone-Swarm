@@ -4,8 +4,8 @@ import org.example.FireIncidentSubsystem.Helpers.*;
 import org.example.Scheduler;
 
 public class FireIncident implements Runnable {
-    private final static String eventFile = "Sample_event_file.csv";
-    private final static String zoneFile = "sample_zone_file.csv";
+    private final static String eventFile = "docs/Sample_event_file.csv";
+    private final static String zoneFile = "docs/sample_zone_file.csv";
     private final Scheduler scheduler;
 
     public FireIncident(Scheduler scheduler){
