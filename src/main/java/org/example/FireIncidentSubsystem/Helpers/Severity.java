@@ -1,5 +1,9 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
+/**
+ * A helper class that manages Severity levels for fire incidents
+ * and allocates the amount of water/agent needed to extinguish
+ */
 public class Severity {
     private final String level;
     private int waterAmount;

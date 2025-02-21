@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Manager of the fleet of drones, handles responsibilities such as
+ * adding drones, checking availability of specific drone, and
+ * maintaining fleet health
+ */
 public class FleetManager {
 
     /**

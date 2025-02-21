@@ -3,11 +3,21 @@ package org.example.FireIncidentSubsystem.Helpers;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+/**
+ * A helper class that reads zones from a CSV and organizes them into Zone objects
+ */
 public class ZoneReader {
     public ZoneReader(){
 
     }
 
+    /**
+     * Reads fire zones from provided file and a specific zone id
+     * and organizes them into Zone objects
+     * @param zoneId the id of the zone of interest
+     * @param fileName the CSV file with all zones within it
+     * @return a Zone object containing info for the zone of interest
+     */
     public static Zone readZone(int zoneId, String fileName){
         // using the zone id, find the zone info
         try {

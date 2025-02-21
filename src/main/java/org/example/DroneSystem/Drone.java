@@ -37,6 +37,9 @@ public class Drone{
      */
     private DroneState state;
 
+    /**
+     * Controller for the drone's bay doors
+     */
     private final BayController bayController;
 
 
@@ -84,18 +87,34 @@ public class Drone{
     }
 
 
+    /**
+     * Gets the id of the drone
+     * @return the drone's id
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Sets a new id for the drone
+     * @param id the new id for the drone
+     */
     public void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * Sets a new battery for the drone
+     * @param battery the new battery for the drone
+     */
     public void setBattery(int battery) {
         this.battery = battery;
     }
 
+    /**
+     * Gets the battery of the drone
+     * @return the battery of the drone
+     */
     public int getBattery() {
         return battery;
     }
@@ -118,7 +137,10 @@ public class Drone{
         return maxAgentCapacity;
     }
 
-
+    /**
+     * Gets the controller of the bay doors for current drone
+     * @return the controller of bay doors
+     */
     public BayController getBayController() {
         return bayController;
     }

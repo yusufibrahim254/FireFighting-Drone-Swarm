@@ -2,10 +2,12 @@ package org.example.DroneSystem;
 
 import org.example.FireIncidentSubsystem.Event;
 
+/**
+ * Handler of the drone's event such as releasing agent and refilling drone
+ */
 public class DroneEvent {
 
     private Drone drone;
-
 
     public DroneEvent(Drone drone) {
         this.drone = drone;

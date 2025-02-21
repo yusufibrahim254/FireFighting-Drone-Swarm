@@ -2,6 +2,10 @@ package org.example.FireIncidentSubsystem;
 
 import org.example.FireIncidentSubsystem.Helpers.*;
 
+/**
+ * Event object containing the fire incident event, such as when it occurred,
+ * the severity of the event, etc.
+ */
 public class Event {
     private String time;
     private int zoneId;

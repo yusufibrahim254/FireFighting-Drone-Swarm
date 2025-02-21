@@ -1,5 +1,8 @@
 package org.example.DroneSystem;
 
+/**
+ * Controller of the bay doors on drone
+ */
 public class BayController {
     /**
      * Flag that indicates if the bay doors are currently open (true) or closed (false).

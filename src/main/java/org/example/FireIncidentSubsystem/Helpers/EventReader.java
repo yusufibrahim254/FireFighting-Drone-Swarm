@@ -7,11 +7,23 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
+/**
+ * A helper class that reads events from a CSV and organizes them into Event objects
+ */
 public class EventReader {
+
+    /**
+     * Constructor for event reader
+     */
     public EventReader(){
 
     }
 
+    /**
+     * Reads fire events from provided file and organizes them into Event objects
+     * @param fileName Input file with fire events
+     * @param scheduler The scheduler to receive the events
+     */
     public static void readEvents(String fileName, Scheduler scheduler){
         try {
             // read the sample event file
@@ -42,6 +54,11 @@ public class EventReader {
         }
     }
 
+    /**
+     * Stores found events into a list of Event objects
+     * @param events storage list
+     * @param event the event to add
+     */
     private static void extracted(ArrayList<Event> events, Event event) {
         events.add(event);
     }
