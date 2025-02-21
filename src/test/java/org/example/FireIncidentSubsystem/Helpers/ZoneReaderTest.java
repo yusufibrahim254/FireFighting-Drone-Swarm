@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ZoneReaderTest {
     private Event event;
-    private static final String testFile = "sample_zone_file.csv";
+    private static final String testFile = "docs/sample_zone_file.csv";
 
     @BeforeEach
     void setUp(){

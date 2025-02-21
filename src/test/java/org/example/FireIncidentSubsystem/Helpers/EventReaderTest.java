@@ -1,6 +1,6 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
-import org.example.DroneSubsystem;
+import org.example.DroneSystem.DroneSubsystem;
 import org.example.FireIncidentSubsystem.Event;
 import org.example.Scheduler;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EventReaderTest {
     private Scheduler scheduler;
-    private static final String testFile = "Sample_event_file.csv";
+    private static final String testFile = "docs/Sample_event_file.csv";
 
     @BeforeEach
     void setUp(){

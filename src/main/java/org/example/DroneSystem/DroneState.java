@@ -1,4 +1,4 @@
-package org.example;
+package org.example.DroneSystem;
 
 /**
  * Interface represents the various states a firefighting drone can be in.
@@ -19,35 +19,35 @@ interface DroneState {
 class IdleState implements DroneState {
     @Override
     public void dispatch(Drone drone) {
-        System.out.println("Drone is dispatched and state is set to EN ROUTE.");
+        System.out.println("Drone " + drone.getId() + " is dispatched and state is set to EN ROUTE.");
         drone.setState(new EnRouteState());
     }
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone is idle. It must be dispatched first.");
+        System.out.println("Drone " + drone.getId() + " is idle. It must be dispatched first.");
     }
 
     @Override
     public double dropAgent(Drone drone, double waterNeeded) {
-        System.out.println("Drone is idle. Cannot drop agent.");
+        System.out.println("Drone " + drone.getId() + " is idle. Cannot drop agent.");
         return waterNeeded;
     }
 
     @Override
     public void refill(Drone drone) {
-        System.out.println("Drone is idle. No need to refill.");
+        System.out.println("Drone " + drone.getId() + " is idle. No need to refill.");
     }
 
     @Override
     public void fault(Drone drone) {
-        System.out.println("Drone encountered an issue! Moving to FAULT state.");
+        System.out.println("Drone " + drone.getId() + " encountered an issue! Moving to FAULT state.");
         drone.setState(new FaultedState());
     }
 
     @Override
     public void reset(Drone drone) {
-        System.out.println("Drone is already idle.");
+        System.out.println("Drone " + drone.getId() + " is already idle.");
     }
 
     @Override
@@ -62,35 +62,35 @@ class IdleState implements DroneState {
 class EnRouteState implements DroneState {
     @Override
     public void dispatch(Drone drone) {
-        System.out.println("Drone is already en route.");
+        System.out.println("Drone " + drone.getId() + " is already en route.");
     }
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone arrived and state is set to DROPPING AGENT.");
+        System.out.println("Drone " + drone.getId() + " arrived and state is set to DROPPING AGENT.");
         drone.setState(new DroppingAgentState());
     }
 
     @Override
     public double dropAgent(Drone drone, double waterNeeded) {
-        System.out.println("Drone is en route. Cannot drop agent yet.");
+        System.out.println("Drone " + drone.getId() + " is en route. Cannot drop agent yet.");
         return waterNeeded;
     }
 
     @Override
     public void refill(Drone drone) {
-        System.out.println("Drone is en route. Cannot refill now.");
+        System.out.println("Drone " + drone.getId() + " is en route. Cannot refill now.");
     }
 
     @Override
     public void fault(Drone drone) {
-        System.out.println("Drone encountered an issue! Moving to FAULT state.");
+        System.out.println("Drone " + drone.getId() + " encountered an issue! Moving to FAULT state.");
         drone.setState(new FaultedState());
     }
 
     @Override
     public void reset(Drone drone) {
-        System.out.println("Resetting drone. Moving to Idle state.");
+        System.out.println("Resetting drone " + drone.getId() + ". Moving to Idle state.");
         drone.setState(new IdleState());
     }
 
@@ -106,33 +106,34 @@ class EnRouteState implements DroneState {
 class DroppingAgentState implements DroneState {
     @Override
     public void dispatch(Drone drone) {
-        System.out.println("Drone is currently dropping agent. Cannot be dispatched.");
+        System.out.println("Drone " + drone.getId() + " is currently dropping agent. Cannot be dispatched.");
     }
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone is already at the fire zone.");
+        System.out.println("Drone " + drone.getId() + " is already at the fire zone.");
     }
 
     @Override
     public double dropAgent(Drone drone, double waterNeeded) throws InterruptedException {
         System.out.println("Dropping agent...");
+        DroneEvent droneEvent = new DroneEvent(drone);
 
         // Release the minimum of the drone's available water or the amount needed to extinguish the fire
         double releasedWater = Math.min(drone.getAgentCapacity(), waterNeeded);
         drone.setAgentCapacity(drone.getAgentCapacity() - releasedWater);
         waterNeeded -= releasedWater;
 
-        System.out.println("Drone released water agent, " + releasedWater + " litres released");
+        System.out.println("Drone " + drone.getId() + " released water agent, " + releasedWater + " litres released");
         System.out.println("Water needed to finish off fire " + waterNeeded);
 
-        drone.closeBayDoors();
+        drone.getBayController().closeBayDoors();
 
         // Refill drone if there's more agent needed to extinguish the fire and the drone ran out of agent
         if (waterNeeded > 0 && drone.getAgentCapacity() == 0) {
-            System.out.println("Drone needs to refill.");
+            System.out.println("Drone " + drone.getId() + " needs to refill.");
             drone.setState(new RefillingState());
-            drone.refill();
+            droneEvent.refill();
         }
 
         return waterNeeded;
@@ -140,18 +141,18 @@ class DroppingAgentState implements DroneState {
 
     @Override
     public void refill(Drone drone) {
-        System.out.println("Drone must finish dropping agent first.");
+        System.out.println("Drone " + drone.getId() + " must finish dropping agent first.");
     }
 
     @Override
     public void fault(Drone drone) {
-        System.out.println("Drone encountered an issue! Moving to FAULT state.");
+        System.out.println("Drone " + drone.getId() + " encountered an issue! Moving to FAULT state.");
         drone.setState(new FaultedState());
     }
 
     @Override
     public void reset(Drone drone) {
-        System.out.println("Resetting drone. Moving to Idle state.");
+        System.out.println("Resetting drone " + drone.getId() + ". Moving to Idle state.");
         drone.setState(new IdleState());
     }
 
@@ -167,17 +168,17 @@ class DroppingAgentState implements DroneState {
 class RefillingState implements DroneState {
     @Override
     public void dispatch(Drone drone) {
-        System.out.println("Drone is refilling. Cannot be dispatched.");
+        System.out.println("Drone " + drone.getId() + " is refilling. Cannot be dispatched.");
     }
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone is refilling. Cannot arrive anywhere.");
+        System.out.println("Drone " + drone.getId() + " is refilling. Cannot arrive anywhere.");
     }
 
     @Override
     public double dropAgent(Drone drone, double waterNeeded) {
-        System.out.println("Drone is refilling. Cannot drop agent.");
+        System.out.println("Drone " + drone.getId() + " is refilling. Cannot drop agent.");
         return waterNeeded;
     }
 
@@ -190,13 +191,13 @@ class RefillingState implements DroneState {
 
     @Override
     public void fault(Drone drone) {
-        System.out.println("Drone encountered an issue! Moving to FAULT state.");
+        System.out.println("Drone " + drone.getId() + " encountered an issue! Moving to FAULT state.");
         drone.setState(new FaultedState());
     }
 
     @Override
     public void reset(Drone drone) {
-        System.out.println("Resetting drone. Moving to Idle state.");
+        System.out.println("Resetting drone " + drone.getId() + ". Moving to Idle state.");
         drone.setState(new IdleState());
     }
 
@@ -212,33 +213,33 @@ class RefillingState implements DroneState {
 class FaultedState implements DroneState {
     @Override
     public void dispatch(Drone drone) {
-        System.out.println("Drone is in FAULT state. Cannot be dispatched.");
+        System.out.println("Drone " + drone.getId() + " is in FAULT state. Cannot be dispatched.");
     }
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone is in FAULT state. Cannot arrive anywhere.");
+        System.out.println("Drone " + drone.getId() + " is in FAULT state. Cannot arrive anywhere.");
     }
 
     @Override
     public double dropAgent(Drone drone, double waterNeeded) {
-        System.out.println("Drone is in FAULT state. Cannot drop agent.");
+        System.out.println("Drone " + drone.getId() + " is in FAULT state. Cannot drop agent.");
         return waterNeeded;
     }
 
     @Override
     public void refill(Drone drone) {
-        System.out.println("Drone is in FAULT state. Cannot refill.");
+        System.out.println("Drone " + drone.getId() + " is in FAULT state. Cannot refill.");
     }
 
     @Override
     public void fault(Drone drone) {
-        System.out.println("Drone is already in FAULT state.");
+        System.out.println("Drone " + drone.getId() + " is already in FAULT state.");
     }
 
     @Override
     public void reset(Drone drone) {
-        System.out.println("Resetting drone. Moving to Idle state.");
+        System.out.println("Resetting drone " + drone.getId() + ". Moving to Idle state.");
         drone.setState(new IdleState());
     }
 

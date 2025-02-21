@@ -3,10 +3,10 @@
  * The DroneSubsystem interacts with the Scheduler to assign drones to fire incidents and handle drone operations.
  */
 
-package org.example;
+package org.example.DroneSystem;
 
 import org.example.FireIncidentSubsystem.Event;
-import java.util.ArrayList;
+
 import java.util.List;
 
 
@@ -15,24 +15,15 @@ import java.util.List;
  * such as firefighting agent release and refilling, to ensure optimal firefighting performance.
  */
 public class DroneSubsystem {
-
-    /**
-     * List of drones managed by this subsystem.
-     */
-    private final List<Drone> drones;
-
-
+    private final FleetManager fleetManager = new FleetManager();
+    private final List<Drone> drones = fleetManager.getDrones();
 
     /**
      * Constructs a DroneSubsystem with a given scheduler and initializes drones.
      *
      */
     public DroneSubsystem() {
-        this.drones = new ArrayList<>();
 
-        for (int i = 1; i <= 10; i++) {
-            drones.add(new Drone(i, 15));
-        }
     }
 
     /**
@@ -44,10 +35,13 @@ public class DroneSubsystem {
         double waterNeeded = event.getSeverityWaterAmount();
         boolean assigned = false;
 
+
         for (Drone drone : drones) {
+            DroneEvent droneEvent = new DroneEvent(drone);
             if (drone.getState() instanceof IdleState) {
                 assigned = true;
-                System.out.println("Assigning drone to event: ");
+                System.out.println();
+                System.out.println("Assigning drone " + drone.getId() + " to event: ");
 
                 // Dispatch drone to the fire zone
                 drone.getState().dispatch(drone);
@@ -56,13 +50,13 @@ public class DroneSubsystem {
                 drone.getState().arrive(drone);
 
                 try {
-                    drone.openBayDoors();
+                    drone.getBayController().openBayDoors();
                 } catch (InterruptedException e) {
                     System.out.println("Error opening bay doors: " + e.getMessage());
                     throw new RuntimeException(e);
                 }
 
-                waterNeeded = drone.dropAgent(waterNeeded);
+                waterNeeded = droneEvent.dropAgent(waterNeeded);
 
                 if (waterNeeded <= 0) {
                     // Fire extinguished, stop looking for more drones
