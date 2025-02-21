@@ -41,7 +41,7 @@ public class DroneSubsystem {
             if (drone.getState() instanceof IdleState) {
                 assigned = true;
                 System.out.println();
-                System.out.println("Assigning drone to event: ");
+                System.out.println("Assigning drone " + drone.getId() + " to event: ");
 
                 // Dispatch drone to the fire zone
                 drone.getState().dispatch(drone);

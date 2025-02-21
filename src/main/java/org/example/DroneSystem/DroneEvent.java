@@ -23,11 +23,11 @@ public class DroneEvent {
         double agentCapacity = drone.getAgentCapacity();
         if (agentCapacity > waterNeeded){
             drone.setAgentCapacity(agentCapacity - waterNeeded);
-            System.out.println("Drone released water agent, " + waterNeeded + " litres released");
+            System.out.println("Drone " + drone.getId() + " released water agent, " + waterNeeded + " litres released");
             drone.setState(new IdleState());
             return 0.0;
         }
-        System.out.println("Drone released water agent, " + agentCapacity + " litres released");
+        System.out.println("Drone " + drone.getId() + " released water agent, " + agentCapacity + " litres released");
         waterNeeded = waterNeeded - agentCapacity;
         drone.setAgentCapacity(0.0);
         drone.setState(new IdleState());
@@ -50,8 +50,8 @@ public class DroneEvent {
      * Refills the drone's firefighting agent to the drone's maximum capacity, and changes the state of the drone to refilling.
      */
     public void refill() {
+        System.out.println("Drone " + drone.getId() + " is refilling");
         drone.getState().refill(drone);
-        System.out.println("Drone is refilling");
     }
 
 }
