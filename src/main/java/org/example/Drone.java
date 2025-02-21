@@ -39,10 +39,9 @@ public class Drone{
     private boolean bayDoorOpen;
 
     /**
-     * The current state of the Drone. (enum DroneState)
+     * The current state of the Drone. (interface DroneState)
      */
     private DroneState state;
-
 
     /**
      * Constructs a Drone with a specified ID and initial agent capacity.
@@ -56,30 +55,18 @@ public class Drone{
         this.agentCapacity = initialCapacity;
         this.maxAgentCapacity = initialCapacity;
         this.bayDoorOpen = false;
-        this.state = DroneState.IDLE;
+        this.state = new IdleState();
     }
 
     /**
      * Responds to a fire incident event by dropping the required amount of agent at a specific location.
      *
-     * @param event The fire incident event
      * @param waterNeeded The amount of agent needed to successfully assist in combating the fire.
      * @return The remaining agent needed after the drone's contribution2
      */
-    public double processEvent(Event event, double waterNeeded) {
-        state = DroneState.DROPPING_AGENT;
-        if (agentCapacity > waterNeeded){
-            agentCapacity = agentCapacity - waterNeeded;
-            System.out.println("Drone released water agent, " + waterNeeded + " litres released");
-            state = DroneState.IDLE;
-            return 0.0;
-        }
-        System.out.println("Drone released water agent, " + agentCapacity + " litres released");
-        waterNeeded = waterNeeded - agentCapacity;
-        agentCapacity = 0.0;
-        state = DroneState.IDLE;
-        return waterNeeded;
-        //I need to wait to see what is going on to see if i need this
+    public double dropAgent(double waterNeeded) throws InterruptedException {
+        // Transition to dropping agent state and handle water amount logic
+        return state.dropAgent(this, waterNeeded);
     }
 
     /**
@@ -108,9 +95,8 @@ public class Drone{
      * Refills the drone's firefighting agent to the drone's maximum capacity, and changes the state of the drone to refilling.
      */
     public void refill() {
-        state = DroneState.REFILLING;
-        System.out.println("Drone is refilling");
         agentCapacity = maxAgentCapacity;
+        state.refill(this);
     }
 
     /**
@@ -132,12 +118,22 @@ public class Drone{
     }
 
     /**
+     * Gets the maximum amount of firefighting agent the drone can carry.
+     *
+     * @return The maximum firefighting agent capacity in Liters.
+     */
+    public double getMaxAgentCapacity() {
+        return maxAgentCapacity;
+    }
+
+    /**
      * Sets the state of the drone
      *
-     * @param state The new state of the drone.
+     * @param newState The new state of the drone.
      */
-    public void setState(DroneState state) {
-        this.state = state;
+    public void setState(DroneState newState) {
+        System.out.println("*Transitioning from " + state.getClass().getSimpleName() + " to " + newState.getClass().getSimpleName() + "*");
+        this.state = newState;
     }
 
     /**
@@ -148,4 +144,14 @@ public class Drone{
     public boolean isBayDoorOpen() {
         return bayDoorOpen;
     }
+
+    /**
+     * Helper methods to manage agent capacity and state
+     *
+     * @param agentCapacity The amount of agent the drone can take
+     */
+    public void setAgentCapacity(double agentCapacity) {
+        this.agentCapacity = agentCapacity;
+    }
 }
+

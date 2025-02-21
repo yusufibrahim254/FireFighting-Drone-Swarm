@@ -103,7 +103,11 @@ public class Scheduler implements Runnable {
                 System.out.println("Scheduler: Notifying fire incident events to DroneSubsystem");
 
                 // call matching method in DroneSubsystem
-                droneSubsystem.assignDroneToEvent(nextEvent);
+                try {
+                    droneSubsystem.assignDroneToEvent(nextEvent);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
 
                 System.out.println("Scheduler: Confirmed DroneSubsystem processed FireIncidentSubsystem event");
                 System.out.println();
