@@ -1,18 +1,28 @@
 # FireFighting-Drone-Swarm
 
-(Iteration 1)
+(Iteration 2)
 
 This program simulates fire incidents as well as drones responding to them. It uses a scheduler to manage fire events reported by a fire incident subsystem and notifies the drone subsystem in order to assign drones accordingly to process the events.
 
 ## File Overview
-
 - Main.java - Entry point to the program
 - Scheduler.java - Manages the queue of incoming incidents and mainly acts as a pass through for communication between subsystems right now
-- FireIncident.java - Reads fire incident events from input files and sends them to the Scheduler
-- Event.java - represents fire/drone request event
-- EventReader.java - helps process reading fire incident events
-- DroneSubsytem.java - Manages drones and assigns them to events
-- Drone.java - represents drone itself 
+- Drone System
+  - BayController.java - Controls the bay doors of the drone
+  - Drone.java - Represents drone itself
+  - DroneEvent.java - Handles the drone's event
+  - DroneState.java - Interface represents the various states a firefighting drone can be in
+  - DroneSubsystem.java - Interacts with the Scheduler to assign drones to fire incidents
+  - FleetManager.java - Manages and coordinates the fleet of drones
+ 
+- Fire Incident Subsystem
+  - FireIncident.java - Reads fire incident events from input files and sends them to the Scheduler
+  - Event.java - Represents fire/drone request event
+  - EventReader.java - Helps process reading fire incident events
+  - Severity.java - Helps manage Severity levels for fire incidents
+  - Zone.java - Represents the zone in which the fire incident is taking place
+  - ZoneReader.java - Helps process reading zone locations
+  - Coordinates.java - Helps manage coordinates of fire incident zones
 
 ## Setup instructions:
 
