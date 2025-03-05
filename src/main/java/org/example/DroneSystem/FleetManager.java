@@ -1,41 +1,42 @@
-package org.example.DroneSystem;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-/**
- * Manager of the fleet of drones, handles responsibilities such as
- * adding drones, checking availability of specific drone, and
- * maintaining fleet health
- */
-public class FleetManager {
-
-    /**
-     * List of drones managed by this subsystem.
-     */
-    private final List<Drone> drones;
-
-    /**
-     * Constructs a DroneSubsystem with a given scheduler and initializes drones.
-     *
-     */
-    public FleetManager() {
-        this.drones = new ArrayList<>();
-
-        for (int i = 1; i <= 10; i++) {
-            drones.add(new Drone(i, 15));
-        }
-    }
-
-    public List<Drone> getDrones() {
-        return drones;
-    }
-
-    public boolean hasIdleDrones(){
-        for (Drone drone: drones){
-            if (Objects.equals(drone.getState(), new IdleState())) return true;
-        }
-        return false;
-    }
-}
+//package org.example.DroneSystem;
+//
+//import java.io.IOException;
+//import java.util.ArrayList;
+//import java.util.List;
+//
+///**
+// * Manager of the fleet of drones, handles responsibilities such as
+// * adding drones, checking availability of specific drone, and
+// * maintaining fleet health.
+// */
+//public class FleetManager {
+//    private final List<Drone> drones; // List of drones in the fleet
+//
+//    /**
+//     * Constructs a FleetManager and initializes the fleet with drones.
+//     *
+//     * @param droneSubsystemHost The hostname or IP address of the DroneSubsystem.
+//     * @param droneSubsystemPort The port number of the DroneSubsystem.
+//     */
+//    public FleetManager(String droneSubsystemHost, int droneSubsystemPort) {
+//        this.drones = new ArrayList<>();
+//
+//        // Initialize the fleet with 10 drones
+//        for (int i = 1; i <= 2; i++) {
+//            try {
+//                drones.add(new Drone(i, 15, droneSubsystemHost, droneSubsystemPort));
+//            } catch (IOException e) {
+//                System.err.println("Error creating Drone " + i + ": " + e.getMessage());
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Gets the list of drones in the fleet.
+//     *
+//     * @return The list of drones.
+//     */
+//    public List<Drone> getDrones() {
+//        return drones;
+//    }
+//}

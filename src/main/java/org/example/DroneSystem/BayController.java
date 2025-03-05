@@ -19,9 +19,9 @@ public class BayController {
      * @throws InterruptedException if the thread is interrupted while sleeping.
      */
     public void openBayDoors() throws InterruptedException {
+        System.out.println("Bay doors opened.");
         Thread.sleep(3000);
         bayDoorOpen = true;
-        System.out.println("Bay doors opened.");
     }
 
     /**
@@ -30,6 +30,7 @@ public class BayController {
      * @throws InterruptedException if the thread is interrupted while sleeping.
      */
     public void closeBayDoors() throws InterruptedException {
+        System.out.println("Bay doors closing.");
         Thread.sleep(3000);
         bayDoorOpen = false;
         System.out.println("Bay doors closed.");

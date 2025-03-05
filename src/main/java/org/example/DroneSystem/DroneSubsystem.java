@@ -1,75 +1,116 @@
-/**
- * Represents the Drone Subsystem responsible for managing and coordinating multiple drones in the firefighting drone swarm system.
- * The DroneSubsystem interacts with the Scheduler to assign drones to fire incidents and handle drone operations.
- */
-
 package org.example.DroneSystem;
 
 import org.example.FireIncidentSubsystem.Event;
 
+import java.io.IOException;
+import java.net.*;
+import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * The DroneSubsystem class manages a fleet of drones, by assigning them to fire incidents and coordinating their operations,
- * such as firefighting agent release and refilling, to ensure optimal firefighting performance.
+ * The DroneSubsystem class represents the Drone Subsystem, which receives tasks from
+ * the Scheduler, processes them, and sends acknowledgments back.
  */
-public class DroneSubsystem {
-    private final FleetManager fleetManager = new FleetManager();
-    private final List<Drone> drones = fleetManager.getDrones();
+public class DroneSubsystem implements Runnable {
+    private final DatagramSocket socket; // UDP socket for communication
+    private final List<Drone> drones; // List of drones managed by the subsystem
+
+    // Default port for the DroneSubsystem
+    private static final int DEFAULT_PORT = 6000;
 
     /**
-     * Constructs a DroneSubsystem with a given scheduler and initializes drones.
+     * Constructs a DroneSubsystem with the default port (6000).
      *
+     * @throws SocketException If the UDP socket cannot be created.
      */
-    public DroneSubsystem() {
-
+    public DroneSubsystem() throws SocketException {
+        this(DEFAULT_PORT);
     }
 
     /**
-     * Assigns an available drone to a fire incident event.
+     * Constructs a DroneSubsystem with the specified port.
      *
-     * @param event the fire incident event to be handled.
+     * @param port The port number on which the Drone Subsystem listens for tasks.
+     * @throws SocketException If the UDP socket cannot be created.
      */
-    public void assignDroneToEvent(Event event) throws InterruptedException {
-        double waterNeeded = event.getSeverityWaterAmount();
-        boolean assigned = false;
+    public DroneSubsystem(int port) throws SocketException {
+        this.socket = new DatagramSocket(port);
+        this.drones = new ArrayList<>();
 
-
-        for (Drone drone : drones) {
-            DroneEvent droneEvent = new DroneEvent(drone);
-            if (drone.getState() instanceof IdleState) {
-                assigned = true;
-                System.out.println();
-                System.out.println("Assigning drone " + drone.getId() + " to event: ");
-
-                // Dispatch drone to the fire zone
-                drone.getState().dispatch(drone);
-
-                // Transition drone to Dropping Agent State as soon as it arrives
-                drone.getState().arrive(drone);
-
-                try {
-                    drone.getBayController().openBayDoors();
-                } catch (InterruptedException e) {
-                    System.out.println("Error opening bay doors: " + e.getMessage());
-                    throw new RuntimeException(e);
-                }
-
-                waterNeeded = droneEvent.dropAgent(waterNeeded);
-
-                if (waterNeeded <= 0) {
-                    // Fire extinguished, stop looking for more drones
-                    break;
-                }
-            }
+        // Initialize the fleet with 10 drones
+        for (int i = 1; i <= 10; i++) {
+            drones.add(new Drone(i, 15));
         }
 
-        if (!assigned) {
-            // If we never assigned a drone
-            System.out.println("no available drones");
+        // Start each drone in a separate thread
+        for (Drone drone : drones) {
+            new Thread(drone).start();
+        }
+    }
+
+    /**
+     * Runs the Drone Subsystem. Listens for tasks from the Scheduler, processes them,
+     * and sends acknowledgments back.
+     */
+    @Override
+    public void run() {
+        System.out.println("[DroneSubsystem] Listening on Port: " + this.socket.getLocalPort());
+        while (true) {
+            try {
+                // Receive event from Scheduler
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                socket.receive(receivePacket);
+                String eventData = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                System.out.println("[DroneSubsystem] Received event: " + eventData);
+
+                // Deserialize the event
+                Event event = Event.deserialize(eventData);
+
+                // Assign the event to an idle drone
+                System.out.println("About to assign a drone");
+                assignEventToIdleDrone(event);
+
+                // Send acknowledgment back to Scheduler
+                String ack = "ACK:" + event.getId();
+                byte[] sendData = ack.getBytes();
+                InetAddress schedulerAddress = receivePacket.getAddress();
+                int schedulerPort = receivePacket.getPort();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+                socket.send(sendPacket);
+                System.out.println("[DroneSubsystem -> Scheduler] Sent acknowledgment: " + ack + "\n\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Assigns an event to an idle drone.
+     *
+     * @param event The event to be assigned.
+     */
+    private void assignEventToIdleDrone(Event event) {
+        for (Drone drone : drones) {
+            if (drone.getState() instanceof IdleState) {
+                drone.assignEvent(event);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Main method to start the DroneSubsystem.
+     *
+     * @param args Command-line arguments (not used).
+     */
+    public static void main(String[] args) {
+        try {
+            // Start the DroneSubsystem
+            DroneSubsystem droneSubsystem = new DroneSubsystem(); // Use the default port (6000)
+            droneSubsystem.run();
+        } catch (SocketException e) {
+            System.err.println("Error starting DroneSubsystem: " + e.getMessage());
         }
     }
 }
-
-

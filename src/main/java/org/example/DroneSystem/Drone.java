@@ -1,57 +1,27 @@
-/**
- * Represents a drone used in a firefighting drone swarm system.
- * The drone can process events, release a special firefighting agent, open and close bay doors, and refill the agent in its supply.
- * The drone subsystem operates as an individual process and communicates with the Scheduler for information about the fire.
- */
 package org.example.DroneSystem;
+
+import org.example.FireIncidentSubsystem.Event;
 
 /**
  * The Drone class models a firefighting drone that assists in fighting fires.
- * It is responsible for interacting with the Scheduler to find and respond to fires, manage firefighting agent, and responding to fires.
+ * It is responsible for handling its own state transitions and printing its current state.
  */
-public class Drone{
+public class Drone implements Runnable {
+    private final int id; // Unique identifier for the drone
+    private final double maxAgentCapacity; // Maximum amount of agent the drone can carry
+    private double agentCapacity; // Current amount of agent in the drone
+    private DroneState state; // Current state of the drone
+    private final BayController bayController; // Controller for the drone's bay doors
+    private Event currentEvent; // Current event assigned to the drone
 
     /**
-     * Unique identifier that identifies each drone.
-     */
-    private int id;
-
-    /**
-     * Current battery level of the drone, represented as a percentage (0-100)
-     */
-    private int battery;
-
-    /**
-     * Current amount of agent available in the drone (Liters)
-     */
-    private double agentCapacity;
-
-    /**
-     * Maximum amount of agent that the drone can carry (Liters)
-     */
-    private final double maxAgentCapacity;
-
-
-    /**
-     * The current state of the Drone. (enum DroneState)
-     */
-    private DroneState state;
-
-    /**
-     * Controller for the drone's bay doors
-     */
-    private final BayController bayController;
-
-
-    /**
-     * Constructs a Drone with a specified ID and initial agent capacity.
+     * Constructs a Drone with the specified ID and initial agent capacity.
      *
-     * @param id Unique identifier of each drone
-     * @param initialCapacity The initial amount of agent that the drone can carry.
+     * @param id The unique identifier of the drone.
+     * @param initialCapacity The initial amount of agent the drone can carry.
      */
     public Drone(int id, double initialCapacity) {
         this.id = id;
-        this.battery = 100;
         this.agentCapacity = initialCapacity;
         this.maxAgentCapacity = initialCapacity;
         this.bayController = new BayController();
@@ -59,88 +29,88 @@ public class Drone{
     }
 
     /**
-     * Gets the current state of the drone.
-     *
-     * @return The current state of the drone
+     * Runs the drone. Handles state transitions and simulates realistic timings.
      */
-    public DroneState getState() {
-        return state;
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                // Handle state transitions
+                if (state instanceof IdleState) {
+                    // Do nothing, wait for an event
+                } else if (state instanceof EnRouteState) {
+                    state.displayState();
+                    simulateTravel();
+                    state.arrive(this); // Transition to DroppingAgentState
+                } else if (state instanceof DroppingAgentState) {
+                    state.displayState();
+                    double waterNeeded = currentEvent.getSeverityWaterAmount();
+                    state.dropAgent(this, waterNeeded); // Drop agent and handle refill if needed
+                } else if (state instanceof RefillingState) {
+                    state.displayState();
+                    state.refill(this); // Refill the drone
+                } else if (state instanceof ReturningState) {
+                    state.displayState();
+                    simulateTravel(); // Simulate traveling back to the original location
+                    state.arrive(this); // Transition to IdleState
+
+                } else if (state instanceof FaultedState) {
+                    // Handle fault state
+                }
+//                // Sleep to simulate real-time behavior
+//                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
-     * Sets the state of the drone
+     * Assigns an event to the drone and transitions it to the EnRouteState.
      *
-     * @param newState The new state of the drone.
+     * @param event The event to be assigned.
      */
-    public void setState(DroneState newState) {
-        System.out.println("*Transitioning from " + state.getClass().getSimpleName() + " to " + newState.getClass().getSimpleName() + "*");
-        this.state = newState;
+    public void assignEvent(Event event) {
+        this.currentEvent = event;
+        System.out.println("Drone " + id + " assigned event: " + event);
+        state.dispatch(this); // Transition to EnRouteState
     }
 
     /**
-     * Gets the current firefighting agent capacity of the drone.
+     * Simulates the drone traveling to a zone.
      *
-     * @return The remaining firefighting agent capacity in Liters.
+     * @throws InterruptedException If the thread is interrupted while sleeping.
      */
+    private void simulateTravel() throws InterruptedException {
+        if(this.state instanceof EnRouteState){
+            System.out.println("Drone " + id + " is traveling to zone: " + this.currentEvent.toString());
+        }
+        Thread.sleep(8180); // Simulate 8.18 seconds of travel time
+    }
+
+    // Getters and setters
+    public int getId() {
+        return id;
+    }
+    public double getMaxAgentCapacity(){
+        return maxAgentCapacity;
+    }
     public double getAgentCapacity() {
         return agentCapacity;
     }
 
-
-    /**
-     * Gets the id of the drone
-     * @return the drone's id
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Sets a new id for the drone
-     * @param id the new id for the drone
-     */
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    /**
-     * Sets a new battery for the drone
-     * @param battery the new battery for the drone
-     */
-    public void setBattery(int battery) {
-        this.battery = battery;
-    }
-
-    /**
-     * Gets the battery of the drone
-     * @return the battery of the drone
-     */
-    public int getBattery() {
-        return battery;
-    }
-
-    /**
-     * Helper methods to manage agent capacity and state
-     *
-     * @param agentCapacity The amount of agent the drone can take
-     */
     public void setAgentCapacity(double agentCapacity) {
         this.agentCapacity = agentCapacity;
     }
 
-    /**
-     * Gets the maximum amount of firefighting agent the drone can carry.
-     *
-     * @return The maximum firefighting agent capacity in Liters.
-     */
-    public double getMaxAgentCapacity() {
-        return maxAgentCapacity;
+    public DroneState getState() {
+        return state;
     }
 
-    /**
-     * Gets the controller of the bay doors for current drone
-     * @return the controller of bay doors
-     */
+    public void setState(DroneState state) {
+        this.state = state;
+    }
+
     public BayController getBayController() {
         return bayController;
     }

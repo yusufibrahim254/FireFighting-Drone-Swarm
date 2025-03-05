@@ -1,66 +1,55 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
 import org.example.FireIncidentSubsystem.Event;
-import org.example.Scheduler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
 /**
- * A helper class that reads events from a CSV and organizes them into Event objects
+ * A helper class that reads events from a CSV and organizes them into Event objects.
  */
 public class EventReader {
 
     /**
-     * Constructor for event reader
+     * Constructor for EventReader.
      */
-    public EventReader(){
-
+    public EventReader() {
+        // Constructor is empty as no initialization is needed.
     }
 
     /**
-     * Reads fire events from provided file and organizes them into Event objects
-     * @param fileName Input file with fire events
-     * @param scheduler The scheduler to receive the events
+     * Reads fire events from the provided file and organizes them into Event objects.
+     *
+     * @param fileName The input file containing fire events.
+     * @return An array of Event objects representing the fire events.
      */
-    public static void readEvents(String fileName, Scheduler scheduler){
-        try {
-            // read the sample event file
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
-            String header = reader.readLine(); // get the header so doesn't get turned into an event
+    public static Event[] readEvents(String fileName) {
+        ArrayList<Event> events = new ArrayList<>(); // Store found events
+        int nextEventId = 1; // Counter for generating unique event IDs
 
-            ArrayList<Event> events = new ArrayList<>(); // store found events
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String header = reader.readLine(); // Read the header so it doesn't get turned into an event
+
             String line;
-            while ((line = reader.readLine()) != null) { // breaks if reaches end of file
+            while ((line = reader.readLine()) != null) { // Read until the end of the file
                 String[] parts = line.split(",");
 
-                // found attributes of the event
+                // Extract attributes of the event
                 String time = parts[0];
                 int zoneId = Integer.parseInt(parts[1]);
                 EventType eventType = EventType.valueOf(parts[2]);
                 String severityLevel = parts[3];
 
-                // create event
-                Event event = new Event(time, zoneId, eventType, severityLevel);
-                scheduler.addIncident(event);
-
-                extracted(events, event);
+                // Create an event with a unique ID
+                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel);
+                events.add(event); // Add the event to the list
             }
-            reader.close(); // close file
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    /**
-     * Stores found events into a list of Event objects
-     * @param events storage list
-     * @param event the event to add
-     */
-    private static void extracted(ArrayList<Event> events, Event event) {
-        events.add(event);
+        // Convert the list of events to an array and return it
+        return events.toArray(new Event[0]);
     }
-
 }

@@ -1,60 +1,104 @@
 package org.example.FireIncidentSubsystem;
 
-import org.example.FireIncidentSubsystem.Helpers.*;
-import org.example.Scheduler;
+import org.example.FireIncidentSubsystem.Helpers.EventReader;
+
+import java.io.IOException;
+import java.net.*;
 
 /**
- * The Fire Incident subsystem processes fire events from an input file and sends to the
- * Scheduler to have firefighting drones assigned to handle event
+ * The FireIncident class represents the Fire Incident Subsystem, which reads fire events
+ * from a file and sends them to the Scheduler via UDP for processing.
  */
 public class FireIncident implements Runnable {
-    /**
-     * The input file with all fire events within it
-     */
-    private final static String eventFile = "docs/Sample_event_file.csv";
-    /**
-     * The input file with all the zones in which fire taking place in within it
-     */
-    private final static String zoneFile = "docs/sample_zone_file.csv";
-    /**
-     * The scheduler to process fire events
-     */
-    private final Scheduler scheduler;
+    private static final String EVENT_FILE = "docs/Sample_event_file.csv"; // Path to the fire event file
+    private final DatagramSocket socket; // UDP socket for communication
+    private final InetAddress schedulerAddress; // Address of the Scheduler
+    private final int schedulerPort; // Port of the Scheduler
 
     /**
-     * Constructs a new Fire Incident subsystem with a reference to the Scheduler.
-     * @param scheduler the Scheduler
+     * Constructs a FireIncident subsystem with the specified Scheduler host and port.
+     *
+     * @param schedulerHost The hostname or IP address of the Scheduler.
+     * @param schedulerPort The port number of the Scheduler.
+     * @throws SocketException If the UDP socket cannot be created.
+     * @throws UnknownHostException If the Scheduler host is invalid.
      */
-    public FireIncident(Scheduler scheduler){
-        this.scheduler = scheduler;
+    public FireIncident(String schedulerHost, int schedulerPort) throws SocketException, UnknownHostException {
+        this.socket = new DatagramSocket();
+        this.schedulerAddress = InetAddress.getByName(schedulerHost);
+        this.schedulerPort = schedulerPort;
     }
 
-
     /**
-     * Runs the fire incident subsystem to process fire events and notify the Scheduler.
+     * Runs the FireIncident subsystem. Reads fire events from the file and sends them
+     * to the Scheduler via UDP, waiting for an acknowledgment after each event.
      */
     @Override
     public void run() {
-        synchronized (scheduler) {
-            EventReader.readEvents(eventFile, scheduler);
-            System.out.println();
-            System.out.println("FireIncidentSubsystem: Reporting events to Scheduler");
-            System.out.println();
-            scheduler.notifyAll();
-        }
+        System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
+        try {
+            Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
+//            for (Event event : events) {
+//                // Serialize the event to a string
+//                String eventData = event.serialize();
+//                byte[] sendData = eventData.getBytes();
+//
+//                // Send the event to the Scheduler
+//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+//                socket.send(sendPacket);
+//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
+//
+//                // Wait for acknowledgment from the Scheduler
+//                waitForAcknowledgment();
+//            }
+            for(int i = 0; i < 1; i++){
+                Event event = events[0];
+                // Serialize the event to a string
+                String eventData = event.serialize();
+                byte[] sendData = eventData.getBytes();
 
-        // Wait for the scheduler to process all events
-        while (!scheduler.isEmpty()) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
+                // Send the event to the Scheduler
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+                socket.send(sendPacket);
+                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
+
+                // Wait for acknowledgment from the Scheduler
+                waitForAcknowledgment();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            socket.close(); // Close the socket when done
         }
-        // Stop the scheduler
-        scheduler.stopScheduler();
-        System.out.println("FireIncidentSubsystem: Stopped the Scheduler after processing all events.");
     }
 
+    /**
+     * Waits for an acknowledgment from the Scheduler.
+     *
+     * @throws IOException If an I/O error occurs while waiting for the acknowledgment.
+     */
+    private void waitForAcknowledgment() throws IOException {
+        byte[] receiveData = new byte[1024];
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        socket.receive(receivePacket); // Wait for acknowledgment
+        String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength());
+
+        // Log the acknowledgment
+        System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment+"\n\n");
+    }
+
+    /**
+     * Main method to start the FireIncident subsystem.
+     *
+     * @param args Command-line arguments (not used).
+     */
+    public static void main(String[] args) {
+        try {
+            // Start the FireIncident subsystem
+            FireIncident fireIncident = new FireIncident("localhost", 5000); // Scheduler is on localhost, port 5000
+            fireIncident.run();
+        } catch (SocketException | UnknownHostException e) {
+            System.err.println("Error starting FireIncident subsystem: " + e.getMessage());
+        }
+    }
 }

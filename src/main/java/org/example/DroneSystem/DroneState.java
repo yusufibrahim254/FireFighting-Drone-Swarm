@@ -187,6 +187,9 @@ class RefillingState implements DroneState {
         // Refill the drone to max capacity
         drone.setAgentCapacity(drone.getMaxAgentCapacity());
         System.out.println("REFILLING state complete.");
+
+        // Transition to ReturningState after refilling
+        drone.setState(new ReturningState());
     }
 
     @Override
@@ -246,5 +249,55 @@ class FaultedState implements DroneState {
     @Override
     public void displayState() {
         System.out.println("Drone is FAULTED. Needs reset.");
+    }
+}
+
+/**
+ * State class represents the drone is returning to its original location after refilling.
+ */
+class ReturningState implements DroneState {
+    @Override
+    public void dispatch(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is returning. Cannot be dispatched.");
+    }
+
+    @Override
+    public void arrive(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " has returned to its original location and is now idle.");
+        try {
+            // Wait 1 second before becoming operational again
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        drone.setState(new IdleState());
+    }
+
+    @Override
+    public double dropAgent(Drone drone, double waterNeeded) {
+        System.out.println("Drone " + drone.getId() + " is returning. Cannot drop agent.");
+        return waterNeeded;
+    }
+
+    @Override
+    public void refill(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is returning. Cannot refill.");
+    }
+
+    @Override
+    public void fault(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " encountered an issue! Moving to FAULT state.");
+        drone.setState(new FaultedState());
+    }
+
+    @Override
+    public void reset(Drone drone) {
+        System.out.println("Resetting drone " + drone.getId() + ". Moving to Idle state.");
+        drone.setState(new IdleState());
+    }
+
+    @Override
+    public void displayState() {
+        System.out.println("Drone is RETURNING to its original location.");
     }
 }
