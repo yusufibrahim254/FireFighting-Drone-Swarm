@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.example.FireIncidentSubsystem.Event;
 
+import java.net.SocketException;
+
 class SchedulerTest {
     private Scheduler scheduler;
     private Event event;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws SocketException {
         DroneSubsystem droneSubsystem = new DroneSubsystem();
         scheduler = new Scheduler(droneSubsystem);
         event = new Event("12:12:12", 2, EventType.DRONE_REQUEST, "High");

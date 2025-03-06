@@ -28,7 +28,7 @@ public class Scheduler implements Runnable {
      */
     public Scheduler(int port, String droneHost, int dronePort) throws SocketException {
         this.socket = new DatagramSocket(port);
-        this.droneHost = droneHost;
+        this.droneHost = droneHost; // Use the IP address of the DroneSubsystem machine
         this.dronePort = dronePort;
 
         // Print a message to let the user know the Scheduler is running
@@ -122,6 +122,7 @@ public class Scheduler implements Runnable {
      */
     public static void main(String[] args) {
         try {
+//            Scheduler scheduler = new Scheduler(5000, "192.168.1.3", 6000); // Replace with the IP address of the DroneSubsystem machine
             // Start the Scheduler
             Scheduler scheduler = new Scheduler(5000, "localhost", 6000); // Listen on port 5000, DroneSubsystem on localhost, port 6000
             scheduler.run();

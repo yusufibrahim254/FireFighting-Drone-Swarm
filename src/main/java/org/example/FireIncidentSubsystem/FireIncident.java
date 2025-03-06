@@ -25,7 +25,7 @@ public class FireIncident implements Runnable {
      */
     public FireIncident(String schedulerHost, int schedulerPort) throws SocketException, UnknownHostException {
         this.socket = new DatagramSocket();
-        this.schedulerAddress = InetAddress.getByName(schedulerHost);
+        this.schedulerAddress = InetAddress.getByName(schedulerHost); // Use the IP address of the Scheduler machine
         this.schedulerPort = schedulerPort;
     }
 
@@ -94,6 +94,7 @@ public class FireIncident implements Runnable {
      */
     public static void main(String[] args) {
         try {
+//            FireIncident fireIncident = new FireIncident("192.168.1.2", 5000); // Replace with the IP address of the Scheduler machine
             // Start the FireIncident subsystem
             FireIncident fireIncident = new FireIncident("localhost", 5000); // Scheduler is on localhost, port 5000
             fireIncident.run();

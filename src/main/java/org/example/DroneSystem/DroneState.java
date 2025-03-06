@@ -1,5 +1,7 @@
 package org.example.DroneSystem;
 
+import org.example.FireIncidentSubsystem.Event;
+
 /**
  * Interface represents the various states a firefighting drone can be in.
  */
@@ -60,6 +62,7 @@ class IdleState implements DroneState {
  * State class represents the drone is on its way to a fire incident zone.
  */
 class EnRouteState implements DroneState {
+
     @Override
     public void dispatch(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is already en route.");
@@ -116,27 +119,31 @@ class DroppingAgentState implements DroneState {
 
     @Override
     public double dropAgent(Drone drone, double waterNeeded) throws InterruptedException {
-        System.out.println("Dropping agent...");
-        DroneEvent droneEvent = new DroneEvent(drone);
 
         // Release the minimum of the drone's available water or the amount needed to extinguish the fire
         double releasedWater = Math.min(drone.getAgentCapacity(), waterNeeded);
+        System.out.println("Dropping "+ releasedWater+ "L  of agent...");
         drone.setAgentCapacity(drone.getAgentCapacity() - releasedWater);
-        waterNeeded -= releasedWater;
+        double remainingWaterNeeded = waterNeeded - releasedWater;
 
+        System.out.println("Remaining water needed to finish off fire: " + remainingWaterNeeded);
         System.out.println("Drone " + drone.getId() + " released water agent, " + releasedWater + " litres released");
-        System.out.println("Water needed to finish off fire " + waterNeeded);
 
         drone.getBayController().closeBayDoors();
 
-        // Refill drone if there's more agent needed to extinguish the fire and the drone ran out of agent
-        if (waterNeeded > 0 && drone.getAgentCapacity() == 0) {
-            System.out.println("Drone " + drone.getId() + " needs to refill.");
-            drone.setState(new RefillingState());
-            droneEvent.refill();
-        }
+//        // If the drone has run out of agent and more is still needed, transition to ReturningState
+//        if (remainingWaterNeeded > 0 && drone.getAgentCapacity() == 0) {
+//            System.out.println("Drone " + drone.getId() + " needs to refill.");
+//            drone.setRemainingWaterNeeded(remainingWaterNeeded); // Store remaining requirement
+//            drone.setTargetPosition(new int[]{0,0});
+//            drone.setState(new ReturningState()); // Transition to ReturningState to go back to refill station
+//        }
+        System.out.println("Drone " + drone.getId() + " needs to refill.");
+        drone.setRemainingWaterNeeded(remainingWaterNeeded); // Store remaining requirement
+        drone.setTargetPosition(new int[]{0,0});
+        drone.setState(new ReturningState());
 
-        return waterNeeded;
+        return remainingWaterNeeded; // Ensure the caller updates its waterNeeded value
     }
 
     @Override
@@ -184,12 +191,19 @@ class RefillingState implements DroneState {
 
     @Override
     public void refill(Drone drone) {
-        // Refill the drone to max capacity
         drone.setAgentCapacity(drone.getMaxAgentCapacity());
-        System.out.println("REFILLING state complete.");
-
-        // Transition to ReturningState after refilling
-        drone.setState(new ReturningState());
+        System.out.println("Drone " + drone.getId() + " has refilled.");
+        if(drone.getRemainingWaterNeeded() > 0){
+            System.out.println("Drone " + drone.getId() + " is going back to finish the job.");
+            // Go back to the incident and finish off the fire
+            drone.setTargetPosition(drone.getIncidentPosition());
+            drone.setState(new EnRouteState());
+            return;
+        }
+        // drone.setCurrentEvent(null); // At this point the event is completed, fire has been extinguised
+        drone.setIncidentPosition(null); // No need to keep track of the incident's location (in case we had to go back)
+        drone.setState(new IdleState());
+        System.out.println("\nDrone is now in IDLE STATE");
     }
 
     @Override
@@ -214,6 +228,9 @@ class RefillingState implements DroneState {
  * State class represents the drone has encountered a problem.
  */
 class FaultedState implements DroneState {
+    /**
+     * State class represents the drone has encountered a problem.
+     */
     @Override
     public void dispatch(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is in FAULT state. Cannot be dispatched.");
@@ -263,14 +280,16 @@ class ReturningState implements DroneState {
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone " + drone.getId() + " has returned to its original location and is now idle.");
+        System.out.println("Drone " + drone.getId() + " has returned to its original location.");
         try {
             // Wait 1 second before becoming operational again
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        drone.setState(new IdleState());
+
+        // Transition to RefillingState to refill the drone
+        drone.setState(new RefillingState());
     }
 
     @Override
@@ -280,9 +299,7 @@ class ReturningState implements DroneState {
     }
 
     @Override
-    public void refill(Drone drone) {
-        System.out.println("Drone " + drone.getId() + " is returning. Cannot refill.");
-    }
+    public void refill(Drone drone) {System.out.println("Drone " + drone.getId() + " is returning. Cannot refill.");}
 
     @Override
     public void fault(Drone drone) {

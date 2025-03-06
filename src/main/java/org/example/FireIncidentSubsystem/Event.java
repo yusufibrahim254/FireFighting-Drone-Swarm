@@ -102,6 +102,7 @@ public class Event {
      * @return A new Event object.
      */
     public static Event deserialize(String data) {
+        System.out.println("The data in deserialize function is "+data);
         String[] parts = data.split(",");
         int id = Integer.parseInt(parts[0]);
         String time = parts[1];
