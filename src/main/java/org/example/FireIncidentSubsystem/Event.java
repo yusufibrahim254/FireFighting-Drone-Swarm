@@ -1,5 +1,6 @@
 package org.example.FireIncidentSubsystem;
 
+import org.example.DroneSystem.Drone;
 import org.example.FireIncidentSubsystem.Helpers.*;
 
 /**
@@ -12,7 +13,9 @@ public class Event {
     private int zoneId; // ID of the zone where the event is taking place
     private final EventType eventType; // Type of event (e.g., FIRE)
     private final String severityLevel; // Severity level of the event
+    private Drone assignedDrone;
 
+    private double currentWaterAmountNeeded;
     /**
      * Event constructor
      *
@@ -28,6 +31,8 @@ public class Event {
         this.zoneId = zoneId;
         this.eventType = eventType;
         this.severityLevel = severityLevel;
+        this.currentWaterAmountNeeded = new Severity(severityLevel).getWaterAmount();
+        this.assignedDrone = null;
     }
 
     /**
@@ -121,5 +126,21 @@ public class Event {
                 ", eventType=" + eventType +
                 ", severityLevel='" + severityLevel + '\'' +
                 '}';
+    }
+
+    public double getCurrentWaterAmountNeeded() {
+        return currentWaterAmountNeeded;
+    }
+
+    public void setCurrentWaterAmountNeeded(double currentWaterAmountNeeded) {
+        this.currentWaterAmountNeeded = currentWaterAmountNeeded;
+    }
+
+    public Drone getAssignedDrone() {
+        return assignedDrone;
+    }
+
+    public void setAssignedDrone(Drone assignedDrone) {
+        this.assignedDrone = assignedDrone;
     }
 }

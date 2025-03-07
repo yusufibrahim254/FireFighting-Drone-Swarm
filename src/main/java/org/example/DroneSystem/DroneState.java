@@ -8,7 +8,7 @@ import org.example.FireIncidentSubsystem.Event;
 interface DroneState {
     void dispatch(Drone drone);
     void arrive(Drone drone);
-    double dropAgent(Drone drone, double waterNeeded) throws InterruptedException;
+    double dropAgent(Drone drone) throws InterruptedException;
     void refill(Drone drone);
     void fault(Drone drone);
     void reset(Drone drone);
@@ -31,9 +31,9 @@ class IdleState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) {
+    public double dropAgent(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is idle. Cannot drop agent.");
-        return waterNeeded;
+        return 0;
     }
 
     @Override
@@ -75,9 +75,9 @@ class EnRouteState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) {
+    public double dropAgent(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is en route. Cannot drop agent yet.");
-        return waterNeeded;
+        return 0;
     }
 
     @Override
@@ -118,13 +118,15 @@ class DroppingAgentState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) throws InterruptedException {
-
+    public double dropAgent(Drone drone) throws InterruptedException {
+        Event currentEvent = drone.getCurrentEvent();
+        double waterNeeded = currentEvent.getCurrentWaterAmountNeeded();
         // Release the minimum of the drone's available water or the amount needed to extinguish the fire
         double releasedWater = Math.min(drone.getAgentCapacity(), waterNeeded);
         System.out.println("Dropping "+ releasedWater+ "L  of agent...");
         drone.setAgentCapacity(drone.getAgentCapacity() - releasedWater);
         double remainingWaterNeeded = waterNeeded - releasedWater;
+        currentEvent.setCurrentWaterAmountNeeded(remainingWaterNeeded);
 
         System.out.println("Remaining water needed to finish off fire: " + remainingWaterNeeded);
         System.out.println("Drone " + drone.getId() + " released water agent, " + releasedWater + " litres released");
@@ -138,10 +140,17 @@ class DroppingAgentState implements DroneState {
 //            drone.setTargetPosition(new int[]{0,0});
 //            drone.setState(new ReturningState()); // Transition to ReturningState to go back to refill station
 //        }
-        System.out.println("Drone " + drone.getId() + " needs to refill.");
-        drone.setRemainingWaterNeeded(remainingWaterNeeded); // Store remaining requirement
+
+        if(remainingWaterNeeded > 0){ // Fire is not extinguished
+            // Delegate the job for better efficiency
+            drone.deletegateJob();
+        }else{
+            // it means the fire is off, so remove the event from the drone
+            drone.setCurrentEvent(null);
+        }
         drone.setTargetPosition(new int[]{0,0});
         drone.setState(new ReturningState());
+
 
         return remainingWaterNeeded; // Ensure the caller updates its waterNeeded value
     }
@@ -184,26 +193,32 @@ class RefillingState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) {
+    public double dropAgent(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is refilling. Cannot drop agent.");
-        return waterNeeded;
+        return 0;
     }
 
     @Override
     public void refill(Drone drone) {
         drone.setAgentCapacity(drone.getMaxAgentCapacity());
         System.out.println("Drone " + drone.getId() + " has refilled.");
-        if(drone.getRemainingWaterNeeded() > 0){
-            System.out.println("Drone " + drone.getId() + " is going back to finish the job.");
-            // Go back to the incident and finish off the fire
+//        if(drone.getRemainingWaterNeeded() > 0){
+//            System.out.println("Drone " + drone.getId() + " is going back to finish the job.");
+//            // Go back to the incident and finish off the fire
+//            drone.setTargetPosition(drone.getIncidentPosition());
+//            drone.setState(new EnRouteState());
+//            return;
+//        }
+        // drone.setCurrentEvent(null); // At this point the event is completed, fire has been extinguised
+//        drone.setIncidentPosition(null); // No need to keep track of the incident's location (in case we had to go back)
+
+        if(drone.getCurrentEvent() != null && drone.getCurrentEvent().getCurrentWaterAmountNeeded() > 0){
             drone.setTargetPosition(drone.getIncidentPosition());
             drone.setState(new EnRouteState());
-            return;
+        }else{
+            drone.setState(new IdleState());
+            System.out.println("\nDrone is now in IDLE STATE");
         }
-        // drone.setCurrentEvent(null); // At this point the event is completed, fire has been extinguised
-        drone.setIncidentPosition(null); // No need to keep track of the incident's location (in case we had to go back)
-        drone.setState(new IdleState());
-        System.out.println("\nDrone is now in IDLE STATE");
     }
 
     @Override
@@ -242,9 +257,9 @@ class FaultedState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) {
+    public double dropAgent(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is in FAULT state. Cannot drop agent.");
-        return waterNeeded;
+        return 0;
     }
 
     @Override
@@ -293,9 +308,9 @@ class ReturningState implements DroneState {
     }
 
     @Override
-    public double dropAgent(Drone drone, double waterNeeded) {
+    public double dropAgent(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is returning. Cannot drop agent.");
-        return waterNeeded;
+        return 0;
     }
 
     @Override

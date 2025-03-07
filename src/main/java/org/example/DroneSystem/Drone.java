@@ -80,7 +80,23 @@ public class Drone implements Runnable {
     public void setState(DroneState state) {
         this.state = state;
     }
-
+    public void deletegateJob(){
+        if (state instanceof DroppingAgentState && currentEvent != null) {
+            try (DatagramSocket socket = new DatagramSocket()) {
+                String type = CommunicationDroneToSubsystem.JOB_DELEGATION.name();
+                String droneID = ""+ id;
+                String message = type+":"+droneID;
+                byte[] sendData = message.getBytes();
+                InetAddress subsystemAddress = InetAddress.getByName("localhost");
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, subsystemAddress, 6001);
+                socket.send(sendPacket);
+                // Print current position and target position
+                System.out.println("[Drone " + id + "] is trying to delegate job.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public int[] getCurrentPosition() {
         return currentPosition;
     }
@@ -109,10 +125,13 @@ public class Drone implements Runnable {
                 // Handle state transitions
                 if (state instanceof IdleState) {
                     // Do nothing, wait for an event
+                    if(currentEvent != null){
+                        this.state.dispatch(this);
+                    }
                 } else if (state instanceof EnRouteState) {
                     System.out.println("\n");
                     state.displayState();
-                    System.out.println("The drone's position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]);
+                    System.out.println("The drone " +this.id+"'s position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]);
                     moveTowardsTarget();
                     if (hasReachedTarget()) {
                         state.arrive(this); // Transition to DroppingAgentState
@@ -120,7 +139,7 @@ public class Drone implements Runnable {
                 } else if (state instanceof DroppingAgentState) {
                     System.out.println("\n");
                     state.displayState();
-                     state.dropAgent(this, this.remainingWaterNeeded); // Drop Agent
+                     state.dropAgent(this); // Drop Agent
                 } else if (state instanceof RefillingState) {
                     System.out.println("\n");
                     state.displayState();
@@ -181,6 +200,14 @@ public class Drone implements Runnable {
                 sendPositionToSubsystem();
                 System.out.println("[Drone " + id + "] Moving towards target: (" +
                         currentPosition[0] + ", " + currentPosition[1] + ")");
+
+                try {
+                    Thread.sleep(1000); // Pause for 1 second
+                } catch (InterruptedException e) {
+                    System.err.println("[Drone " + id + "] Movement interrupted.");
+                    Thread.currentThread().interrupt(); // Restore interrupted state
+                    break;
+                }
             }
         }
     }
@@ -190,7 +217,8 @@ public class Drone implements Runnable {
      */
     private void sendPositionToSubsystem() {
         try (DatagramSocket socket = new DatagramSocket()) {
-            String positionData = id + "," + currentPosition[0] + "," + currentPosition[1];
+            String type = CommunicationDroneToSubsystem.LOCATION_UPDATE.name();
+            String positionData = type+":"+id + "," + currentPosition[0] + "," + currentPosition[1];
             byte[] sendData = positionData.getBytes();
             InetAddress subsystemAddress = InetAddress.getByName("localhost");
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, subsystemAddress, 6001);
@@ -234,8 +262,12 @@ public class Drone implements Runnable {
 
     public void setCurrentEvent(Event currentEvent) {
         this.currentEvent = currentEvent;
-        this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
-        this.state.dispatch(this);
+        if(currentEvent != null){
+            this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
+        }
+    }
+    public Event getCurrentEvent(){
+        return this.currentEvent;
     }
     /**
      * Checks if the drone has reached its target position.

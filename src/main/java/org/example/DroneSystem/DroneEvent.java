@@ -45,7 +45,7 @@ public class DroneEvent {
      */
     public double dropAgent(double waterNeeded) throws InterruptedException {
         // Transition to dropping agent state and handle water amount logic
-        return drone.getState().dropAgent(drone, waterNeeded);
+        return drone.getState().dropAgent(drone);
     }
 
     /**
