@@ -171,6 +171,13 @@ public class Drone implements Runnable {
      * Moves the drone 1 meter closer to its target position until it reaches the target.
      */
     public void moveTowardsTarget() {
+        double cruisingSpeed = 4; // m/s (cruise speed)
+        double acceleration = 7; // m/s²
+        double timeStep = 1; // seconds per step
+        double currentSpeed = 0; // Start at rest
+        double timeElapsed = 0; // Time elapsed
+        boolean isCruising = false; // Flag to track if the drone has reached cruising speed
+
         while (targetPosition != null && !hasReachedTarget()) {
             double distanceToTarget = Math.sqrt(
                     Math.pow(targetPosition[0] - currentPosition[0], 2) +
@@ -178,28 +185,43 @@ public class Drone implements Runnable {
             );
 
             if (distanceToTarget > 0) {
-                double cruisingSpeed = 6; // m/s (average cruising speed)
-                double acceleration = 7; // m/s^2 (acceleration)
-                double timeStep = 1; // 1 second (simulation step)
-
                 double directionX = (targetPosition[0] - currentPosition[0]) / distanceToTarget;
                 double directionY = (targetPosition[1] - currentPosition[1]) / distanceToTarget;
 
-                double currentSpeed = Math.sqrt(
-                        Math.pow(directionX * acceleration * timeStep, 2) +
-                                Math.pow(directionY * acceleration * timeStep, 2)
-                );
-
-                if (currentSpeed < cruisingSpeed) {
-                    currentPosition[0] += directionX * acceleration * timeStep;
-                    currentPosition[1] += directionY * acceleration * timeStep;
-                } else {
-                    currentPosition[0] += directionX * cruisingSpeed * timeStep;
-                    currentPosition[1] += directionY * cruisingSpeed * timeStep;
+                //Accelerate first
+                if (!isCruising) {
+                    currentSpeed = acceleration;
+                    timeElapsed += timeStep;
                 }
+                //Once the first few seconds of acceleration elapsed, go down to cruising speed
+                if (timeElapsed > 3) {
+                    isCruising = true;
+                    currentSpeed = cruisingSpeed;
+                }
+
+                // Calculate next position
+                double nextX = currentPosition[0] + directionX * currentSpeed * timeStep;
+                double nextY = currentPosition[1] + directionY * currentSpeed * timeStep;
+
+                if (Math.abs(nextX - targetPosition[0]) < 1) {
+                    nextX = targetPosition[0];
+                } else if ((nextX > targetPosition[0] && directionX > 0) || (nextX < targetPosition[0] && directionX < 0)) {
+                    nextX = targetPosition[0];
+                }
+
+                if (Math.abs(nextY - targetPosition[1]) < 1) {
+                    nextY = targetPosition[1];
+                } else if ((nextY > targetPosition[1] && directionY > 0) || (nextY < targetPosition[1] && directionY < 0)) {
+                    nextY = targetPosition[1];
+                }
+
+                // Update current position
+                currentPosition[0] = (int) nextX;
+                currentPosition[1] = (int) nextY;
+
                 sendPositionToSubsystem();
                 System.out.println("[Drone " + id + "] Moving towards target: (" +
-                        currentPosition[0] + ", " + currentPosition[1] + ")");
+                        currentPosition[0] + ", " + currentPosition[1] + ") at speed " + currentSpeed + " m/s");
 
                 try {
                     Thread.sleep(1000); // Pause for 1 second
@@ -211,6 +233,10 @@ public class Drone implements Runnable {
             }
         }
     }
+
+
+
+
 
     /**
      * Sends the drone's current position to the DroneSubsystem.
