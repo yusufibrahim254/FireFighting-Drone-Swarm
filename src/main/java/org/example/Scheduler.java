@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.FireIncidentSubsystem.Event;
 
+import javax.sound.midi.SysexMessage;
 import java.io.IOException;
 import java.net.*;
 import java.util.Queue;
@@ -33,11 +34,12 @@ public class Scheduler implements Runnable {
 
         // Print a message to let the user know the Scheduler is running
         System.out.println("[Scheduler] Listening on Port: " + this.socket.getLocalPort());
+        // Start a background thread to continuously send events to the DroneSubsystem
+        new Thread(this::processIncidentQueue).start();
     }
 
     /**
-     * Runs the Scheduler. Listens for fire incidents, adds them to the queue, and
-     * assigns drones to handle them.
+     * Runs the Scheduler. Listens for fire incidents, adds them to the queue.
      */
     @Override
     public void run() {
@@ -51,7 +53,7 @@ public class Scheduler implements Runnable {
 
                 // Check if the message is an acknowledgment
                 if (message.startsWith("ACK:")) {
-                    // Handle acknowledgment (from DroneSubsystem)
+                    System.out.println("In herre");
                     System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + message);
                 } else {
                     // Handle event (from FireIncident)
@@ -59,26 +61,94 @@ public class Scheduler implements Runnable {
 
                     // Deserialize the event and add it to the queue
                     Event event = Event.deserialize(message);
-                    incidentQueue.add(event);
-
-                    // Assign a drone to the event
-                    assignDroneToEvent(event);
-
-                    // Wait for acknowledgment from the DroneSubsystem
-                    waitForAcknowledgment();
+                    synchronized (incidentQueue) {
+                        incidentQueue.add(event);
+                    }
 
                     // Send acknowledgment back to FireIncident
                     String ack = "ACK:" + event.getId();
                     byte[] sendData = ack.getBytes();
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
                     socket.send(sendPacket);
-                    System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack+"\n\n");
+                    System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+    /**
+     * Continuously attempts to send events to the DroneSubsystem.
+     */
+    private void processIncidentQueue() {
+        while (true) {
+            System.out.println("Seind event to dronesubsystem");
+            try {
+                Event event;
+                synchronized (incidentQueue) {
+                    event = incidentQueue.peek(); // Get the event without removing it
+                }
+                if (event != null) {
+                    boolean assigned = sendEventToDrone(event);
+                    if (assigned) {
+                        synchronized (incidentQueue) {
+                            incidentQueue.poll(); // Remove only if successfully assigned
+                        }
+                    } else {
+                        System.out.println("[Scheduler] No drone available, retrying event: " + event.getId());
+                    }
+                }
+                // Avoid tight looping
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+    /**
+     * Sends an event to the DroneSubsystem and waits for acknowledgment.
+     *
+     * @param event The fire incident to be assigned.
+     * @return true if successfully assigned, false if no drone was available.
+     */
+    private boolean sendEventToDrone(Event event) {
+        try (DatagramSocket ackSocket = new DatagramSocket()) { // Separate socket for acknowledgments
+            String eventData = event.serialize();
+            byte[] sendData = eventData.getBytes();
+            InetAddress droneAddress = InetAddress.getByName(droneHost);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, droneAddress, dronePort);
+
+            // Send event using ackSocket to ensure the acknowledgment comes back to the right socket
+            ackSocket.send(sendPacket);
+            System.out.println("[Scheduler -> DroneSubsystem] Sent event: " + eventData);
+
+            // Wait for acknowledgment using the new socket
+            byte[] receiveData = new byte[1024];
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            ackSocket.receive(receivePacket);  // Waiting for acknowledgment on the new socket
+            String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
+
+            System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + acknowledgment);
+
+            if ("ACK: NO".equalsIgnoreCase(acknowledgment)) {
+                System.out.println("[Scheduler] No available drones. Will retry later...");
+                return false;
+            }
+
+            if (acknowledgment.startsWith("ACK:")) {
+                System.out.println("[Scheduler] Drone assigned successfully.");
+                return true;
+            }
+
+            System.out.println("[Scheduler] Unexpected response from DroneSubsystem: " + acknowledgment);
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 
     /**
      * Assigns a drone to a fire incident by sending the event to the Drone Subsystem.
@@ -106,6 +176,10 @@ public class Scheduler implements Runnable {
         socket.receive(receivePacket);
         String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
+        if(acknowledgment.equals("ACK: NO")){
+            System.out.println("[Scheduler <- DroneSubsystem] No available drones right now");
+            return;
+        }
         // Ensure the received message is an acknowledgment
         if (acknowledgment.startsWith("ACK:")) {
             System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + acknowledgment);

@@ -1,6 +1,7 @@
 package org.example.DroneSystem;
 
 import org.example.FireIncidentSubsystem.Event;
+import org.example.DroneSystem.DroneSubsystem;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -14,7 +15,7 @@ public class Drone implements Runnable {
     /**
      * Current battery level of the drone, represented as a percentage (0-100)
      */
-    private int battery;
+    private double battery;
 
     /**
      * Current amount of agent available in the drone (Liters)
@@ -37,14 +38,14 @@ public class Drone implements Runnable {
      */
     private final BayController bayController;
     private double remainingWaterNeeded;
-
-
+    private DroneSubsystem droneSubsystem;
     private int[] currentPosition = {0, 0}; // Current position of the drone
     private int[] incidentPosition; // Used by the drone to go back when refilled in case it was not extinguished the first time
     private int[] targetPosition = null; // Target position of the drone
     private int[] lastSentPosition = {0, 0}; // Last position sent to the DroneSubsystem
     private Event currentEvent; // Current event assigned to the drone
-    public Drone(int id, double initialCapacity) {
+    double batteryDepletionRate;
+    public Drone(int id, double initialCapacity, DroneSubsystem droneSubsystem, double batteryDepletionRate) {
         this.id = id;
         this.battery = 100;
         this.bayController = new BayController();
@@ -53,6 +54,12 @@ public class Drone implements Runnable {
         this.remainingWaterNeeded = 0;
         this.currentEvent = null;
         this.state = new IdleState();
+        this.droneSubsystem = droneSubsystem;
+        this.batteryDepletionRate = batteryDepletionRate;
+    }
+
+    public double getBatteryDepletionRate() {
+        return batteryDepletionRate;
     }
 
     public int getId() {
@@ -69,8 +76,11 @@ public class Drone implements Runnable {
         }
     }
 
-    public int getBatteryLevel() {
+    public double getBatteryLevel() {
         return battery;
+    }
+    public void setBatterLevel(int newLevel){
+        this.battery = newLevel;
     }
 
     public DroneState getState() {
@@ -130,7 +140,7 @@ public class Drone implements Runnable {
                     }
                 } else if (state instanceof EnRouteState) {
                     System.out.println("\n");
-                    state.displayState();
+                    state.displayState(this);
                     System.out.println("The drone " +this.id+"'s position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]);
                     moveTowardsTarget();
                     if (hasReachedTarget()) {
@@ -138,15 +148,15 @@ public class Drone implements Runnable {
                     }
                 } else if (state instanceof DroppingAgentState) {
                     System.out.println("\n");
-                    state.displayState();
-                     state.dropAgent(this); // Drop Agent
+                    state.displayState(this);
+                    state.dropAgent(this); // Drop Agent
                 } else if (state instanceof RefillingState) {
                     System.out.println("\n");
-                    state.displayState();
+                    state.displayState(this);
                     state.refill(this);
                 } else if (state instanceof ReturningState) {
                     System.out.println("\n");
-                    state.displayState();
+                    state.displayState(this);
                     moveTowardsTarget();
                     if (hasReachedTarget()) {
                         state.arrive(this); // Transition to IdleState
@@ -219,9 +229,14 @@ public class Drone implements Runnable {
                 currentPosition[0] = (int) nextX;
                 currentPosition[1] = (int) nextY;
 
+                // Deplete battery based on distance traveled
+                double distanceTraveled = Math.sqrt(Math.pow(directionX * currentSpeed * timeStep, 2) +
+                        Math.pow(directionY * currentSpeed * timeStep, 2));
+                this.battery -= distanceTraveled * batteryDepletionRate;
+
                 sendPositionToSubsystem();
-                System.out.println("[Drone " + id + "] Moving towards target: (" +
-                        currentPosition[0] + ", " + currentPosition[1] + ") at speed " + currentSpeed + " m/s");
+//                System.out.println("[Drone " + id + "] Moving towards target: (" + currentPosition[0] + ", " + currentPosition[1] + ") at speed " + currentSpeed + " m/s");
+//                System.out.println("[Drone " + id + "] Battery Level: "+ this.battery);
 
                 try {
                     Thread.sleep(1000); // Pause for 1 second
@@ -233,10 +248,6 @@ public class Drone implements Runnable {
             }
         }
     }
-
-
-
-
 
     /**
      * Sends the drone's current position to the DroneSubsystem.
@@ -251,8 +262,7 @@ public class Drone implements Runnable {
             socket.send(sendPacket);
             // Print current position and target position
             if (targetPosition != null) {
-                System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData +
-                        ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+//                System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
             } else {
                 System.out.println("[Drone " + id + "] Sent position data: " + positionData +
                         ", No target position set.");

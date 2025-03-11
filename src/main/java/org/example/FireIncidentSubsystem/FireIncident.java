@@ -38,21 +38,7 @@ public class FireIncident implements Runnable {
         System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
-//            for (Event event : events) {
-//                // Serialize the event to a string
-//                String eventData = event.serialize();
-//                byte[] sendData = eventData.getBytes();
-//
-//                // Send the event to the Scheduler
-//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
-//                socket.send(sendPacket);
-//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
-//
-//                // Wait for acknowledgment from the Scheduler
-//                waitForAcknowledgment();
-//            }
-            for(int i = 0; i < 1; i++){
-                Event event = events[0];
+            for (Event event : events) {
                 // Serialize the event to a string
                 String eventData = event.serialize();
                 byte[] sendData = eventData.getBytes();
@@ -65,6 +51,20 @@ public class FireIncident implements Runnable {
                 // Wait for acknowledgment from the Scheduler
                 waitForAcknowledgment();
             }
+//            for(int i = 0; i < events.length; i++){
+//                Event event = events[0];
+//                // Serialize the event to a string
+//                String eventData = event.serialize();
+//                byte[] sendData = eventData.getBytes();
+//
+//                // Send the event to the Scheduler
+//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+//                socket.send(sendPacket);
+//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
+//
+//                // Wait for acknowledgment from the Scheduler
+//                waitForAcknowledgment();
+//            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

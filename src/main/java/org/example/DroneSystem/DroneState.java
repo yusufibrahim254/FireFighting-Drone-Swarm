@@ -12,7 +12,7 @@ interface DroneState {
     void refill(Drone drone);
     void fault(Drone drone);
     void reset(Drone drone);
-    void displayState();
+    void displayState(Drone drone);
 }
 
 /**
@@ -53,8 +53,8 @@ class IdleState implements DroneState {
     }
 
     @Override
-    public void displayState() {
-        System.out.println("Drone is in IDLE state.");
+    public void displayState(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is in IDLE state.");
     }
 }
 
@@ -70,7 +70,7 @@ class EnRouteState implements DroneState {
 
     @Override
     public void arrive(Drone drone) {
-        System.out.println("Drone " + drone.getId() + " arrived and state is set to DROPPING AGENT.");
+        System.out.println("\n\nDrone " + drone.getId() + " arrived and state is set to DROPPING AGENT.");
         drone.setState(new DroppingAgentState());
     }
 
@@ -98,8 +98,8 @@ class EnRouteState implements DroneState {
     }
 
     @Override
-    public void displayState() {
-        System.out.println("Drone is EN ROUTE.");
+    public void displayState(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is EN ROUTE.");
     }
 }
 
@@ -151,7 +151,6 @@ class DroppingAgentState implements DroneState {
         drone.setTargetPosition(new int[]{0,0});
         drone.setState(new ReturningState());
 
-
         return remainingWaterNeeded; // Ensure the caller updates its waterNeeded value
     }
 
@@ -173,8 +172,8 @@ class DroppingAgentState implements DroneState {
     }
 
     @Override
-    public void displayState() {
-        System.out.println("Drone is DROPPING FIRE SUPPRESSANT.");
+    public void displayState(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is DROPPING FIRE SUPPRESSANT.");
     }
 }
 
@@ -201,6 +200,7 @@ class RefillingState implements DroneState {
     @Override
     public void refill(Drone drone) {
         drone.setAgentCapacity(drone.getMaxAgentCapacity());
+        drone.setBatterLevel(100);
         System.out.println("Drone " + drone.getId() + " has refilled.");
 //        if(drone.getRemainingWaterNeeded() > 0){
 //            System.out.println("Drone " + drone.getId() + " is going back to finish the job.");
@@ -217,7 +217,7 @@ class RefillingState implements DroneState {
             drone.setState(new EnRouteState());
         }else{
             drone.setState(new IdleState());
-            System.out.println("\nDrone is now in IDLE STATE");
+            System.out.println("\nDrone "+drone.getId()+" is now in IDLE STATE");
         }
     }
 
@@ -234,8 +234,8 @@ class RefillingState implements DroneState {
     }
 
     @Override
-    public void displayState() {
-        System.out.println("Drone is REFILLING its fire suppressant.");
+    public void displayState(Drone drone) {
+        System.out.println("Drone "+drone.getId()+" is REFILLING its fire suppressant.");
     }
 }
 
@@ -279,8 +279,8 @@ class FaultedState implements DroneState {
     }
 
     @Override
-    public void displayState() {
-        System.out.println("Drone is FAULTED. Needs reset.");
+    public void displayState(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is FAULTED. Needs reset.");
     }
 }
 
@@ -329,7 +329,7 @@ class ReturningState implements DroneState {
     }
 
     @Override
-    public void displayState() {
-        System.out.println("Drone is RETURNING to its original location.");
+    public void displayState(Drone drone) {
+        System.out.println("Drone " + drone.getId() + " is RETURNING to its original location.");
     }
 }

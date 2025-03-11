@@ -89,4 +89,22 @@ public class Zones {
         }
         return sb.toString();
     }
+    /**
+     * Gets the furthest zone's midpoint from the origin (0, 0).
+     *
+     * @return The midpoint coordinates of the furthest zone as an array [x, y].
+     */
+    public int[] getFurthestZoneMidpoint() {
+        int[] furthestMidpoint = null;
+        double maxDistance = 0;
+
+        for (int[] midpoint : zoneMap.values()) {
+            double distance = Math.sqrt(Math.pow(midpoint[0], 2) + Math.pow(midpoint[1], 2));
+            if (distance > maxDistance) {
+                maxDistance = distance;
+                furthestMidpoint = midpoint;
+            }
+        }
+        return furthestMidpoint;
+    }
 }
