@@ -19,7 +19,6 @@ public class DroneSubsystem implements Runnable {
     private final DatagramSocket droneSocket; // Socket for Drone communication
     private final List<Drone> drones;
     private final Zones zones;
-    private int numberOfIdleDrones;
 
     public DroneSubsystem(int schedulerPort, int dronePort, String zonesFilePath) throws SocketException {
         this.schedulerSocket = new DatagramSocket(schedulerPort);
@@ -36,17 +35,15 @@ public class DroneSubsystem implements Runnable {
         System.out.println("Battery Depletion Rate: "+ batteryDepletionRate);
 
         // Initialize the fleet with 10 drones
-        for (int i = 1; i <= 2; i++) {
+        for (int i = 1; i <= 10; i++) {
             drones.add(new Drone(i, 15, this, batteryDepletionRate));
         }
-        this.numberOfIdleDrones = drones.size();
 
         // Start each drone in a separate thread
         for (Drone drone : drones) {
             new Thread(drone).start();
         }
     }
-
     @Override
     public void run() {
         System.out.println("[DroneSubsystem] Listening on Ports: " + schedulerSocket.getLocalPort() + " (Scheduler), " + droneSocket.getLocalPort() + " (Drones)");
@@ -57,7 +54,6 @@ public class DroneSubsystem implements Runnable {
         // Start a thread to handle Drone location updates
         new Thread(this::handleDroneLocationUpdates).start();
     }
-
     /**
      * Handles messages from the Scheduler.
      */
@@ -109,7 +105,6 @@ public class DroneSubsystem implements Runnable {
             }
         }
     }
-
     /**
      * Handles location updates from the Drones.
      */
@@ -151,8 +146,6 @@ public class DroneSubsystem implements Runnable {
             }
         }
     }
-
-
     /**
      * Processes a location update from a Drone.
      *
@@ -169,12 +162,6 @@ public class DroneSubsystem implements Runnable {
             synchronized (drones){
                 drones.get(droneId).setCurrentPosition(new int[]{x, y});
             }
-//            for (Drone drone : drones) {
-//                if (drone.getId() == droneId) {
-//                    drone.setCurrentPosition(new int[]{x, y});
-//                    break;
-//                }
-//            }
         } else {
             System.err.println("Invalid location data format: " + locationData);
         }
@@ -285,12 +272,9 @@ public class DroneSubsystem implements Runnable {
     private double calculateDistance(int[] point1, int[] point2) {
         return Math.sqrt(Math.pow(point1[0] - point2[0], 2) + Math.pow(point1[1] - point2[1], 2));
     }
-
-
     public Zones getZones() {
         return zones;
     }
-
     /**
      * Checks if a drone is en route to an incident with the same severity.
      *
@@ -303,7 +287,6 @@ public class DroneSubsystem implements Runnable {
                 drone.getCurrentEvent() != null &&
                 drone.getCurrentEvent().getSeverityLevel().equals(severity);
     }
-
     /**
      * Calculates the Euclidean distance between a drone and an incident location.
      *
@@ -315,7 +298,6 @@ public class DroneSubsystem implements Runnable {
         int[] dronePosition = drone.getCurrentPosition();
         return Math.sqrt(Math.pow(location[0] - dronePosition[0], 2) + Math.pow(location[1] - dronePosition[1], 2));
     }
-
     public static void main(String[] args) {
         try {
             DroneSubsystem droneSubsystem = new DroneSubsystem(6000, 6001, "docs/sample_zone_file.csv");
@@ -323,24 +305,6 @@ public class DroneSubsystem implements Runnable {
             droneSubsystem.run();
         } catch (SocketException e) {
             System.err.println("Error starting DroneSubsystem: " + e.getMessage());
-        }
-    }
-
-    public int getNumberOfIdleDrones() {
-        return numberOfIdleDrones;
-    }
-
-    public void setNumberOfIdleDrones(int numberOfIdleDrones) {
-        this.numberOfIdleDrones = numberOfIdleDrones;
-    }
-    public void updateIdleDroneCount(boolean isIdle) {
-        synchronized (drones) {
-            if (isIdle) {
-                numberOfIdleDrones++;
-            } else {
-                numberOfIdleDrones--;
-            }
-            System.out.println("The number of IDLE DRONES ARE: "+numberOfIdleDrones+" -----------------------------------");
         }
     }
     /**

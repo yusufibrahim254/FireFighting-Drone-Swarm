@@ -133,17 +133,9 @@ class DroppingAgentState implements DroneState {
 
         drone.getBayController().closeBayDoors();
 
-//        // If the drone has run out of agent and more is still needed, transition to ReturningState
-//        if (remainingWaterNeeded > 0 && drone.getAgentCapacity() == 0) {
-//            System.out.println("Drone " + drone.getId() + " needs to refill.");
-//            drone.setRemainingWaterNeeded(remainingWaterNeeded); // Store remaining requirement
-//            drone.setTargetPosition(new int[]{0,0});
-//            drone.setState(new ReturningState()); // Transition to ReturningState to go back to refill station
-//        }
-
         if(remainingWaterNeeded > 0){ // Fire is not extinguished
             // Delegate the job for better efficiency
-            drone.deletegateJob();
+            drone.delegateJob();
         }else{
             // it means the fire is off, so remove the event from the drone
             drone.setCurrentEvent(null);
@@ -200,17 +192,8 @@ class RefillingState implements DroneState {
     @Override
     public void refill(Drone drone) {
         drone.setAgentCapacity(drone.getMaxAgentCapacity());
-        drone.setBatterLevel(100);
+        drone.setBatteryLevel(100);
         System.out.println("Drone " + drone.getId() + " has refilled.");
-//        if(drone.getRemainingWaterNeeded() > 0){
-//            System.out.println("Drone " + drone.getId() + " is going back to finish the job.");
-//            // Go back to the incident and finish off the fire
-//            drone.setTargetPosition(drone.getIncidentPosition());
-//            drone.setState(new EnRouteState());
-//            return;
-//        }
-        // drone.setCurrentEvent(null); // At this point the event is completed, fire has been extinguised
-//        drone.setIncidentPosition(null); // No need to keep track of the incident's location (in case we had to go back)
 
         if(drone.getCurrentEvent() != null && drone.getCurrentEvent().getCurrentWaterAmountNeeded() > 0){
             drone.setTargetPosition(drone.getIncidentPosition());

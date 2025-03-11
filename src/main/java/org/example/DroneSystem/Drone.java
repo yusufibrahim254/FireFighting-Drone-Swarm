@@ -38,7 +38,6 @@ public class Drone implements Runnable {
      */
     private final BayController bayController;
     private double remainingWaterNeeded;
-    private DroneSubsystem droneSubsystem;
     private int[] currentPosition = {0, 0}; // Current position of the drone
     private int[] incidentPosition; // Used by the drone to go back when refilled in case it was not extinguished the first time
     private int[] targetPosition = null; // Target position of the drone
@@ -54,16 +53,7 @@ public class Drone implements Runnable {
         this.remainingWaterNeeded = 0;
         this.currentEvent = null;
         this.state = new IdleState();
-        this.droneSubsystem = droneSubsystem;
         this.batteryDepletionRate = batteryDepletionRate;
-    }
-
-    public double getBatteryDepletionRate() {
-        return batteryDepletionRate;
-    }
-
-    public int getId() {
-        return id;
     }
 
     // Setter for the drone's current position
@@ -76,21 +66,7 @@ public class Drone implements Runnable {
         }
     }
 
-    public double getBatteryLevel() {
-        return battery;
-    }
-    public void setBatterLevel(int newLevel){
-        this.battery = newLevel;
-    }
-
-    public DroneState getState() {
-        return state;
-    }
-
-    public void setState(DroneState state) {
-        this.state = state;
-    }
-    public void deletegateJob(){
+    public void delegateJob(){
         if (state instanceof DroppingAgentState && currentEvent != null) {
             try (DatagramSocket socket = new DatagramSocket()) {
                 String type = CommunicationDroneToSubsystem.JOB_DELEGATION.name();
@@ -107,15 +83,6 @@ public class Drone implements Runnable {
             }
         }
     }
-    public int[] getCurrentPosition() {
-        return currentPosition;
-    }
-
-    public void setTargetPosition(int[] targetPosition) {
-        this.targetPosition = targetPosition;
-    }
-
-
     /**
      * Checks if the target has changed since the last update.
      *
@@ -164,13 +131,6 @@ public class Drone implements Runnable {
                 } else if (state instanceof FaultedState) {
                     // Handle fault state
                 }
-
-//                // Send position update only if the target has changed
-//                if (hasTargetChanged()) {
-//                    sendPositionToSubsystem();
-//                    lastSentPosition[0] = currentPosition[0]; // Update last sent position
-//                    lastSentPosition[1] = currentPosition[1];
-//                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -271,6 +231,24 @@ public class Drone implements Runnable {
             e.printStackTrace();
         }
     }
+    /**
+     * Checks if the drone has reached its target position.
+     *
+     * @return True if the drone is within 1 meter of the target, false otherwise.
+     */
+    private boolean hasReachedTarget() {
+        if (targetPosition == null) {
+            return false; // No target assigned
+        }
+
+        // Calculate the Euclidean distance to the target
+        double distance = Math.sqrt(
+                Math.pow(targetPosition[0] - currentPosition[0], 2) +
+                        Math.pow(targetPosition[1] - currentPosition[1], 2)
+        );
+
+        return distance <= 1.0; // Considered reached if within 1 meter
+    }
 
     public double getMaxAgentCapacity() {
         return maxAgentCapacity;
@@ -296,6 +274,21 @@ public class Drone implements Runnable {
         this.remainingWaterNeeded = remainingWaterNeeded;
     }
 
+    public double getBatteryLevel() {
+        return battery;
+    }
+    public void setBatteryLevel(int newLevel){
+        this.battery = newLevel;
+    }
+
+    public DroneState getState() {
+        return state;
+    }
+
+    public void setState(DroneState state) {
+        this.state = state;
+    }
+
     public void setCurrentEvent(Event currentEvent) {
         this.currentEvent = currentEvent;
         if(currentEvent != null){
@@ -305,24 +298,6 @@ public class Drone implements Runnable {
     public Event getCurrentEvent(){
         return this.currentEvent;
     }
-    /**
-     * Checks if the drone has reached its target position.
-     *
-     * @return True if the drone is within 1 meter of the target, false otherwise.
-     */
-    private boolean hasReachedTarget() {
-        if (targetPosition == null) {
-            return false; // No target assigned
-        }
-
-        // Calculate the Euclidean distance to the target
-        double distance = Math.sqrt(
-                Math.pow(targetPosition[0] - currentPosition[0], 2) +
-                        Math.pow(targetPosition[1] - currentPosition[1], 2)
-        );
-
-        return distance <= 1.0; // Considered reached if within 1 meter
-    }
 
     public int[] getIncidentPosition() {
         return incidentPosition;
@@ -330,5 +305,20 @@ public class Drone implements Runnable {
 
     public void setIncidentPosition(int[] incidentPosition) {
         this.incidentPosition = incidentPosition;
+    }
+
+    public double getBatteryDepletionRate() {
+        return batteryDepletionRate;
+    }
+
+    public int getId() {
+        return id;
+    }
+    public int[] getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setTargetPosition(int[] targetPosition) {
+        this.targetPosition = targetPosition;
     }
 }

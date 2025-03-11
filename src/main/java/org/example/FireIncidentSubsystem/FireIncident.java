@@ -51,8 +51,8 @@ public class FireIncident implements Runnable {
                 // Wait for acknowledgment from the Scheduler
                 waitForAcknowledgment();
             }
-//            for(int i = 0; i < events.length; i++){
-//                Event event = events[0];
+//            for(int i = 0; i < 2; i++){
+//                Event event = events[i];
 //                // Serialize the event to a string
 //                String eventData = event.serialize();
 //                byte[] sendData = eventData.getBytes();
