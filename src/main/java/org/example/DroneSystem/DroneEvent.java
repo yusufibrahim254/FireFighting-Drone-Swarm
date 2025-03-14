@@ -9,6 +9,10 @@ public class DroneEvent {
 
     private Drone drone;
 
+    /**
+     * Constructor to handle drone events
+     * @param drone the drone
+     */
     public DroneEvent(Drone drone) {
         this.drone = drone;
     }
@@ -45,7 +49,7 @@ public class DroneEvent {
      */
     public double dropAgent(double waterNeeded) throws InterruptedException {
         // Transition to dropping agent state and handle water amount logic
-        return drone.getState().dropAgent(drone, waterNeeded);
+        return drone.getState().dropAgent(drone);
     }
 
     /**

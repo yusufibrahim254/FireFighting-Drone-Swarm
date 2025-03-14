@@ -3,14 +3,18 @@ package org.example.DroneSystem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.SocketException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BayControllerTest {
     private BayController bayController;
     private Drone drone;
+    private DroneSubsystem droneSubsystem;
+
     @BeforeEach
-    void setUp() {
-        drone = new Drone(1,100.00);
+    void setUp() throws SocketException {
+        drone = new Drone(1,15, new DroneSubsystem(0, 0, "docs/sample_zone_file.csv"), 0.1);
         bayController = drone.getBayController();
     }
 

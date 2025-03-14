@@ -13,7 +13,7 @@ class ZoneReaderTest {
 
     @BeforeEach
     void setUp(){
-        event = new Event("12:12:12", 2, EventType.DRONE_REQUEST, "High");
+        event = new Event(8, "12:12:12", 2, EventType.DRONE_REQUEST, "High");
 
     }
 
@@ -23,11 +23,11 @@ class ZoneReaderTest {
 
         assertNotNull(zone);
         assertEquals(2, zone.getZoneId());
-        assertEquals(0, zone.getZoneStart().getX());
-        assertEquals(600, zone.getZoneStart().getY());
-        assertEquals(650, zone.getZoneEnd().getX());
-        assertEquals(1500, zone.getZoneEnd().getY());
+        assertEquals(200, zone.getZoneStart().getX());
+        assertEquals(0, zone.getZoneStart().getY());
+        assertEquals(400, zone.getZoneEnd().getX());
+        assertEquals(200, zone.getZoneEnd().getY());
 
-        assertEquals(new Coordinates(0, 600), zone.getZoneStart());
+        assertEquals(new Coordinates(200, 0), zone.getZoneStart());
     }
 }

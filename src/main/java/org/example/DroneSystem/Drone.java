@@ -1,25 +1,21 @@
-/**
- * Represents a drone used in a firefighting drone swarm system.
- * The drone can process events, release a special firefighting agent, open and close bay doors, and refill the agent in its supply.
- * The drone subsystem operates as an individual process and communicates with the Scheduler for information about the fire.
- */
 package org.example.DroneSystem;
 
+import org.example.FireIncidentSubsystem.Event;
+import org.example.DroneSystem.DroneSubsystem;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
 /**
- * The Drone class models a firefighting drone that assists in fighting fires.
- * It is responsible for interacting with the Scheduler to find and respond to fires, manage firefighting agent, and responding to fires.
+ * The Drone class represents a drone that can be assigned tasks and moves towards a target position.
  */
-public class Drone{
-
-    /**
-     * Unique identifier that identifies each drone.
-     */
-    private int id;
-
+public class Drone implements Runnable {
+    private final int id;
     /**
      * Current battery level of the drone, represented as a percentage (0-100)
      */
-    private int battery;
+    private double battery;
 
     /**
      * Current amount of agent available in the drone (Liters)
@@ -41,107 +37,316 @@ public class Drone{
      * Controller for the drone's bay doors
      */
     private final BayController bayController;
-
-
-    /**
-     * Constructs a Drone with a specified ID and initial agent capacity.
-     *
-     * @param id Unique identifier of each drone
-     * @param initialCapacity The initial amount of agent that the drone can carry.
-     */
-    public Drone(int id, double initialCapacity) {
+    private double remainingWaterNeeded;
+    private int[] currentPosition = {0, 0}; // Current position of the drone
+    private int[] incidentPosition; // Used by the drone to go back when refilled in case it was not extinguished the first time
+    private int[] targetPosition = null; // Target position of the drone
+    private int[] lastSentPosition = {0, 0}; // Last position sent to the DroneSubsystem
+    private Event currentEvent; // Current event assigned to the drone
+    private double batteryDepletionRate;
+    public Drone(int id, double initialCapacity, DroneSubsystem droneSubsystem, double batteryDepletionRate) {
         this.id = id;
         this.battery = 100;
-        this.agentCapacity = initialCapacity;
-        this.maxAgentCapacity = initialCapacity;
         this.bayController = new BayController();
+        this.maxAgentCapacity = initialCapacity;
+        this.agentCapacity = initialCapacity;
+        this.remainingWaterNeeded = 0;
+        this.currentEvent = null;
         this.state = new IdleState();
+        this.batteryDepletionRate = batteryDepletionRate;
     }
 
+    // Setter for the drone's current position
+    public void setCurrentPosition(int[] position) {
+        if (position != null && position.length == 2) {
+            this.currentPosition[0] = position[0];
+            this.currentPosition[1] = position[1];
+        } else {
+            throw new IllegalArgumentException("Position must be a non-null array of length 2.");
+        }
+    }
+
+    public void delegateJob(){
+        if (state instanceof DroppingAgentState && currentEvent != null) {
+            try (DatagramSocket socket = new DatagramSocket()) {
+                String type = CommunicationDroneToSubsystem.JOB_DELEGATION.name();
+                String droneID = ""+ id;
+                String message = type+":"+droneID;
+                byte[] sendData = message.getBytes();
+                InetAddress subsystemAddress = InetAddress.getByName("localhost");
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, subsystemAddress, 6001);
+                socket.send(sendPacket);
+                // Print current position and target position
+                System.out.println("[Drone " + id + "] is trying to delegate job.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
     /**
-     * Gets the current state of the drone.
+     * Checks if the target has changed since the last update.
      *
-     * @return The current state of the drone
+     * @return True if the target has changed, false otherwise.
      */
-    public DroneState getState() {
-        return state;
+    private boolean hasTargetChanged() {
+        return targetPosition != null && (currentPosition[0] != lastSentPosition[0] || currentPosition[1] != lastSentPosition[1]);
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                // Update position every second
+                Thread.sleep(1000);
+
+                // Handle state transitions
+                if (state instanceof IdleState) {
+                    // Do nothing, wait for an event
+                    if(currentEvent != null){
+                        this.state.dispatch(this);
+                    }
+                } else if (state instanceof EnRouteState) {
+                    System.out.println("\n");
+                    state.displayState(this);
+                    System.out.println("The drone " +this.id+"'s position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]);
+                    moveTowardsTarget();
+                    if (hasReachedTarget()) {
+                        state.arrive(this); // Transition to DroppingAgentState
+                    }
+                } else if (state instanceof DroppingAgentState) {
+                    System.out.println("\n");
+                    state.displayState(this);
+                    state.dropAgent(this); // Drop Agent
+                } else if (state instanceof RefillingState) {
+                    System.out.println("\n");
+                    state.displayState(this);
+                    state.refill(this);
+                } else if (state instanceof ReturningState) {
+                    System.out.println("\n");
+                    state.displayState(this);
+                    moveTowardsTarget();
+                    if (hasReachedTarget()) {
+                        state.arrive(this); // Transition to IdleState
+                    }
+                } else if (state instanceof FaultedState) {
+                    // Handle fault state
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
-     * Sets the state of the drone
+     * Moves the drone 1 meter closer to its target position until it reaches the target.
+     */
+    public void moveTowardsTarget() {
+        double cruisingSpeed = 4; // m/s (cruise speed)
+        double acceleration = 7; // m/s²
+        double timeStep = 1; // seconds per step
+        double currentSpeed = 0; // Start at rest
+        double timeElapsed = 0; // Time elapsed
+        boolean isCruising = false; // Flag to track if the drone has reached cruising speed
+
+        double travelDistance = Math.round(Math.sqrt(
+                Math.pow(targetPosition[0] - currentPosition[0], 2) +
+                        Math.pow(targetPosition[1] - currentPosition[1], 2)
+        ));
+
+        double travelTime = Math.round(travelDistance / cruisingSpeed);
+
+        System.out.println("Drone " + id + " Distance to target: " + travelDistance + " meters");
+        System.out.println("Drone " + id + " Time to target: " + travelTime + " seconds");
+
+        while (targetPosition != null && !hasReachedTarget()) {
+            double distanceToTarget = Math.sqrt(
+                    Math.pow(targetPosition[0] - currentPosition[0], 2) +
+                            Math.pow(targetPosition[1] - currentPosition[1], 2)
+            );
+
+            if (distanceToTarget > 0) {
+                double directionX = (targetPosition[0] - currentPosition[0]) / distanceToTarget;
+                double directionY = (targetPosition[1] - currentPosition[1]) / distanceToTarget;
+
+                //Accelerate first
+                if (!isCruising) {
+                    currentSpeed = acceleration;
+                    timeElapsed += timeStep;
+                }
+                //Once the first few seconds of acceleration elapsed, go down to cruising speed
+                if (timeElapsed > 3) {
+                    isCruising = true;
+                    currentSpeed = cruisingSpeed;
+                }
+
+                // Calculate next position
+                double nextX = currentPosition[0] + directionX * currentSpeed * timeStep;
+                double nextY = currentPosition[1] + directionY * currentSpeed * timeStep;
+
+                if (Math.abs(nextX - targetPosition[0]) < 1) {
+                    nextX = targetPosition[0];
+                } else if ((nextX > targetPosition[0] && directionX > 0) || (nextX < targetPosition[0] && directionX < 0)) {
+                    nextX = targetPosition[0];
+                }
+
+                if (Math.abs(nextY - targetPosition[1]) < 1) {
+                    nextY = targetPosition[1];
+                } else if ((nextY > targetPosition[1] && directionY > 0) || (nextY < targetPosition[1] && directionY < 0)) {
+                    nextY = targetPosition[1];
+                }
+
+                // Update current position
+                currentPosition[0] = (int) nextX;
+                currentPosition[1] = (int) nextY;
+
+                // Deplete battery based on distance traveled
+                double distanceTraveled = Math.sqrt(Math.pow(directionX * currentSpeed * timeStep, 2) +
+                        Math.pow(directionY * currentSpeed * timeStep, 2));
+                this.battery -= distanceTraveled * batteryDepletionRate;
+
+                sendPositionToSubsystem();
+//                System.out.println("[Drone " + id + "] Moving towards target: (" + currentPosition[0] + ", " + currentPosition[1] + ") at speed " + currentSpeed + " m/s");
+//                System.out.println("[Drone " + id + "] Battery Level: "+ this.battery);
+
+                try {
+                    Thread.sleep(1000); // Pause for 1 second
+                } catch (InterruptedException e) {
+                    System.err.println("[Drone " + id + "] Movement interrupted.");
+                    Thread.currentThread().interrupt(); // Restore interrupted state
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends the drone's current position to the DroneSubsystem.
+     */
+    private void sendPositionToSubsystem() {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            String type = CommunicationDroneToSubsystem.LOCATION_UPDATE.name();
+            String positionData = type+":"+id + "," + currentPosition[0] + "," + currentPosition[1];
+            byte[] sendData = positionData.getBytes();
+            InetAddress subsystemAddress = InetAddress.getByName("localhost");
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, subsystemAddress, 6001);
+            socket.send(sendPacket);
+            // Print current position and target position
+            if (targetPosition != null) {
+//                System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+            } else {
+                System.out.println("[Drone " + id + "] Sent position data: " + positionData +
+                        ", No target position set.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    /**
+     * Checks if the drone has reached its target position.
      *
-     * @param newState The new state of the drone.
+     * @return True if the drone is within 1 meter of the target, false otherwise.
      */
-    public void setState(DroneState newState) {
-        System.out.println("*Transitioning from " + state.getClass().getSimpleName() + " to " + newState.getClass().getSimpleName() + "*");
-        this.state = newState;
+    private boolean hasReachedTarget() {
+        if (targetPosition == null) {
+            return false; // No target assigned
+        }
+
+        // Calculate the Euclidean distance to the target
+        double distance = Math.sqrt(
+                Math.pow(targetPosition[0] - currentPosition[0], 2) +
+                        Math.pow(targetPosition[1] - currentPosition[1], 2)
+        );
+
+        return distance <= 1.0; // Considered reached if within 1 meter
     }
 
-    /**
-     * Gets the current firefighting agent capacity of the drone.
-     *
-     * @return The remaining firefighting agent capacity in Liters.
-     */
-    public double getAgentCapacity() {
-        return agentCapacity;
-    }
-
-
-    /**
-     * Gets the id of the drone
-     * @return the drone's id
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Sets a new id for the drone
-     * @param id the new id for the drone
-     */
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    /**
-     * Sets a new battery for the drone
-     * @param battery the new battery for the drone
-     */
-    public void setBattery(int battery) {
-        this.battery = battery;
-    }
-
-    /**
-     * Gets the battery of the drone
-     * @return the battery of the drone
-     */
-    public int getBattery() {
-        return battery;
-    }
-
-    /**
-     * Helper methods to manage agent capacity and state
-     *
-     * @param agentCapacity The amount of agent the drone can take
-     */
-    public void setAgentCapacity(double agentCapacity) {
-        this.agentCapacity = agentCapacity;
-    }
-
-    /**
-     * Gets the maximum amount of firefighting agent the drone can carry.
-     *
-     * @return The maximum firefighting agent capacity in Liters.
-     */
     public double getMaxAgentCapacity() {
         return maxAgentCapacity;
     }
 
-    /**
-     * Gets the controller of the bay doors for current drone
-     * @return the controller of bay doors
-     */
+    public double getAgentCapacity() {
+        return agentCapacity;
+    }
+
+    public void setAgentCapacity(double agentCapacity) {
+        this.agentCapacity = agentCapacity;
+    }
+
     public BayController getBayController() {
         return bayController;
+    }
+
+    public double getRemainingWaterNeeded() {
+        return remainingWaterNeeded;
+    }
+
+    public void setRemainingWaterNeeded(double remainingWaterNeeded) {
+        this.remainingWaterNeeded = remainingWaterNeeded;
+    }
+
+    public double getBatteryLevel() {
+        return battery;
+    }
+    public void setBatteryLevel(int newLevel){
+        this.battery = newLevel;
+    }
+
+    public DroneState getState() {
+        return state;
+    }
+
+    public void setState(DroneState state) {
+        this.state = state;
+    }
+
+    public void setCurrentEvent(Event currentEvent) {
+        this.currentEvent = currentEvent;
+        if(currentEvent != null){
+            this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
+        } else {
+            this.remainingWaterNeeded = 0;
+        }
+    }
+    public Event getCurrentEvent(){
+        return this.currentEvent;
+    }
+
+    public int[] getIncidentPosition() {
+        return incidentPosition;
+    }
+
+    public void setIncidentPosition(int[] incidentPosition) {
+        this.incidentPosition = incidentPosition;
+    }
+
+    public double getBatteryDepletionRate() {
+        return batteryDepletionRate;
+    }
+
+    public int getId() {
+        return id;
+    }
+    public int[] getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setTargetPosition(int[] targetPosition) {
+        this.targetPosition = targetPosition;
+    }
+
+    public int[] getTargetPosition() {
+        return targetPosition;
+    }
+
+    public int[] getLastSentPosition() {
+        return lastSentPosition;
+    }
+
+    public void setLastSentPosition(int[] lastSentPosition) {
+        this.lastSentPosition = lastSentPosition;
+    }
+
+    public void setBatteryDepletionRate(double batteryDepletionRate) {
+        this.batteryDepletionRate = batteryDepletionRate;
     }
 }

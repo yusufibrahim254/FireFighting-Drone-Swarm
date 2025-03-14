@@ -3,6 +3,8 @@ package org.example.DroneSystem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.SocketException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class IdleStateTest {
@@ -10,8 +12,8 @@ class IdleStateTest {
     private IdleState idleState;
 
     @BeforeEach
-    void setUp() {
-        drone = new Drone(1, 30);
+    void setUp() throws SocketException {
+        drone = new Drone(1,15, new DroneSubsystem(0, 0, "docs/sample_zone_file.csv"), 0.1);
         idleState = new IdleState();
         drone.setState(idleState);
     }
@@ -30,8 +32,7 @@ class IdleStateTest {
 
     @Test
     void dropAgent() {
-        double waterNeeded = 10.0;
-        assertEquals(waterNeeded, idleState.dropAgent(drone, waterNeeded));
+        assertEquals(0, idleState.dropAgent(drone));
     }
 
     @Test

@@ -1,132 +1,165 @@
 package org.example;
 
-import org.example.DroneSystem.DroneSubsystem;
 import org.example.FireIncidentSubsystem.Event;
+
+import java.io.IOException;
+import java.net.*;
 import java.util.Queue;
 import java.util.LinkedList;
 
 /**
- * The Scheduler class manages fire incident events and assigns them to the Drone Subsystem.
- * It runs as a separate thread designed to handle and coordinate incoming fire incidents.
+ * The Scheduler class coordinates fire incidents and assigns drones to handle them.
+ * It receives fire events from the FireIncident Subsystem via UDP and forwards them
+ * to the Drone Subsystem for processing.
  */
 public class Scheduler implements Runnable {
+    private final DatagramSocket socket; // UDP socket for communication
+    private final Queue<Event> incidentQueue = new LinkedList<>(); // Queue to store incoming fire incidents
+    private final String droneHost; // Hostname or IP address of the Drone Subsystem
+    private final int dronePort; // Port number of the Drone Subsystem
 
     /**
-     * Flag to indicate whether the scheduler should stop running.
-     */
-    private boolean stop;
-
-    /**
-     * Queue holding various fire incident events to be processed by the drones.
-     */
-    private final Queue<Event> incidentQueue;
-
-    /**
-     * A reference to the DroneSubsystem that will handle each event.
-     */
-    private final DroneSubsystem droneSubsystem;
-
-    /**
-     * Constructs a new Scheduler with an empty incident queue and a reference to the DroneSubsystem.
-     */
-    public Scheduler(DroneSubsystem droneSubsystem) {
-        this.incidentQueue = new LinkedList<>();
-        this.stop = false;
-        this.droneSubsystem = droneSubsystem;
-    }
-
-    /**
-     * Checks if the scheduler is stopped.
+     * Constructs a Scheduler with the specified port, Drone Subsystem host, and port.
      *
-     * @return true if the scheduler is stopped, false otherwise.
+     * @param port The port number on which the Scheduler listens for fire incidents.
+     * @param droneHost The hostname or IP address of the Drone Subsystem.
+     * @param dronePort The port number of the Drone Subsystem.
+     * @throws SocketException If the UDP socket cannot be created.
      */
-    public boolean isStopped() {
-        return stop;
+    public Scheduler(int port, String droneHost, int dronePort) throws SocketException {
+        this.socket = new DatagramSocket(port);
+        this.droneHost = droneHost; // Use the IP address of the DroneSubsystem machine
+        this.dronePort = dronePort;
+
+        // Print a message to let the user know the Scheduler is running
+        System.out.println("[Scheduler] Listening on Port: " + this.socket.getLocalPort());
+        // Start a background thread to continuously send events to the DroneSubsystem
+        new Thread(this::processIncidentQueue).start();
     }
 
     /**
-     * Retrieves and removes the next event from the queue.
-     *
-     * @return the next Event, or null if the queue is empty.
-     */
-    public synchronized Event getEvent() {
-        return incidentQueue.poll();
-    }
-
-    /**
-     * Adds a fire incident event to the queue.
-     *
-     * @param event the event to be added.
-     */
-    public synchronized void addIncident(Event event) {
-        incidentQueue.add(event);
-        notifyAll(); // Notify the scheduler that a new event has been added
-    }
-
-    /**
-     * Checks if the incident queue is empty.
-     *
-     * @return true if the queue is empty, false otherwise.
-     */
-    public boolean isEmpty() {
-        return incidentQueue.isEmpty();
-    }
-
-    /**
-     * Runs the scheduler to process fire incidents and notify the DroneSubsystem.
+     * Runs the Scheduler. Listens for fire incidents, adds them to the queue.
      */
     @Override
     public void run() {
-        while (!stop) {
-            Event nextEvent;
+        while (true) {
+            try {
+                // Receive a packet
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                socket.receive(receivePacket);
+                String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-            // Wait for an event to be added to the queue
-            synchronized (this) {
-                while (incidentQueue.isEmpty() && !stop) {
-                    try {
-                        wait();  // Wait until we are notified of a new event
-                    } catch (InterruptedException e) {
-                        System.out.println("Scheduler interrupted");
-                        Thread.currentThread().interrupt();
-                        return; // We were interrupted, exit the run loop
+                // Check if the message is an acknowledgment
+                if (message.startsWith("ACK:")) {
+                    System.out.println("In herre");
+                    System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + message);
+                } else {
+                    // Handle event (from FireIncident)
+                    System.out.println("[Scheduler <- FireIncident] Received event: " + message);
+
+                    // Deserialize the event and add it to the queue
+                    Event event = Event.deserialize(message);
+                    synchronized (incidentQueue) {
+                        incidentQueue.add(event);
                     }
-                }
-                // If we were woken up because we were told to stop, exit the run loop
-                if (stop) {
-                    break;
-                }
-                // else we were woken up because there is an event in the queue
-                nextEvent = incidentQueue.poll();
-            }
 
-            // Process the next event if there is one
-            if (nextEvent != null) {
-                System.out.println("Scheduler: Notifying fire incident events to DroneSubsystem");
-                System.out.println("Event taking place: " + nextEvent);
-
-                // call matching method in DroneSubsystem
-                try {
-                    droneSubsystem.assignDroneToEvent(nextEvent);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    // Send acknowledgment back to FireIncident
+                    String ack = "ACK:" + event.getId();
+                    byte[] sendData = ack.getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                    socket.send(sendPacket);
+                    System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
                 }
-
-                System.out.println("Scheduler: Confirmed DroneSubsystem processed FireIncidentSubsystem event\n");
-                System.out.println();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        // Scheduler has stopped
-        System.out.println("Scheduler: Stopped processing fire incident events.");
     }
-
     /**
-     * Stops the scheduler and notifies all waiting threads.
+     * Continuously attempts to send events to the DroneSubsystem.
      */
-    public void stopScheduler() {
-        System.out.println("Scheduler stopped.");
-        stop = true;
-        synchronized (this) {
-            notifyAll();
+    private void processIncidentQueue() {
+        while (true) {
+
+            try {
+                Event event;
+                synchronized (incidentQueue) {
+                    event = incidentQueue.peek(); // Get the event without removing it
+                }
+                if (event != null) {
+                    boolean assigned = sendEventToDrone(event);
+                    if (assigned) {
+                        synchronized (incidentQueue) {
+                            incidentQueue.poll(); // Remove only if successfully assigned
+                        }
+                        System.out.println("Sending event to DroneSubsystem");
+                    } else {
+                        System.out.println("[Scheduler] No drone available, retrying event: " + event.getId());
+                    }
+                }
+                // Avoid tight looping
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+    /**
+     * Sends an event to the DroneSubsystem and waits for acknowledgment.
+     *
+     * @param event The fire incident to be assigned.
+     * @return true if successfully assigned, false if no drone was available.
+     */
+    protected boolean sendEventToDrone(Event event) {
+        try (DatagramSocket ackSocket = new DatagramSocket()) { // Separate socket for acknowledgments
+            String eventData = event.serialize();
+            byte[] sendData = eventData.getBytes();
+            InetAddress droneAddress = InetAddress.getByName(droneHost);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, droneAddress, dronePort);
+
+            // Send event using ackSocket to ensure the acknowledgment comes back to the right socket
+            ackSocket.send(sendPacket);
+            System.out.println("[Scheduler -> DroneSubsystem] Sent event: " + eventData);
+
+            // Wait for acknowledgment using the new socket
+            byte[] receiveData = new byte[1024];
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            ackSocket.receive(receivePacket);  // Waiting for acknowledgment on the new socket
+            String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
+
+            System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + acknowledgment);
+
+            if ("ACK: NO".equalsIgnoreCase(acknowledgment)) {
+                System.out.println("[Scheduler] No available drones. Will retry later...");
+                return false;
+            }
+
+            if (acknowledgment.startsWith("ACK:")) {
+                System.out.println("[Scheduler] Drone assigned successfully.");
+                return true;
+            }
+
+            System.out.println("[Scheduler] Unexpected response from DroneSubsystem: " + acknowledgment);
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    /**
+     * Main method to start the Scheduler.
+     *
+     * @param args Command-line arguments (not used).
+     */
+    public static void main(String[] args) {
+        try {
+//            Scheduler scheduler = new Scheduler(5000, "192.168.1.3", 6000); // Replace with the IP address of the DroneSubsystem machine
+            // Start the Scheduler
+            Scheduler scheduler = new Scheduler(5000, "localhost", 6000); // Listen on port 5000, DroneSubsystem on localhost, port 6000
+            scheduler.run();
+        } catch (SocketException e) {
+            System.err.println("Error starting Scheduler: " + e.getMessage());
         }
     }
 }
