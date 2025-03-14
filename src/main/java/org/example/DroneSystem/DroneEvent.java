@@ -9,6 +9,10 @@ public class DroneEvent {
 
     private Drone drone;
 
+    /**
+     * Constructor to handle drone events
+     * @param drone the drone
+     */
     public DroneEvent(Drone drone) {
         this.drone = drone;
     }

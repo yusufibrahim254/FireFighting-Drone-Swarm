@@ -24,7 +24,7 @@ public class RefillingState implements DroneState {
     public void refill(Drone drone) {
         drone.setAgentCapacity(drone.getMaxAgentCapacity());
         drone.setBatteryLevel(100);
-        System.out.println("Drone " + drone.getId() + " has refilled.");
+        System.out.println("Drone " + drone.getId() + " has refilled and recharged.");
 
         if (drone.getCurrentEvent() != null && drone.getCurrentEvent().getCurrentWaterAmountNeeded() > 0) {
             drone.setTargetPosition(drone.getIncidentPosition());

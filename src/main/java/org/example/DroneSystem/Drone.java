@@ -43,7 +43,7 @@ public class Drone implements Runnable {
     private int[] targetPosition = null; // Target position of the drone
     private int[] lastSentPosition = {0, 0}; // Last position sent to the DroneSubsystem
     private Event currentEvent; // Current event assigned to the drone
-    double batteryDepletionRate;
+    private double batteryDepletionRate;
     public Drone(int id, double initialCapacity, DroneSubsystem droneSubsystem, double batteryDepletionRate) {
         this.id = id;
         this.battery = 100;
@@ -147,6 +147,16 @@ public class Drone implements Runnable {
         double currentSpeed = 0; // Start at rest
         double timeElapsed = 0; // Time elapsed
         boolean isCruising = false; // Flag to track if the drone has reached cruising speed
+
+        double travelDistance = Math.round(Math.sqrt(
+                Math.pow(targetPosition[0] - currentPosition[0], 2) +
+                        Math.pow(targetPosition[1] - currentPosition[1], 2)
+        ));
+
+        double travelTime = Math.round(travelDistance / cruisingSpeed);
+
+        System.out.println("Drone " + id + " Distance to target: " + travelDistance + " meters");
+        System.out.println("Drone " + id + " Time to target: " + travelTime + " seconds");
 
         while (targetPosition != null && !hasReachedTarget()) {
             double distanceToTarget = Math.sqrt(
@@ -293,6 +303,8 @@ public class Drone implements Runnable {
         this.currentEvent = currentEvent;
         if(currentEvent != null){
             this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
+        } else {
+            this.remainingWaterNeeded = 0;
         }
     }
     public Event getCurrentEvent(){
@@ -320,5 +332,21 @@ public class Drone implements Runnable {
 
     public void setTargetPosition(int[] targetPosition) {
         this.targetPosition = targetPosition;
+    }
+
+    public int[] getTargetPosition() {
+        return targetPosition;
+    }
+
+    public int[] getLastSentPosition() {
+        return lastSentPosition;
+    }
+
+    public void setLastSentPosition(int[] lastSentPosition) {
+        this.lastSentPosition = lastSentPosition;
+    }
+
+    public void setBatteryDepletionRate(double batteryDepletionRate) {
+        this.batteryDepletionRate = batteryDepletionRate;
     }
 }

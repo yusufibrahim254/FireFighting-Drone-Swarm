@@ -27,7 +27,7 @@ public class DroppingAgentState implements DroneState {
         double remainingWaterNeeded = waterNeeded - releasedWater;
         currentEvent.setCurrentWaterAmountNeeded(remainingWaterNeeded);
 
-        System.out.println("Remaining water needed to finish off fire: " + remainingWaterNeeded);
+        System.out.println("Remaining water needed to finish off fire: " + remainingWaterNeeded + " litres");
         System.out.println("Drone " + drone.getId() + " released water agent, " + releasedWater + " litres released");
 
         drone.getBayController().closeBayDoors();
@@ -37,6 +37,7 @@ public class DroppingAgentState implements DroneState {
             drone.delegateJob();
         } else {
             // it means the fire is off, so remove the event from the drone
+            System.out.println("Event completed, fire extinguished");
             drone.setCurrentEvent(null);
         }
         drone.setTargetPosition(new int[]{0, 0});

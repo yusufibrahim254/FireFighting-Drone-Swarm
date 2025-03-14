@@ -50,22 +50,9 @@ public class FireIncident implements Runnable {
 
                 // Wait for acknowledgment from the Scheduler
                 waitForAcknowledgment();
+                Thread.sleep(10000); // events sent every 10 seconds
             }
-//            for(int i = 0; i < 2; i++){
-//                Event event = events[i];
-//                // Serialize the event to a string
-//                String eventData = event.serialize();
-//                byte[] sendData = eventData.getBytes();
-//
-//                // Send the event to the Scheduler
-//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
-//                socket.send(sendPacket);
-//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
-//
-//                // Wait for acknowledgment from the Scheduler
-//                waitForAcknowledgment();
-//            }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         } finally {
             socket.close(); // Close the socket when done

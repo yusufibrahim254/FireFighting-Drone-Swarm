@@ -81,7 +81,7 @@ public class Scheduler implements Runnable {
      */
     private void processIncidentQueue() {
         while (true) {
-            System.out.println("Sending event to DroneSubsystem");
+
             try {
                 Event event;
                 synchronized (incidentQueue) {
@@ -93,6 +93,7 @@ public class Scheduler implements Runnable {
                         synchronized (incidentQueue) {
                             incidentQueue.poll(); // Remove only if successfully assigned
                         }
+                        System.out.println("Sending event to DroneSubsystem");
                     } else {
                         System.out.println("[Scheduler] No drone available, retrying event: " + event.getId());
                     }

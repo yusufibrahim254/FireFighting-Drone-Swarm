@@ -20,6 +20,13 @@ public class DroneSubsystem implements Runnable {
     private final List<Drone> drones;
     private final Zones zones;
 
+    /**
+     * Constructor for the drone subsystem
+     * @param schedulerPort the port of the scheduler
+     * @param dronePort the port of the drones
+     * @param zonesFilePath where the zones CSV is stored
+     * @throws SocketException incorrect socket
+     */
     public DroneSubsystem(int schedulerPort, int dronePort, String zonesFilePath) throws SocketException {
         this.schedulerSocket = new DatagramSocket(schedulerPort);
         this.droneSocket = new DatagramSocket(dronePort);
@@ -44,6 +51,10 @@ public class DroneSubsystem implements Runnable {
             new Thread(drone).start();
         }
     }
+
+    /**
+     * Runs this operation.
+     */
     @Override
     public void run() {
         System.out.println("[DroneSubsystem] Listening on Ports: " + schedulerSocket.getLocalPort() + " (Scheduler), " + droneSocket.getLocalPort() + " (Drones)");
@@ -218,7 +229,7 @@ public class DroneSubsystem implements Runnable {
 
             // Assign the original event to the closest idle drone  (*** Assign it to this variable currentAssignee ***)
             if (closestIdleDrone != null) {
-                System.out.println("The two DRONES are switching roles now --------------------------------");
+                System.out.println("The two DRONES are switching roles now \n--------------------------------");
                 // Reassign the en route drone to the new event
                 closestEnRouteDrone.setTargetPosition(eventLocation);
                 closestEnRouteDrone.setIncidentPosition(eventLocation);
@@ -272,9 +283,15 @@ public class DroneSubsystem implements Runnable {
     private double calculateDistance(int[] point1, int[] point2) {
         return Math.sqrt(Math.pow(point1[0] - point2[0], 2) + Math.pow(point1[1] - point2[1], 2));
     }
+
+    /**
+     * Get a map of zones where fires are simulated
+     * @return map of zones
+     */
     public Zones getZones() {
         return zones;
     }
+
     /**
      * Checks if a drone is en route to an incident with the same severity.
      *
@@ -287,6 +304,7 @@ public class DroneSubsystem implements Runnable {
                 drone.getCurrentEvent() != null &&
                 drone.getCurrentEvent().getSeverityLevel().equals(severity);
     }
+
     /**
      * Calculates the Euclidean distance between a drone and an incident location.
      *
@@ -298,6 +316,11 @@ public class DroneSubsystem implements Runnable {
         int[] dronePosition = drone.getCurrentPosition();
         return Math.sqrt(Math.pow(location[0] - dronePosition[0], 2) + Math.pow(location[1] - dronePosition[1], 2));
     }
+
+    /**
+     * Main method to start the Drone Subsystem
+     * @param args Command-line arguments (not used).
+     */
     public static void main(String[] args) {
         try {
             DroneSubsystem droneSubsystem = new DroneSubsystem(6000, 6001, "docs/sample_zone_file.csv");
