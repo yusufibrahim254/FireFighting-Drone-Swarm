@@ -111,7 +111,7 @@ public class Scheduler implements Runnable {
      * @param event The fire incident to be assigned.
      * @return true if successfully assigned, false if no drone was available.
      */
-    private boolean sendEventToDrone(Event event) {
+    protected boolean sendEventToDrone(Event event) {
         try (DatagramSocket ackSocket = new DatagramSocket()) { // Separate socket for acknowledgments
             String eventData = event.serialize();
             byte[] sendData = eventData.getBytes();

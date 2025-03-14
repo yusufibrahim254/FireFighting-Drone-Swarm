@@ -70,7 +70,7 @@ This program simulates fire incidents as well as drones responding to them. It u
 4. Go to `View > Tool Windows > Maven` to open the Maven pane
 5. In the Maven panel, click the Refresh button (a circle arrow icon) to download dependencies
 6. Click on the Build menu at the top and select Build Project or press Ctrl+F9
-7. Run the main class, and observe the three threads working together
+7. Run the Scheduler class first, then the DroneSubSystem class and finally the FireIncident class and observe the output.
 
 ## Contact
 [Abdel Qayyim Maazou Yahaya](mailto:ABDELQAYYIMYAHAYA@cmail.carleton.ca) <br>
