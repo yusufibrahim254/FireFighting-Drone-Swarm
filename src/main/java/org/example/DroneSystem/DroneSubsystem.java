@@ -224,30 +224,39 @@ public class DroneSubsystem implements Runnable {
         // 1. If a matching en route drone is found, reassign it to the new event and give its previous event to the closest idle drone
         if (closestEnRouteDrone != null && minEnRouteDistance < minIdleDistance) {
             Event originalEvent = closestEnRouteDrone.getCurrentEvent();
-            int[] originalEventLocation = zones.getZoneMidpoint(originalEvent.getZoneId());
+            if (originalEvent != null) {
+                int[] originalEventLocation = zones.getZoneMidpoint(originalEvent.getZoneId());
 
+                // Assign the original event to the closest idle drone
+                if (closestIdleDrone != null) {
+                    System.out.println("IDLE DRONE FOUND ----------------------- (Drone "+ closestIdleDrone.getId()+")");
+                    System.out.println("The two DRONES are switching roles now \n--------------------------------");
 
-            // Assign the original event to the closest idle drone  (*** Assign it to this variable currentAssignee ***)
-            if (closestIdleDrone != null) {
-                System.out.println("The two DRONES are switching roles now \n--------------------------------");
-                // Reassign the en route drone to the new event
-                closestEnRouteDrone.setTargetPosition(eventLocation);
-                closestEnRouteDrone.setIncidentPosition(eventLocation);
-                closestEnRouteDrone.setCurrentEvent(event);
+                    // Reassign the en route drone to the new event
+                    closestEnRouteDrone.setTargetPosition(eventLocation);
+                    closestEnRouteDrone.setIncidentPosition(eventLocation);
+                    closestEnRouteDrone.setCurrentEvent(event);
 
+                    // Assign the original event to the closest idle drone
+                    closestIdleDrone.setTargetPosition(originalEventLocation);
+                    closestIdleDrone.setIncidentPosition(originalEventLocation);
+                    closestIdleDrone.setCurrentEvent(originalEvent);
 
-                closestIdleDrone.setTargetPosition(originalEventLocation);
-                closestIdleDrone.setIncidentPosition(originalEventLocation);
-                closestIdleDrone.setCurrentEvent(originalEvent);
+                    // Clear the current assignee if necessary
+                    if (currentAssignee != null) {
+                        currentAssignee.setCurrentEvent(null);
+                    }
 
-                System.out.println("Drone "+closestIdleDrone.getId()+ " 's new target is "+originalEventLocation[0]+","+originalEventLocation[1]);
-                System.out.println("Drone "+closestEnRouteDrone.getId()+ " 's new target is "+eventLocation[0]+","+eventLocation[1]);
-                System.out.println("\n\n---------------------------------");
+                    System.out.println("Drone " + closestIdleDrone.getId() + " 's new target is " + originalEventLocation[0] + "," + originalEventLocation[1] + " With Event ID: "+originalEvent.getId());
+                    System.out.println("Drone " + closestEnRouteDrone.getId() + " 's new target is " + eventLocation[0] + "," + eventLocation[1]+ " With Event ID: "+event.getId());
+                    System.out.println("\n\n---------------------------------");
+                }
             }
             return;
         }
         // 2. If no matching en route drone was found, assign the event to the closest idle drone
         else if (closestIdleDrone != null) {
+            System.out.println("IDLE DRONE IS FOUND AND ABOUT TO BE ASSIGNED--------------------------(Drone "+ closestIdleDrone.getId()+")");
             closestIdleDrone.setTargetPosition(eventLocation);
             closestIdleDrone.setIncidentPosition(eventLocation);
 
@@ -255,12 +264,12 @@ public class DroneSubsystem implements Runnable {
             if (currentAssignee != null) {
                 currentAssignee.setCurrentEvent(null);
             }
-            event.setAssignedDrone(closestIdleDrone);
             closestIdleDrone.setCurrentEvent(event);
             return;
         }
         // 3. If there are no idle drones, assign the event to the closest returning drone
         else if (closestReturningDrone != null) {
+            System.out.println("RETURNING IS FOUND AND ABOUT TO BE ASSIGNED--------------------------(Drone" + closestIdleDrone.getId() +")");
             closestReturningDrone.setTargetPosition(eventLocation);
             closestReturningDrone.setIncidentPosition(eventLocation);
             closestReturningDrone.setCurrentEvent(event);
