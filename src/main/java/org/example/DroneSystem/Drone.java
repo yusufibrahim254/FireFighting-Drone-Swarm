@@ -108,7 +108,7 @@ public class Drone implements Runnable {
                 } else if (state instanceof EnRouteState) {
                     System.out.println("\n");
                     state.displayState(this);
-                    System.out.println("The drone " +this.id+"'s position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]);
+                    System.out.println("The drone " +this.id+"'s position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]+ " With Event ID: "+this.currentEvent.getId());
                     moveTowardsTarget();
                     if (hasReachedTarget()) {
                         state.arrive(this); // Transition to DroppingAgentState
@@ -302,8 +302,10 @@ public class Drone implements Runnable {
     public void setCurrentEvent(Event currentEvent) {
         this.currentEvent = currentEvent;
         if(currentEvent != null){
+            currentEvent.setAssignedDrone(this);
             this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
         } else {
+            System.out.println("Drone "+this.id+"'s current event is now NULL");
             this.remainingWaterNeeded = 0;
         }
     }
