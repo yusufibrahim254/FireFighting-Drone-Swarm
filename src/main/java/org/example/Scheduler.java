@@ -52,7 +52,7 @@ public class Scheduler implements Runnable {
 
                 // Check if the message is an acknowledgment
                 if (message.startsWith("ACK:")) {
-                    System.out.println("In herre");
+                    // System.out.println("In herre");
                     System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + message);
                 } else {
                     // Handle event (from FireIncident)
@@ -60,16 +60,24 @@ public class Scheduler implements Runnable {
 
                     // Deserialize the event and add it to the queue
                     Event event = Event.deserialize(message);
-                    synchronized (incidentQueue) {
-                        incidentQueue.add(event);
-                    }
+                    if (event.isValidEvent(event)) {
+                        synchronized (incidentQueue) {
+                            incidentQueue.add(event);
+                        }
 
-                    // Send acknowledgment back to FireIncident
-                    String ack = "ACK:" + event.getId();
-                    byte[] sendData = ack.getBytes();
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
-                    socket.send(sendPacket);
-                    System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
+                        // Send acknowledgment back to FireIncident
+                        String ack = "ACK:" + event.getId();
+                        byte[] sendData = ack.getBytes();
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                        socket.send(sendPacket);
+                        System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
+                    } else {
+                        String errorMessage = "Invalid event: " + event.getId();
+                        byte[] sendErrorData = errorMessage.getBytes();
+                        DatagramPacket sendErrorPacket = new DatagramPacket(sendErrorData, sendErrorData.length, receivePacket.getAddress(), receivePacket.getPort());
+                        socket.send(sendErrorPacket);
+                        System.out.println("[Scheduler -> FireIncident] Sent back invalid event: " + event.getId() + "\n\n");
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

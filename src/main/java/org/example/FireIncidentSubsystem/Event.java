@@ -117,6 +117,39 @@ public class Event {
         return new Event(id, time, zoneId, eventType, severityLevel);
     }
 
+    public boolean isValidEvent(Event event) {
+        if (event.getId() < 0) {
+            System.out.println("[Validation] Invalid event ID: " + event.getId());
+            return false;
+        }
+
+        if (event.getZoneId() < 0) {
+            System.out.println("[Validation] Invalid zone ID: " + event.getZoneId());
+            return false;
+        }
+
+        try {
+            EventType eventType = EventType.valueOf(event.getEventType().toString());
+        } catch (IllegalArgumentException e) {
+            System.out.println("[Validation] Invalid event type: " + event.getEventType());
+            return false;
+        }
+
+        switch (event.getSeverityLevel().toLowerCase()) {
+            case "low":
+            case "moderate":
+            case "high":
+                break;
+            default:
+                System.out.println("[Validation] Invalid severity level: " + event.getSeverityLevel());
+                return false;
+        }
+
+
+        return true;
+    }
+
+
     @Override
     public String toString() {
         return "Event{" +

@@ -37,8 +37,13 @@ public class EventReader {
 
                 // Extract attributes of the event
                 String time = parts[0];
+                EventType eventType;
                 int zoneId = Integer.parseInt(parts[1]);
-                EventType eventType = EventType.valueOf(parts[2]);
+                try {
+                     eventType = EventType.valueOf(parts[2]);
+                } catch (IllegalArgumentException e){
+                    eventType = EventType.INVALID_FIRE_EVENT;
+                }
                 String severityLevel = parts[3];
 
                 // Create an event with a unique ID

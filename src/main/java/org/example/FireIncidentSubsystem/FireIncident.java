@@ -36,6 +36,7 @@ public class FireIncident implements Runnable {
     @Override
     public void run() {
         System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
+        boolean acknowledged;
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
             for (Event event : events) {
@@ -49,7 +50,8 @@ public class FireIncident implements Runnable {
                 System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
 
                 // Wait for acknowledgment from the Scheduler
-                waitForAcknowledgment();
+                acknowledged = waitForAcknowledgment(event);
+
                 Thread.sleep(10000); // events sent every 10 seconds
             }
         } catch (IOException | InterruptedException e) {
@@ -64,7 +66,7 @@ public class FireIncident implements Runnable {
      *
      * @throws IOException If an I/O error occurs while waiting for the acknowledgment.
      */
-    private void waitForAcknowledgment() throws IOException {
+    private boolean waitForAcknowledgment(Event event) throws IOException {
         byte[] receiveData = new byte[1024];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         socket.receive(receivePacket); // Wait for acknowledgment
@@ -72,6 +74,10 @@ public class FireIncident implements Runnable {
 
         // Log the acknowledgment
         System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment+"\n\n");
+        if(acknowledgment != ("ACK"+event.getId())) {
+            return false;
+        }
+        return true;
     }
 
     /**
