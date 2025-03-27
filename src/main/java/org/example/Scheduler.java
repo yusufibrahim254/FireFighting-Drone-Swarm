@@ -52,7 +52,6 @@ public class Scheduler implements Runnable {
 
                 // Check if the message is an acknowledgment
                 if (message.startsWith("ACK:")) {
-                    // System.out.println("In herre");
                     System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + message);
                 } else {
                     // Handle event (from FireIncident)
@@ -71,8 +70,8 @@ public class Scheduler implements Runnable {
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
                         socket.send(sendPacket);
                         System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
-                    } else {
-                        String errorMessage = "Invalid event: " + event.getId();
+                    } else {// invalid event
+                        String errorMessage = "NAK:" + event.getId();
                         byte[] sendErrorData = errorMessage.getBytes();
                         DatagramPacket sendErrorPacket = new DatagramPacket(sendErrorData, sendErrorData.length, receivePacket.getAddress(), receivePacket.getPort());
                         socket.send(sendErrorPacket);

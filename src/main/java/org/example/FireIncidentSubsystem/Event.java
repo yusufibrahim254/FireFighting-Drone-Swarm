@@ -117,24 +117,32 @@ public class Event {
         return new Event(id, time, zoneId, eventType, severityLevel);
     }
 
+    /**
+     * Checks if the event is a valid event
+     * @param event the event
+     * @return true if event is valid, false if otherwise
+     */
     public boolean isValidEvent(Event event) {
+        // check for a valid id
         if (event.getId() < 0) {
             System.out.println("[Validation] Invalid event ID: " + event.getId());
             return false;
         }
 
-        if (event.getZoneId() < 0) {
+        // check for a valid zone id
+        if (event.getZoneId() < 0) { // needs to point to a proper zone found in the zone CSV
             System.out.println("[Validation] Invalid zone ID: " + event.getZoneId());
             return false;
         }
 
-        try {
+        try { // try to get the EventType value to ensure its a valid event type
             EventType eventType = EventType.valueOf(event.getEventType().toString());
         } catch (IllegalArgumentException e) {
             System.out.println("[Validation] Invalid event type: " + event.getEventType());
             return false;
         }
 
+        // check the severity level
         switch (event.getSeverityLevel().toLowerCase()) {
             case "low":
             case "moderate":
@@ -144,8 +152,7 @@ public class Event {
                 System.out.println("[Validation] Invalid severity level: " + event.getSeverityLevel());
                 return false;
         }
-
-
+        // passes all previous checks
         return true;
     }
 
@@ -161,18 +168,34 @@ public class Event {
                 '}';
     }
 
+    /**
+     * Gets the current amount of water needed for the event
+     * @return the amount of water needed
+     */
     public double getCurrentWaterAmountNeeded() {
         return currentWaterAmountNeeded;
     }
 
+    /**
+     * Sets the current amount of water needed for the event
+     * @param currentWaterAmountNeeded the new amount of water needed
+     */
     public void setCurrentWaterAmountNeeded(double currentWaterAmountNeeded) {
         this.currentWaterAmountNeeded = currentWaterAmountNeeded;
     }
 
+    /**
+     * Gets the event's assigned drone
+     * @return the assigned drone
+     */
     public Drone getAssignedDrone() {
         return assignedDrone;
     }
 
+    /**
+     * Sets the event's drone
+     * @param assignedDrone the new drone for event
+     */
     public void setAssignedDrone(Drone assignedDrone) {
         this.assignedDrone = assignedDrone;
     }

@@ -74,10 +74,7 @@ public class FireIncident implements Runnable {
 
         // Log the acknowledgment
         System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment+"\n\n");
-        if(acknowledgment != ("ACK"+event.getId())) {
-            return false;
-        }
-        return true;
+        return acknowledgment.equals("ACK" + event.getId());
     }
 
     /**
