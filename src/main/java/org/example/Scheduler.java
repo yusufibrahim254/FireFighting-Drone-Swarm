@@ -55,7 +55,7 @@ public class Scheduler implements Runnable {
                     System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + message);
                 } else {
                     // Handle event (from FireIncident)
-                    System.out.println("[Scheduler <- FireIncident] Received event: " + message);
+                    System.out.println("\n[Scheduler <- FireIncident] Received event: " + message);
 
                     // Deserialize the event and add it to the queue
                     Event event = Event.deserialize(message);

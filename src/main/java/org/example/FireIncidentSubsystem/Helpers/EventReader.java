@@ -45,9 +45,10 @@ public class EventReader {
                     eventType = EventType.INVALID_FIRE_EVENT;
                 }
                 String severityLevel = parts[3];
+                int faulted = Integer.parseInt(parts[4]);
 
                 // Create an event with a unique ID
-                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel);
+                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel, faulted);
                 events.add(event); // Add the event to the list
             }
         } catch (Exception e) {

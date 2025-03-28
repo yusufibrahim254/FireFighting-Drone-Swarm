@@ -13,6 +13,7 @@ public class Event {
     private int zoneId; // ID of the zone where the event is taking place
     private final EventType eventType; // Type of event (e.g., FIRE)
     private final String severityLevel; // Severity level of the event
+    private int faulted; // faulted status of event (0 is normal, 1 is faulted)
     private Drone assignedDrone;
 
     private double currentWaterAmountNeeded;
@@ -25,12 +26,13 @@ public class Event {
      * @param eventType    The type of event occurring.
      * @param severityLevel The severity level of the event.
      */
-    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel) {
+    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel, int faulted) {
         this.id = id;
         this.time = time;
         this.zoneId = zoneId;
         this.eventType = eventType;
         this.severityLevel = severityLevel;
+        this.faulted = faulted;
         this.currentWaterAmountNeeded = new Severity(severityLevel).getWaterAmount();
         this.assignedDrone = null;
     }
@@ -90,13 +92,21 @@ public class Event {
     }
 
     /**
+     * Get the status if the event is faulted or not
+     * @return the faulted status
+     */
+    public int getFaulted() {
+        return faulted;
+    }
+
+    /**
      * Serializes the Event object into a string representation.
      * The format is: "id,time,zoneId,eventType,severityLevel"
      *
      * @return A string representation of the Event object.
      */
     public String serialize() {
-        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel;
+        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel + "," + faulted;
     }
 
     /**
@@ -114,7 +124,8 @@ public class Event {
         int zoneId = Integer.parseInt(parts[2]);
         EventType eventType = EventType.valueOf(parts[3]);
         String severityLevel = parts[4];
-        return new Event(id, time, zoneId, eventType, severityLevel);
+        int faulted = Integer.parseInt(parts[5]);
+        return new Event(id, time, zoneId, eventType, severityLevel, faulted);
     }
 
     /**
@@ -151,6 +162,13 @@ public class Event {
             default:
                 System.out.println("[Validation] Invalid severity level: " + event.getSeverityLevel());
                 return false;
+        }
+
+        // faulted flag on CSV
+        if (event.getFaulted() == 1){
+            // check if faulted for any other reason first for more detailed debugging
+            System.out.println("[Validation] Faulted event ID: " + event.getId());
+            return false;
         }
         // passes all previous checks
         return true;
