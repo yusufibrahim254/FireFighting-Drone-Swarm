@@ -13,28 +13,29 @@ public class Event {
     private int zoneId; // ID of the zone where the event is taking place
     private final EventType eventType; // Type of event (e.g., FIRE)
     private final String severityLevel; // Severity level of the event
-    private int faulted; // faulted status of event (0 is normal, 1 is faulted)
+    private final String fault;
     private Drone assignedDrone;
 
     private double currentWaterAmountNeeded;
     /**
      * Event constructor
      *
-     * @param id           The unique identifier for the event.
-     * @param time         The timestamp of the event.
-     * @param zoneId       The ID of the zone where the event is taking place.
-     * @param eventType    The type of event occurring.
+     * @param id            The unique identifier for the event.
+     * @param time          The timestamp of the event.
+     * @param zoneId        The ID of the zone where the event is taking place.
+     * @param eventType     The type of event occurring.
      * @param severityLevel The severity level of the event.
+     * @param fault         The parameter indicating a drone's fault
      */
-    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel, int faulted) {
+    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel, String fault) {
         this.id = id;
         this.time = time;
         this.zoneId = zoneId;
         this.eventType = eventType;
         this.severityLevel = severityLevel;
-        this.faulted = faulted;
         this.currentWaterAmountNeeded = new Severity(severityLevel).getWaterAmount();
         this.assignedDrone = null;
+        this.fault = fault;
     }
 
     /**
@@ -92,21 +93,13 @@ public class Event {
     }
 
     /**
-     * Get the status if the event is faulted or not
-     * @return the faulted status
-     */
-    public int getFaulted() {
-        return faulted;
-    }
-
-    /**
      * Serializes the Event object into a string representation.
      * The format is: "id,time,zoneId,eventType,severityLevel"
      *
      * @return A string representation of the Event object.
      */
     public String serialize() {
-        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel + "," + faulted;
+        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel + "," + fault;
     }
 
     /**
@@ -118,14 +111,15 @@ public class Event {
      */
     public static Event deserialize(String data) {
 //        System.out.println("The data in deserialize function is "+data);
+        System.out.println(data);
         String[] parts = data.split(",");
         int id = Integer.parseInt(parts[0]);
         String time = parts[1];
         int zoneId = Integer.parseInt(parts[2]);
         EventType eventType = EventType.valueOf(parts[3]);
         String severityLevel = parts[4];
-        int faulted = Integer.parseInt(parts[5]);
-        return new Event(id, time, zoneId, eventType, severityLevel, faulted);
+        String fault = parts[5];
+        return new Event(id, time, zoneId, eventType, severityLevel, fault);
     }
 
     /**
@@ -163,13 +157,6 @@ public class Event {
                 System.out.println("[Validation] Invalid severity level: " + event.getSeverityLevel());
                 return false;
         }
-
-        // faulted flag on CSV
-        if (event.getFaulted() == 1){
-            // check if faulted for any other reason first for more detailed debugging
-            System.out.println("[Validation] Faulted event ID: " + event.getId());
-            return false;
-        }
         // passes all previous checks
         return true;
     }
@@ -183,6 +170,7 @@ public class Event {
                 ", zoneId=" + zoneId +
                 ", eventType=" + eventType +
                 ", severityLevel='" + severityLevel + '\'' +
+                ", fault=" + fault +
                 '}';
     }
 

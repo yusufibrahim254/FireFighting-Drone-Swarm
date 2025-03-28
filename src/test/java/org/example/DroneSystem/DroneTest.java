@@ -3,7 +3,6 @@ package org.example.DroneSystem;
 import org.example.FireIncidentSubsystem.Helpers.EventType;
 import org.junit.jupiter.api.*;
 
-import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 
@@ -20,7 +19,7 @@ class DroneTest {
     void setUp() throws SocketException {
         drone = new Drone(1,15, new DroneSubsystem(0, 0, "docs/sample_zone_file.csv"), 0.1);
         testSocket = new DatagramSocket(0);
-        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High");
+        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
     }
 
     @AfterEach
@@ -98,7 +97,7 @@ class DroneTest {
 
     @Test
     void setCurrentEvent() {
-        Event newEvent = new Event(8, "08:07:06", 2, EventType.FIRE_DETECTED, "Low");
+        Event newEvent = new Event(8, "08:07:06", 2, EventType.FIRE_DETECTED, "Low", "NO_FAULT");
         drone.setCurrentEvent(newEvent);
         assertEquals(newEvent, drone.getCurrentEvent());
         assertEquals(10, drone.getRemainingWaterNeeded());
