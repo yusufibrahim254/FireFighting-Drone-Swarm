@@ -13,19 +13,21 @@ public class Event {
     private int zoneId; // ID of the zone where the event is taking place
     private final EventType eventType; // Type of event (e.g., FIRE)
     private final String severityLevel; // Severity level of the event
+    private final String fault;
     private Drone assignedDrone;
 
     private double currentWaterAmountNeeded;
     /**
      * Event constructor
      *
-     * @param id           The unique identifier for the event.
-     * @param time         The timestamp of the event.
-     * @param zoneId       The ID of the zone where the event is taking place.
-     * @param eventType    The type of event occurring.
+     * @param id            The unique identifier for the event.
+     * @param time          The timestamp of the event.
+     * @param zoneId        The ID of the zone where the event is taking place.
+     * @param eventType     The type of event occurring.
      * @param severityLevel The severity level of the event.
+     * @param fault         The parameter indicating a drone's fault
      */
-    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel) {
+    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel, String fault) {
         this.id = id;
         this.time = time;
         this.zoneId = zoneId;
@@ -33,6 +35,7 @@ public class Event {
         this.severityLevel = severityLevel;
         this.currentWaterAmountNeeded = new Severity(severityLevel).getWaterAmount();
         this.assignedDrone = null;
+        this.fault = fault;
     }
 
     /**
@@ -96,7 +99,7 @@ public class Event {
      * @return A string representation of the Event object.
      */
     public String serialize() {
-        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel;
+        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel + "," + fault;
     }
 
     /**
@@ -108,13 +111,15 @@ public class Event {
      */
     public static Event deserialize(String data) {
 //        System.out.println("The data in deserialize function is "+data);
+        System.out.println(data);
         String[] parts = data.split(",");
         int id = Integer.parseInt(parts[0]);
         String time = parts[1];
         int zoneId = Integer.parseInt(parts[2]);
         EventType eventType = EventType.valueOf(parts[3]);
         String severityLevel = parts[4];
-        return new Event(id, time, zoneId, eventType, severityLevel);
+        String fault = parts[5];
+        return new Event(id, time, zoneId, eventType, severityLevel, fault);
     }
 
     /**
@@ -165,6 +170,7 @@ public class Event {
                 ", zoneId=" + zoneId +
                 ", eventType=" + eventType +
                 ", severityLevel='" + severityLevel + '\'' +
+                ", fault=" + fault +
                 '}';
     }
 

@@ -46,9 +46,15 @@ public class EventReader {
                 }
                 String severityLevel = parts[3];
 
+                String fault = "NO_FAULT";
+                if (parts.length > 4) {
+                    fault = parts[4].trim();
+                }
+
                 // Create an event with a unique ID
-                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel);
+                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel, fault);
                 events.add(event); // Add the event to the list
+
             }
         } catch (Exception e) {
             e.printStackTrace();

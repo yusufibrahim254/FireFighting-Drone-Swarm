@@ -83,7 +83,7 @@ class IntegrationTest {
 
         // Test sending a packet from Scheduler to DroneSubsystem
         Scheduler scheduler = new Scheduler(5000, host, droneSubsystemPort);
-        boolean result = scheduler.sendEventToDrone(new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High"));
+        boolean result = scheduler.sendEventToDrone(new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT"));
         assertTrue(result);
     }
 }

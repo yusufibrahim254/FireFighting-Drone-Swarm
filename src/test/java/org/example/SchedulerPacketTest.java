@@ -22,7 +22,7 @@ class SchedulerPacketTest {
     void setUp() throws Exception {
         serverSocket = new DatagramSocket(serverPort);
         scheduler = new Scheduler(5000, serverHost, serverPort);
-        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High");
+        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
     }
 
     @Test
