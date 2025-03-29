@@ -205,4 +205,6 @@ public class Event {
     public void setAssignedDrone(Drone assignedDrone) {
         this.assignedDrone = assignedDrone;
     }
+    public String getFault(){return this.fault;};
+
 }

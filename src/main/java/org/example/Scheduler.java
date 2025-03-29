@@ -70,7 +70,7 @@ public class Scheduler implements Runnable {
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
                         socket.send(sendPacket);
                         System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
-                    } else {// invalid event
+                    } else {// invalid event (discarded the event)
                         String errorMessage = "NAK:" + event.getId();
                         byte[] sendErrorData = errorMessage.getBytes();
                         DatagramPacket sendErrorPacket = new DatagramPacket(sendErrorData, sendErrorData.length, receivePacket.getAddress(), receivePacket.getPort());

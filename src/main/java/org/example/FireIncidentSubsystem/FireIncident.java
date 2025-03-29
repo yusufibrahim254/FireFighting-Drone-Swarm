@@ -39,9 +39,24 @@ public class FireIncident implements Runnable {
         boolean acknowledged;
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
-            for (Event event : events) {
-                // Serialize the event to a string
-                String eventData = event.serialize();
+//            for (Event event : events) {
+//                // Serialize the event to a string
+//                String eventData = event.serialize();
+//                byte[] sendData = eventData.getBytes();
+//
+//                // Send the event to the Scheduler
+//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+//                socket.send(sendPacket);
+//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
+//
+//                // Wait for acknowledgment from the Scheduler
+//                acknowledged = waitForAcknowledgment(event);
+//
+//                Thread.sleep(10000); // events sent every 10 seconds
+//            }
+            for(int i =0 ; i< 1; i++){
+//                 Serialize the event to a string
+                String eventData = events[0].serialize();
                 byte[] sendData = eventData.getBytes();
 
                 // Send the event to the Scheduler
@@ -50,7 +65,7 @@ public class FireIncident implements Runnable {
                 System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
 
                 // Wait for acknowledgment from the Scheduler
-                acknowledged = waitForAcknowledgment(event);
+                acknowledged = waitForAcknowledgment(events[0]);
 
                 Thread.sleep(10000); // events sent every 10 seconds
             }
