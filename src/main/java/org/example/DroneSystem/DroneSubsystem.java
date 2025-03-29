@@ -42,7 +42,7 @@ public class DroneSubsystem implements Runnable {
         System.out.println("Battery Depletion Rate: "+ batteryDepletionRate);
 
         // Initialize the fleet with 10 drones
-        for (int i = 1; i <= 2; i++) {
+        for (int i = 1; i <= 10; i++) {
             drones.add(new Drone(i, 15, this, batteryDepletionRate));
         }
 

@@ -126,7 +126,6 @@ public class Drone implements Runnable {
                         System.out.println("Drone is resetting nozzle...");
                         this.setState(new IdleState());
                         state.displayState(this);
-                        System.out.println("The location is ("+ this.currentPosition[0] + ","+ this.currentPosition[1]+")");
                     }
                     if (hasReachedTarget()) {
                         state.arrive(this); // Transition to DroppingAgentState
