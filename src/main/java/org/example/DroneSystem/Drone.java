@@ -6,11 +6,16 @@ import org.example.DroneSystem.DroneSubsystem;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * The Drone class represents a drone that can be assigned tasks and moves towards a target position.
  */
 public class Drone implements Runnable {
+    private Timer faultTimer;
+    private static final int FAULT_TIMEOUT = 600000; // Timeout duration: 60 seconds
+
     private final int id;
     /**
      * Current battery level of the drone, represented as a percentage (0-100)
@@ -159,6 +164,7 @@ public class Drone implements Runnable {
      * Moves the drone 1 meter closer to its target position until it reaches the target.
      */
     public String moveTowardsTarget() {
+        startFaultTimer(); // Start the timer when movement begins
         double cruisingSpeed = 4; // m/s (cruise speed)
         double acceleration = 7; // m/s²
         double timeStep = 1; // seconds per step
@@ -258,6 +264,11 @@ public class Drone implements Runnable {
 
                 sendPositionToSubsystem();
 
+                // Cancels the timer if the drone successfully reaches its target.
+                if (hasReachedTarget()) {
+                    cancelFaultTimer();
+                }
+
                 try {
                     Thread.sleep(1000); // Pause for 1 second
                 } catch (InterruptedException e) {
@@ -272,6 +283,40 @@ public class Drone implements Runnable {
             return "NOZZLE_JAMMED";
         }
         return "TARGET_REACHED";
+    }
+
+    /**
+     * Starts a timer to track if the drone reaches its target within a given time frame.
+     * If the drone doesn't reach the target within the specified timeout, a fault is triggered
+     * and the drone's state is changed to FaultedState.
+     */
+    private void startFaultTimer() {
+        if (faultTimer != null) {
+            faultTimer.cancel(); // Cancel any existing timer
+        }
+
+        faultTimer = new Timer();
+        faultTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (!hasReachedTarget()) {
+                    System.out.println("[Drone " + id + "] Fault detected: Failed to reach target in time.");
+                    setState(new FaultedState());
+                }
+            }
+        }, FAULT_TIMEOUT);
+    }
+
+    /**
+     * Cancels the currently running fault timer, if one exists.
+     * This is called when the drone successfully reaches its target before the timer expires,
+     * preventing the fault from being triggered.
+     */
+    private void cancelFaultTimer() {
+        if (faultTimer != null) {
+            faultTimer.cancel();
+            faultTimer = null;
+        }
     }
 
     public void cleandAndSendEventBackToDroneSubsystem(){
