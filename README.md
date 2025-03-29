@@ -1,17 +1,21 @@
 # FireFighting-Drone-Swarm
 
-(Iteration 3)
+(Iteration 4)
 
-This program simulates fire incidents as well as drones responding to them. It uses a scheduler to manage fire events reported by a fire incident subsystem and notifies the drone subsystem in order to assign drones accordingly to process the events.
+This program simulates fire incidents as well as drones responding to them. It uses a scheduler to manage fire events reported by a fire incident subsystem and notifies the drone subsystem in order to assign drones accordingly to process the events. Fault detection and handling mechanisms were added to simulate and manage various fault scenarios that can occur during the drone operation.
 
-# Iteration-3 Group Task Assignment
+## Iteration-4 Group Task Assignment
  - UML Class Diagram
  - UML State Diagram
  - UML Sequence Diagram
- - FireIncident changed to use UDP to communicate with scheduler
- - Scheduler changed to use UDP to communicate to both FireIncident and DroneSubsytem
- - DroneSubsystem changed to use UDP to communicate to schedule and assign drones
- - Handle Drone delegation for events
+ - Timing Diagram
+- Injected faults:
+  - Drone stuck mid-flight
+  - Nozzle jammed
+  - Packet loss or corrupted messages
+- The Scheduler is updated to detect and handle these faults gracefully by:
+  - Reroute missions when necessary
+  - Mark a drone as offline if it cannot continue the mission
 
 ## File Overview
 - Main.java - Not used anymore (FireIncident, Scheduler and DroneSubsystem each have their own main class as they use UDP to communicate)
@@ -30,6 +34,7 @@ This program simulates fire incidents as well as drones responding to them. It u
 
 - Scheduler.java 
   - Receives events from FireIncident class through UDP
+  - Sends acknowledgement/negative acknowledgment to FireIncident if the event is valid or faulted
   - Adds the event to a queue
   - Sends the event to the DroneSubsystem and waits for response
   - If response is ACK: NO, it means there are no drones currently available
@@ -64,13 +69,15 @@ This program simulates fire incidents as well as drones responding to them. It u
 
 ## Setup instructions:
 
-1. Download submitted zip file for iteration 1
+1. Download submitted zip file for iteration 4
 2. Extract the project and select open project with intellij (will be recognized as java project)
 3. If prompted, click `Import Maven Projects`. If not, right-click the pom.xml file and select `Add as Maven Project`
 4. Go to `View > Tool Windows > Maven` to open the Maven pane
 5. In the Maven panel, click the Refresh button (a circle arrow icon) to download dependencies
 6. Click on the Build menu at the top and select Build Project or press Ctrl+F9
 7. Run the Scheduler class first, then the DroneSubSystem class and finally the FireIncident class and observe the output.
+
+
 
 ## Contact
 [Abdel Qayyim Maazou Yahaya](mailto:ABDELQAYYIMYAHAYA@cmail.carleton.ca) <br>
