@@ -20,7 +20,7 @@ public class FireIncident implements Runnable {
      *
      * @param schedulerHost The hostname or IP address of the Scheduler.
      * @param schedulerPort The port number of the Scheduler.
-     * @throws SocketException If the UDP socket cannot be created.
+     * @throws SocketException      If the UDP socket cannot be created.
      * @throws UnknownHostException If the Scheduler host is invalid.
      */
     public FireIncident(String schedulerHost, int schedulerPort) throws SocketException, UnknownHostException {
@@ -73,7 +73,7 @@ public class FireIncident implements Runnable {
         String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
         // Log the acknowledgment
-        System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment+"\n\n");
+        System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment + "\n\n");
         return acknowledgment.equals("ACK" + event.getId());
     }
 
