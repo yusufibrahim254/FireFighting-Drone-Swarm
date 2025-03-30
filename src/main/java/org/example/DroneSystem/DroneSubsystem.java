@@ -130,9 +130,9 @@ public class DroneSubsystem implements Runnable {
 //                System.out.println("[DroneSubsystem] Received message: " + message);
 
                 // Split the message into type and data (droneID or location update data)
-                String[] parts = message.split(":");
-                if (parts.length == 2) {
-                    String type = parts[0];  // This will be the message type (e.g., "JOB_DELEGATION", "LOCATION_UPDATE")
+                String[] parts = message.split(":", 2);
+                String type = parts[0];  // This will be the message type (e.g., "JOB_DELEGATION", "LOCATION_UPDATE")
+                if (parts.length >= 2) {
                     String data = parts[1];  // This will be the drone ID or location data
 
                     // Check the type and process accordingly
@@ -146,11 +146,28 @@ public class DroneSubsystem implements Runnable {
                         // Handle location update
 //                        System.out.println("[DroneSubsystem] Location update received. Data: " + data);
                         processDroneLocationUpdate(data); // Call your method to handle location update
-                    } else {
+                    } else if (type.equals(CommunicationDroneToSubsystem.EVENT_RETURN.name())) {
+                        // Handle returned event from stuck drone
+                        System.out.println("[DroneSubsystem] Received returned event from stuck drone: " + data);
+                        Event returnedEvent = Event.deserialize(data);
+
+                        // Forward the event back to the Scheduler
+                        try (DatagramSocket socket = new DatagramSocket()) {
+                            String eventData = returnedEvent.serialize();
+                            byte[] sendData = eventData.getBytes();
+                            InetAddress schedulerAddress = InetAddress.getByName("localhost");
+                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, 6000);
+                            socket.send(sendPacket);
+                            System.out.println("[DroneSubsystem -> Scheduler] Forwarded returned event: " + eventData);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }else {
                         System.out.println("[DroneSubsystem] Unknown message type: " + type);
                     }
                 } else {
                     System.out.println("[DroneSubsystem] Invalid message format.");
+                    System.out.println("The Parts are: "+ parts.length);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -195,6 +212,9 @@ public class DroneSubsystem implements Runnable {
 
         // Find the closest idle drone, en route drone with the same severity, and returning drone
         for (Drone drone : drones) {
+            if(drone.getState() instanceof FaultedState){
+                continue;
+            }
             double distance = calculateDistance(drone, eventLocation);
 
             // Calculate the total distance the drone needs to travel (to the event and back to (0, 0))
@@ -269,13 +289,13 @@ public class DroneSubsystem implements Runnable {
         }
         // 3. If there are no idle drones, assign the event to the closest returning drone
         else if (closestReturningDrone != null) {
-            System.out.println("RETURNING IS FOUND AND ABOUT TO BE ASSIGNED--------------------------(Drone" + closestIdleDrone.getId() +")");
+            System.out.println("A RETURNING DRONE IS FOUND AND ABOUT TO BE ASSIGNED -> (Drone" + closestIdleDrone.getId() +")");
             closestReturningDrone.setTargetPosition(eventLocation);
             closestReturningDrone.setIncidentPosition(eventLocation);
             closestReturningDrone.setCurrentEvent(event);
             return;
         } else { // No drones available
-            System.out.println("NO DRONE AVAILABLE -------------------------");
+            System.out.println("NO DRONE AVAILABLE FOR DELEGATION");
             // At this point the drone is returning back to 0,0, so if the job is not done, change its target location
 //            if (event.getCurrentWaterAmountNeeded() > 0 && currentAssignee != null) {
 //                currentAssignee.setTargetPosition(zones.getZoneMidpoint(event.getZoneId()));

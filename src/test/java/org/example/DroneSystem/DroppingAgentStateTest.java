@@ -16,7 +16,7 @@ class DroppingAgentStateTest {
     @BeforeEach
     void setUp() throws SocketException {
         drone = new Drone(1,15, new DroneSubsystem(0, 0, "docs/sample_zone_file.csv"), 0.1);
-        Event event = new Event(8, "08:07:06", 2, EventType.FIRE_DETECTED, "Low");
+        Event event = new Event(8, "08:07:06", 2, EventType.FIRE_DETECTED, "Low", "NO_FAULT");
         droppingAgentState = new DroppingAgentState();
         drone.setState(droppingAgentState);
         drone.setCurrentEvent(event);

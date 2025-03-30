@@ -20,7 +20,7 @@ public class FireIncident implements Runnable {
      *
      * @param schedulerHost The hostname or IP address of the Scheduler.
      * @param schedulerPort The port number of the Scheduler.
-     * @throws SocketException If the UDP socket cannot be created.
+     * @throws SocketException      If the UDP socket cannot be created.
      * @throws UnknownHostException If the Scheduler host is invalid.
      */
     public FireIncident(String schedulerHost, int schedulerPort) throws SocketException, UnknownHostException {
@@ -36,6 +36,7 @@ public class FireIncident implements Runnable {
     @Override
     public void run() {
         System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
+        boolean acknowledged;
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
             for (Event event : events) {
@@ -49,9 +50,25 @@ public class FireIncident implements Runnable {
                 System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
 
                 // Wait for acknowledgment from the Scheduler
-                waitForAcknowledgment();
+                acknowledged = waitForAcknowledgment(event);
+
                 Thread.sleep(10000); // events sent every 10 seconds
             }
+//            for(int i =0 ; i< 1; i++){
+////                 Serialize the event to a string
+//                String eventData = events[0].serialize();
+//                byte[] sendData = eventData.getBytes();
+//
+//                // Send the event to the Scheduler
+//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+//                socket.send(sendPacket);
+//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
+//
+//                // Wait for acknowledgment from the Scheduler
+//                acknowledged = waitForAcknowledgment(events[0]);
+//
+//                Thread.sleep(10000); // events sent every 10 seconds
+//            }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -64,14 +81,15 @@ public class FireIncident implements Runnable {
      *
      * @throws IOException If an I/O error occurs while waiting for the acknowledgment.
      */
-    private void waitForAcknowledgment() throws IOException {
+    private boolean waitForAcknowledgment(Event event) throws IOException {
         byte[] receiveData = new byte[1024];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         socket.receive(receivePacket); // Wait for acknowledgment
         String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
         // Log the acknowledgment
-        System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment+"\n\n");
+        System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment + "\n\n");
+        return acknowledgment.equals("ACK" + event.getId());
     }
 
     /**

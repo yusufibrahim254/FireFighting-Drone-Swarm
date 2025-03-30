@@ -16,7 +16,7 @@ class RefillingStateTest {
     @BeforeEach
     void setUp() throws SocketException {
         drone = new Drone(1,15, new DroneSubsystem(0, 0, "docs/sample_zone_file.csv"), 0.1);
-        Event event = new Event(8, "08:07:06", 2, EventType.FIRE_DETECTED, "Low");
+        Event event = new Event(8, "08:07:06", 2, EventType.FIRE_DETECTED, "Low", "NO_FAULT");
         refillingState = new RefillingState();
         drone.setState(refillingState);
         drone.setCurrentEvent(event);

@@ -11,7 +11,7 @@ class EventTest {
 
     @BeforeEach
     void setUp() {
-        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High");
+        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
     }
 
     @Test

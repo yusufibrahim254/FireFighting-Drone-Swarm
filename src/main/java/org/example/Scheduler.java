@@ -52,24 +52,31 @@ public class Scheduler implements Runnable {
 
                 // Check if the message is an acknowledgment
                 if (message.startsWith("ACK:")) {
-                    System.out.println("In herre");
                     System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + message);
                 } else {
                     // Handle event (from FireIncident)
-                    System.out.println("[Scheduler <- FireIncident] Received event: " + message);
+                    System.out.println("\n[Scheduler <- FireIncident] Received event: " + message);
 
                     // Deserialize the event and add it to the queue
                     Event event = Event.deserialize(message);
-                    synchronized (incidentQueue) {
-                        incidentQueue.add(event);
-                    }
+                    if (event.isValidEvent(event)) {
+                        synchronized (incidentQueue) {
+                            incidentQueue.add(event);
+                        }
 
-                    // Send acknowledgment back to FireIncident
-                    String ack = "ACK:" + event.getId();
-                    byte[] sendData = ack.getBytes();
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
-                    socket.send(sendPacket);
-                    System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
+                        // Send acknowledgment back to FireIncident
+                        String ack = "ACK:" + event.getId();
+                        byte[] sendData = ack.getBytes();
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                        socket.send(sendPacket);
+                        System.out.println("[Scheduler -> FireIncident] Sent acknowledgment: " + ack + "\n\n");
+                    } else {// invalid event (discarded the event)
+                        String errorMessage = "NAK:" + event.getId();
+                        byte[] sendErrorData = errorMessage.getBytes();
+                        DatagramPacket sendErrorPacket = new DatagramPacket(sendErrorData, sendErrorData.length, receivePacket.getAddress(), receivePacket.getPort());
+                        socket.send(sendErrorPacket);
+                        System.out.println("[Scheduler -> FireIncident] Sent back invalid event: " + event.getId() + "\n\n");
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -95,7 +102,7 @@ public class Scheduler implements Runnable {
                         }
                         System.out.println("Sending event to DroneSubsystem");
                     } else {
-                        System.out.println("[Scheduler] No drone available, retrying event: " + event.getId());
+                            System.out.println("[Scheduler] Retrying corrupted event: " + event.getId());
                     }
                 }
                 // Avoid tight looping
@@ -114,6 +121,17 @@ public class Scheduler implements Runnable {
     protected boolean sendEventToDrone(Event event) {
         try (DatagramSocket ackSocket = new DatagramSocket()) { // Separate socket for acknowledgments
             String eventData = event.serialize();
+
+            if ("CORRUPTED_MESSAGE".equals(event.getFault())) {
+                eventData = corruptData(eventData);
+            }
+
+            if (!checkIfValidMessage(eventData)) {
+                System.out.println("[Scheduler] Corrupted message detected. Clearing to prepare retry.");
+                event.setFault("NO_FAULT");
+                return false;
+            }
+
             byte[] sendData = eventData.getBytes();
             InetAddress droneAddress = InetAddress.getByName(droneHost);
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, droneAddress, dronePort);
@@ -146,6 +164,16 @@ public class Scheduler implements Runnable {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private String corruptData(String data) {
+        //Simulate corruption by modifying data in some unexpected way
+        return data.substring(0, Math.max(1, data.length() / 2)) + "#$%";
+    }
+
+    private boolean checkIfValidMessage(String data) {
+        // validity test to see if it doesnt have that corruption
+        return !data.contains("#$%");
     }
     /**
      * Main method to start the Scheduler.

@@ -37,13 +37,24 @@ public class EventReader {
 
                 // Extract attributes of the event
                 String time = parts[0];
+                EventType eventType;
                 int zoneId = Integer.parseInt(parts[1]);
-                EventType eventType = EventType.valueOf(parts[2]);
+                try {
+                     eventType = EventType.valueOf(parts[2]);
+                } catch (IllegalArgumentException e){
+                    eventType = EventType.INVALID_FIRE_EVENT;
+                }
                 String severityLevel = parts[3];
 
+                String fault = "NO_FAULT";
+                if (parts.length > 4) {
+                    fault = parts[4].trim();
+                }
+
                 // Create an event with a unique ID
-                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel);
+                Event event = new Event(nextEventId++, time, zoneId, eventType, severityLevel, fault);
                 events.add(event); // Add the event to the list
+
             }
         } catch (Exception e) {
             e.printStackTrace();

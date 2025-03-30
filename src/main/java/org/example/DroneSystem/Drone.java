@@ -6,11 +6,16 @@ import org.example.DroneSystem.DroneSubsystem;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * The Drone class represents a drone that can be assigned tasks and moves towards a target position.
  */
 public class Drone implements Runnable {
+    private Timer faultTimer;
+    private static final int FAULT_TIMEOUT = 600000; // Timeout duration: 60 seconds
+
     private final int id;
     /**
      * Current battery level of the drone, represented as a percentage (0-100)
@@ -109,7 +114,24 @@ public class Drone implements Runnable {
                     System.out.println("\n");
                     state.displayState(this);
                     System.out.println("The drone " +this.id+"'s position ("+  currentPosition[0] + ", " + currentPosition[1]+ ") The target position "+this.targetPosition[0]+","+this.targetPosition[1]+ " With Event ID: "+this.currentEvent.getId());
-                    moveTowardsTarget();
+                    String returnValue = moveTowardsTarget();
+                    if(returnValue.equals("DRONE_STUCK")){
+                        // Turn off the drone at whichever location it is
+                        this.setState(new FaultedState());
+                        state.displayState(this);
+                        this.setCurrentEvent(null);
+                    }else if(returnValue.equals("NOZZLE_JAMMED")){
+                        // Then go back to original location and reset and should be able to take tasks
+                        cleandAndSendEventBackToDroneSubsystem();
+                        this.setCurrentEvent(null);
+                        this.setState(new FaultedState());
+                        state.displayState(this);
+                        this.setTargetPosition(new int[]{0, 0});
+                        moveTowardsTarget();
+                        System.out.println("Drone is resetting nozzle...");
+                        this.setState(new IdleState());
+                        state.displayState(this);
+                    }
                     if (hasReachedTarget()) {
                         state.arrive(this); // Transition to DroppingAgentState
                     }
@@ -130,6 +152,7 @@ public class Drone implements Runnable {
                     }
                 } else if (state instanceof FaultedState) {
                     // Handle fault state
+
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -140,7 +163,8 @@ public class Drone implements Runnable {
     /**
      * Moves the drone 1 meter closer to its target position until it reaches the target.
      */
-    public void moveTowardsTarget() {
+    public String moveTowardsTarget() {
+        startFaultTimer(); // Start the timer when movement begins
         double cruisingSpeed = 4; // m/s (cruise speed)
         double acceleration = 7; // m/s²
         double timeStep = 1; // seconds per step
@@ -148,15 +172,20 @@ public class Drone implements Runnable {
         double timeElapsed = 0; // Time elapsed
         boolean isCruising = false; // Flag to track if the drone has reached cruising speed
 
-        double travelDistance = Math.round(Math.sqrt(
+        // Calculate total distance to target
+        double totalDistance = Math.sqrt(
                 Math.pow(targetPosition[0] - currentPosition[0], 2) +
                         Math.pow(targetPosition[1] - currentPosition[1], 2)
-        ));
+        );
 
-        double travelTime = Math.round(travelDistance / cruisingSpeed);
+        // Check if drone should get stuck (1/3 of the way to target)
+        boolean shouldGetStuck = currentEvent != null &&
+                "DRONE_STUCK".equals(currentEvent.getFault()) &&
+                !(state instanceof ReturningState);
 
-        System.out.println("Drone " + id + " Distance to target: " + travelDistance + " meters");
-        System.out.println("Drone " + id + " Time to target: " + travelTime + " seconds");
+        double distanceTraveledBeforeStuck = 0;
+        boolean isStuck = false;
+        long stuckStartTime = 0;
 
         while (targetPosition != null && !hasReachedTarget()) {
             double distanceToTarget = Math.sqrt(
@@ -164,16 +193,45 @@ public class Drone implements Runnable {
                             Math.pow(targetPosition[1] - currentPosition[1], 2)
             );
 
+            // Check if we should simulate getting stuck (only when going to target, not returning)
+            if (shouldGetStuck && !isStuck) {
+                distanceTraveledBeforeStuck = totalDistance - distanceToTarget;
+                if (distanceTraveledBeforeStuck >= totalDistance / 3) {
+                    isStuck = true;
+                    stuckStartTime = System.currentTimeMillis();
+                    System.out.println("[Drone " + id + "] STUCK! Remaining in position for 2 seconds");
+                }
+            }
+
+            // If stuck, wait for 2 seconds then return to base
+            if (isStuck) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - stuckStartTime < 2000) {
+//                    drone.setTargetPosition(new int[]{0, 0});
+                    // Still stuck, don't move
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    continue;
+                } else {
+                    cleandAndSendEventBackToDroneSubsystem();
+
+                    return "DRONE_STUCK";
+                }
+            }
+
             if (distanceToTarget > 0) {
                 double directionX = (targetPosition[0] - currentPosition[0]) / distanceToTarget;
                 double directionY = (targetPosition[1] - currentPosition[1]) / distanceToTarget;
 
-                //Accelerate first
+                // Accelerate first
                 if (!isCruising) {
                     currentSpeed = acceleration;
                     timeElapsed += timeStep;
                 }
-                //Once the first few seconds of acceleration elapsed, go down to cruising speed
+                // Once the first few seconds of acceleration elapsed, go down to cruising speed
                 if (timeElapsed > 3) {
                     isCruising = true;
                     currentSpeed = cruisingSpeed;
@@ -205,8 +263,11 @@ public class Drone implements Runnable {
                 this.battery -= distanceTraveled * batteryDepletionRate;
 
                 sendPositionToSubsystem();
-//                System.out.println("[Drone " + id + "] Moving towards target: (" + currentPosition[0] + ", " + currentPosition[1] + ") at speed " + currentSpeed + " m/s");
-//                System.out.println("[Drone " + id + "] Battery Level: "+ this.battery);
+
+                // Cancels the timer if the drone successfully reaches its target.
+                if (hasReachedTarget()) {
+                    cancelFaultTimer();
+                }
 
                 try {
                     Thread.sleep(1000); // Pause for 1 second
@@ -216,6 +277,69 @@ public class Drone implements Runnable {
                     break;
                 }
             }
+        }
+
+        if(this.currentEvent != null && this.currentEvent.getFault().equals("NOZZLE_JAMMED")){
+            return "NOZZLE_JAMMED";
+        }
+        return "TARGET_REACHED";
+    }
+
+    /**
+     * Starts a timer to track if the drone reaches its target within a given time frame.
+     * If the drone doesn't reach the target within the specified timeout, a fault is triggered
+     * and the drone's state is changed to FaultedState.
+     */
+    private void startFaultTimer() {
+        if (faultTimer != null) {
+            faultTimer.cancel(); // Cancel any existing timer
+        }
+
+        faultTimer = new Timer();
+        faultTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (!hasReachedTarget()) {
+                    System.out.println("[Drone " + id + "] Fault detected: Failed to reach target in time.");
+                    setState(new FaultedState());
+                }
+            }
+        }, FAULT_TIMEOUT);
+    }
+
+    /**
+     * Cancels the currently running fault timer, if one exists.
+     * This is called when the drone successfully reaches its target before the timer expires,
+     * preventing the fault from being triggered.
+     */
+    private void cancelFaultTimer() {
+        if (faultTimer != null) {
+            faultTimer.cancel();
+            faultTimer = null;
+        }
+    }
+
+    public void cleandAndSendEventBackToDroneSubsystem(){
+        // Create cleaned event
+        Event newEvent = new Event(
+                this.currentEvent.getId(),
+                this.currentEvent.getTime(),
+                this.currentEvent.getZoneId(),
+                this.currentEvent.getEventType(),
+                this.currentEvent.getSeverityLevel(),
+                null);
+
+        // Send the event back to DroneSubsystem
+        try (DatagramSocket socket = new DatagramSocket()) {
+            String type = CommunicationDroneToSubsystem.EVENT_RETURN.name();
+            String message = type + ":" + newEvent.serialize();
+            byte[] sendData = message.getBytes();
+            InetAddress subsystemAddress = InetAddress.getByName("localhost");
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, subsystemAddress, 6001);
+            socket.send(sendPacket);
+            System.out.println("[Drone " + id + "] Sent event back to DroneSubsystem because it faulted");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -301,6 +425,7 @@ public class Drone implements Runnable {
 
     public void setCurrentEvent(Event currentEvent) {
         this.currentEvent = currentEvent;
+
         if(currentEvent != null){
             currentEvent.setAssignedDrone(this);
             this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();

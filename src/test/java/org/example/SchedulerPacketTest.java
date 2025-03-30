@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SchedulerPacketTest {
     private Scheduler scheduler;
-    private Event event;
+    private Event event, faultyEvent;
     private DatagramSocket serverSocket;
     private final int serverPort = 6000;
     private final String serverHost = "localhost";
@@ -22,7 +22,8 @@ class SchedulerPacketTest {
     void setUp() throws Exception {
         serverSocket = new DatagramSocket(serverPort);
         scheduler = new Scheduler(5000, serverHost, serverPort);
-        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High");
+        event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
+        faultyEvent = new Event(1, "09:09:09", 2, EventType.DRONE_REQUEST, "Low", "CORRUPTED_MESSAGE");
     }
 
     @Test
@@ -54,5 +55,25 @@ class SchedulerPacketTest {
         InetAddress clientAddress = receivePacket.getAddress();
         int clientPort = receivePacket.getPort();
         return new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+    }
+
+    @Test
+    void testCorruptMessage() throws Exception {
+        // Server thread to receive packets
+        new Thread(() -> {
+            try {
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                serverSocket.receive(receivePacket);
+                DatagramPacket sendPacket = getDatagramPacket(receivePacket);
+                serverSocket.send(sendPacket);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        // sending faulty event to drone
+        boolean result = scheduler.sendEventToDrone(faultyEvent);
+        assertFalse(result);
     }
 }

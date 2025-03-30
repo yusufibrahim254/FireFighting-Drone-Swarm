@@ -1,7 +1,6 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
 import org.example.FireIncidentSubsystem.Event;
-import org.example.Scheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,7 @@ class ZoneReaderTest {
 
     @BeforeEach
     void setUp(){
-        event = new Event(8, "12:12:12", 2, EventType.DRONE_REQUEST, "High");
+        event = new Event(8, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
 
     }
 

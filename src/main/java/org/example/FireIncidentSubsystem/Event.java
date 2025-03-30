@@ -13,19 +13,21 @@ public class Event {
     private int zoneId; // ID of the zone where the event is taking place
     private final EventType eventType; // Type of event (e.g., FIRE)
     private final String severityLevel; // Severity level of the event
+    private String fault;
     private Drone assignedDrone;
 
     private double currentWaterAmountNeeded;
     /**
      * Event constructor
      *
-     * @param id           The unique identifier for the event.
-     * @param time         The timestamp of the event.
-     * @param zoneId       The ID of the zone where the event is taking place.
-     * @param eventType    The type of event occurring.
+     * @param id            The unique identifier for the event.
+     * @param time          The timestamp of the event.
+     * @param zoneId        The ID of the zone where the event is taking place.
+     * @param eventType     The type of event occurring.
      * @param severityLevel The severity level of the event.
+     * @param fault         The parameter indicating a drone's fault
      */
-    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel) {
+    public Event(int id, String time, int zoneId, EventType eventType, String severityLevel, String fault) {
         this.id = id;
         this.time = time;
         this.zoneId = zoneId;
@@ -33,6 +35,7 @@ public class Event {
         this.severityLevel = severityLevel;
         this.currentWaterAmountNeeded = new Severity(severityLevel).getWaterAmount();
         this.assignedDrone = null;
+        this.fault = fault;
     }
 
     /**
@@ -96,7 +99,7 @@ public class Event {
      * @return A string representation of the Event object.
      */
     public String serialize() {
-        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel;
+        return id + "," + time + "," + zoneId + "," + eventType + "," + severityLevel + "," + fault;
     }
 
     /**
@@ -108,14 +111,56 @@ public class Event {
      */
     public static Event deserialize(String data) {
 //        System.out.println("The data in deserialize function is "+data);
+        System.out.println(data);
         String[] parts = data.split(",");
         int id = Integer.parseInt(parts[0]);
         String time = parts[1];
         int zoneId = Integer.parseInt(parts[2]);
         EventType eventType = EventType.valueOf(parts[3]);
         String severityLevel = parts[4];
-        return new Event(id, time, zoneId, eventType, severityLevel);
+        String fault = parts[5];
+        return new Event(id, time, zoneId, eventType, severityLevel, fault);
     }
+
+    /**
+     * Checks if the event is a valid event
+     * @param event the event
+     * @return true if event is valid, false if otherwise
+     */
+    public boolean isValidEvent(Event event) {
+        // check for a valid id
+        if (event.getId() < 0) {
+            System.out.println("[Validation] Invalid event ID: " + event.getId());
+            return false;
+        }
+
+        // check for a valid zone id
+        if (event.getZoneId() < 0) { // needs to point to a proper zone found in the zone CSV
+            System.out.println("[Validation] Invalid zone ID: " + event.getZoneId());
+            return false;
+        }
+
+        try { // try to get the EventType value to ensure its a valid event type
+            EventType eventType = EventType.valueOf(event.getEventType().toString());
+        } catch (IllegalArgumentException e) {
+            System.out.println("[Validation] Invalid event type: " + event.getEventType());
+            return false;
+        }
+
+        // check the severity level
+        switch (event.getSeverityLevel().toLowerCase()) {
+            case "low":
+            case "moderate":
+            case "high":
+                break;
+            default:
+                System.out.println("[Validation] Invalid severity level: " + event.getSeverityLevel());
+                return false;
+        }
+        // passes all previous checks
+        return true;
+    }
+
 
     @Override
     public String toString() {
@@ -125,22 +170,45 @@ public class Event {
                 ", zoneId=" + zoneId +
                 ", eventType=" + eventType +
                 ", severityLevel='" + severityLevel + '\'' +
+                ", fault=" + fault +
                 '}';
     }
 
+    /**
+     * Gets the current amount of water needed for the event
+     * @return the amount of water needed
+     */
     public double getCurrentWaterAmountNeeded() {
         return currentWaterAmountNeeded;
     }
 
+    /**
+     * Sets the current amount of water needed for the event
+     * @param currentWaterAmountNeeded the new amount of water needed
+     */
     public void setCurrentWaterAmountNeeded(double currentWaterAmountNeeded) {
         this.currentWaterAmountNeeded = currentWaterAmountNeeded;
     }
 
+    /**
+     * Gets the event's assigned drone
+     * @return the assigned drone
+     */
     public Drone getAssignedDrone() {
         return assignedDrone;
     }
 
+    /**
+     * Sets the event's drone
+     * @param assignedDrone the new drone for event
+     */
     public void setAssignedDrone(Drone assignedDrone) {
         this.assignedDrone = assignedDrone;
     }
+    public String getFault(){return this.fault;};
+
+    public void setFault(String fault){
+        this.fault = fault;
+    }
+
 }
