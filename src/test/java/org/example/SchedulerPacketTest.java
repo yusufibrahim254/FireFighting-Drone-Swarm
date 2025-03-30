@@ -23,7 +23,7 @@ class SchedulerPacketTest {
         serverSocket = new DatagramSocket(serverPort);
         scheduler = new Scheduler(5000, serverHost, serverPort);
         event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
-        faultyEvent = new Event(1, "09:09:09", 2, EventType.DRONE_REQUEST, "Low", "CORRUPT_MESSAGE");
+        faultyEvent = new Event(1, "09:09:09", 2, EventType.DRONE_REQUEST, "Low", "CORRUPTED_MESSAGE");
     }
 
     @Test

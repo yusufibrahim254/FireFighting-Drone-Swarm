@@ -102,7 +102,7 @@ public class Scheduler implements Runnable {
                         }
                         System.out.println("Sending event to DroneSubsystem");
                     } else {
-                            System.out.println("[Scheduler] Event corrupted. retrying event: " + event.getId());
+                            System.out.println("[Scheduler] Retrying corrupted event: " + event.getId());
                     }
                 }
                 // Avoid tight looping
@@ -122,7 +122,12 @@ public class Scheduler implements Runnable {
         try (DatagramSocket ackSocket = new DatagramSocket()) { // Separate socket for acknowledgments
             String eventData = event.serialize();
 
-            if ("CORRUPT_MESSAGE".equals(event.getFault())) {
+            if ("CORRUPTED_MESSAGE".equals(event.getFault())) {
+                eventData = corruptData(eventData);
+            }
+
+            if (!checkIfValidMessage(eventData)) {
+                System.out.println("[Scheduler] Corrupted message detected. Clearing to prepare retry.");
                 event.setFault("NO_FAULT");
                 return false;
             }
@@ -159,6 +164,16 @@ public class Scheduler implements Runnable {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private String corruptData(String data) {
+        //Simulate corruption by modifying data in some unexpected way
+        return data.substring(0, Math.max(1, data.length() / 2)) + "#$%";
+    }
+
+    private boolean checkIfValidMessage(String data) {
+        // validity test to see if it doesnt have that corruption
+        return !data.contains("#$%");
     }
     /**
      * Main method to start the Scheduler.
