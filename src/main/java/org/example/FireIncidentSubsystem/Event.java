@@ -13,7 +13,7 @@ public class Event {
     private int zoneId; // ID of the zone where the event is taking place
     private final EventType eventType; // Type of event (e.g., FIRE)
     private final String severityLevel; // Severity level of the event
-    private final String fault;
+    private String fault;
     private Drone assignedDrone;
 
     private double currentWaterAmountNeeded;
@@ -206,5 +206,9 @@ public class Event {
         this.assignedDrone = assignedDrone;
     }
     public String getFault(){return this.fault;};
+
+    public void setFault(String fault){
+        this.fault = fault;
+    }
 
 }

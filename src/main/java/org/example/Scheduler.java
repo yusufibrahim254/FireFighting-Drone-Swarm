@@ -102,7 +102,7 @@ public class Scheduler implements Runnable {
                         }
                         System.out.println("Sending event to DroneSubsystem");
                     } else {
-                        System.out.println("[Scheduler] No drone available, retrying event: " + event.getId());
+                            System.out.println("[Scheduler] Event corrupted. retrying event: " + event.getId());
                     }
                 }
                 // Avoid tight looping
@@ -121,6 +121,12 @@ public class Scheduler implements Runnable {
     protected boolean sendEventToDrone(Event event) {
         try (DatagramSocket ackSocket = new DatagramSocket()) { // Separate socket for acknowledgments
             String eventData = event.serialize();
+
+            if ("CORRUPT_MESSAGE".equals(event.getFault())) {
+                event.setFault("NO_FAULT");
+                return false;
+            }
+
             byte[] sendData = eventData.getBytes();
             InetAddress droneAddress = InetAddress.getByName(droneHost);
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, droneAddress, dronePort);
