@@ -12,7 +12,7 @@ class ZoneReaderTest {
 
     @BeforeEach
     void setUp(){
-        event = new Event(8, "12:12:12", 2, EventType.DRONE_REQUEST, "High", fault);
+        event = new Event(8, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
 
     }
 

@@ -13,13 +13,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class DroneTest {
     private Drone drone;
     private DroneState droneState = new IdleState();
-    private Event event;
+    private Event event,droneStuckEvent,nozzleJammedEvent;
     private DatagramSocket testSocket;
     @BeforeEach
     void setUp() throws SocketException {
         drone = new Drone(1,15, new DroneSubsystem(0, 0, "docs/sample_zone_file.csv"), 0.1);
         testSocket = new DatagramSocket(0);
         event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
+        droneStuckEvent = new Event(2, "09:09:09", 3, EventType.DRONE_REQUEST, "Low", "DRONE_STUCK");
+        nozzleJammedEvent = new Event(3, "10:10:10", 4, EventType.DRONE_REQUEST, "Low", "NOZZLE_JAMMED");
     }
 
     @AfterEach
@@ -155,4 +157,25 @@ class DroneTest {
         assertTrue(drone.getBatteryLevel() < 100);
     }
 
+    @Test
+    void testDroneStuck() {
+
+        drone.setCurrentEvent(droneStuckEvent);
+
+        drone.setTargetPosition(new int[]{100, 100});
+
+        String result = drone.moveTowardsTarget();
+        assertEquals("DRONE_STUCK", result, "Drone should return 'DRONE_STUCK' when stuck");
+    }
+
+    @Test
+    void testNozzleJammed() {
+
+        drone.setCurrentEvent(nozzleJammedEvent);
+
+        drone.setTargetPosition(new int[]{50, 50});
+
+        String result = drone.moveTowardsTarget();
+        assertEquals("NOZZLE_JAMMED", result, "Drone should return 'NOZZLE_JAMMED' when the nozzle is jammed");
+    }
 }
