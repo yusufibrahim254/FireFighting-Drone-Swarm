@@ -9,14 +9,33 @@ package "Main" {
 }
 
 package "org.example" {
-  class Scheduler {
-    - socket: DatagramSocket
-    - incidentQueue: Queue<Event>
-    - droneHost: String
-    - dronePort: int
-    + Scheduler(port: int, droneHost: String, dronePort: int)
-    + run(): void
-  }
+    class Sensor {
+      - logs: List<String>
+      - LOG_FILE: String = "docs/logs/system_event_logs.txt"
+      - scheduledExecutor: ScheduledExecutorService
+      + Sensor()
+      + detectFire(zoneId: int): void
+      + requestDrone(zoneId: int): void
+      + droneArrived(droneId: int, zoneId: int): void
+      + shutdown(): void
+      - logEvent(eventType: EventType, entity: String, details: String): void
+      - flushLogs(): void
+    }
+
+    class Scheduler {
+      - socket: DatagramSocket
+      - incidentQueue: Queue<Event>
+      - droneHost: String
+      - dronePort: int
+
+      + Scheduler(port: int, droneHost: String, dronePort: int) throws SocketException
+      + run(): void
+      + main(args: String[]): void
+      + sendEventToDrone(event: Event): boolean
+      - processIncidentQueue(): void
+      - corruptData(data: String): String
+      - checkIfValidMessage(data: String): boolean
+      }
 
   package DroneSystem {
     class BayController {
@@ -30,19 +49,20 @@ package "org.example" {
     enum CommunicationDroneToSubsystem {
       LOCATION_UPDATE
       JOB_DELEGATION
+      EVENT_RETURN
     }
 
-    interface DroneState {
-      + dispatch(drone: Drone): void
-      + arrive(drone: Drone): void
-      + dropAgent(drone: Drone): double
-      + refill(drone: Drone): void
-      + fault(drone: Drone): void
-      + reset(drone: Drone): void
-      + displayState(drone: Drone): void
-    }
-
+   interface DroneState {
+     + dispatch(drone: Drone): void
+     + arrive(drone: Drone): void
+     + dropAgent(drone: Drone): double
+     + refill(drone: Drone): void
+     + fault(drone: Drone): void
+     + reset(drone: Drone): void
+     + displayState(drone: Drone): void
+   }
     class Drone {
+      - faultTimer: Timer
       - id: int
       - battery: double
       - agentCapacity: double
@@ -56,10 +76,14 @@ package "org.example" {
       - lastSentPosition: int[]
       - currentEvent: Event
       - batteryDepletionRate: double
+
+      + Drone(id: int, initialCapacity: double, droneSubsystem: DroneSubsystem, batteryDepletionRate: double)
       + setCurrentPosition(position: int[]): void
       + delegateJob(): void
       + run(): void
-      + moveTowardsTarget(): void
+      + moveTowardsTarget(): String
+      + cleandAndSendEventBackToDroneSubsystem(): void
+      + sendPositionToSubsystem(): void
       + getMaxAgentCapacity(): double
       + getAgentCapacity(): double
       + setAgentCapacity(agentCapacity: double): void
@@ -86,8 +110,9 @@ package "org.example" {
 
     class DroneEvent {
       - drone: Drone
+
       + DroneEvent(drone: Drone)
-      + processEvent(event: Event, water: double, drone: Drone): double
+      + processEvent(event: Event, waterNeeded: double, drone: Drone): double
       + dropAgent(waterNeeded: double): double
       + refill(): void
     }
@@ -97,101 +122,122 @@ package "org.example" {
       - droneSocket: DatagramSocket
       - drones: List<Drone>
       - zones: Zones
+
       + DroneSubsystem(schedulerPort: int, dronePort: int, zonesFilePath: String)
       + run(): void
       + getZones(): Zones
       + getAvailableDrones(event: Event): int
+      + main(args: String[]): void
+      - handleSchedulerMessages(): void
+      - handleDroneLocationUpdates(): void
+      - processDroneLocationUpdate(locationData: String): void
+      - assignEventToClosestIdleDrone(event: Event): void
+      - calculateDistance(point1: int[], point2: int[]): double
+      - isDroneEnRouteToSameSeverity(drone: Drone, severity: String): boolean
+      - calculateDistance(drone: Drone, location: int[]): double
     }
 
       class DroppingAgentState {
-        + dispatch(Drone): void
-        + arrive(Drone): void
-        + dropAgent(Drone): double
-        + refill(Drone): void
-        + fault(Drone): void
-        + reset(Drone): void
-        + displayState(Drone): void
+        + dispatch(drone: Drone): void
+        + arrive(drone: Drone): void
+        + dropAgent(drone: Drone): double
+        + refill(drone: Drone): void
+        + fault(drone: Drone): void
+        + reset(drone: Drone): void
+        + displayState(drone: Drone): void
       }
 
       class EnRouteState {
-        + dispatch(Drone): void
-        + arrive(Drone): void
-        + dropAgent(Drone): double
-        + refill(Drone): void
-        + fault(Drone): void
-        + reset(Drone): void
-        + displayState(Drone): void
+        + dispatch(drone: Drone): void
+        + arrive(drone: Drone): void
+        + dropAgent(drone: Drone): double
+        + refill(drone: Drone): void
+        + fault(drone: Drone): void
+        + reset(drone: Drone): void
+        + displayState(drone: Drone): void
       }
 
-      class FaultedState {
-        + dispatch(Drone): void
-        + arrive(Drone): void
-        + dropAgent(Drone): double
-        + refill(Drone): void
-        + fault(Drone): void
-        + reset(Drone): void
-        + displayState(Drone): void
-      }
+     class FaultedState {
+       + dispatch(drone: Drone): void
+       + arrive(drone: Drone): void
+       + dropAgent(drone: Drone): double
+       + refill(drone: Drone): void
+       + fault(drone: Drone): void
+       + reset(drone: Drone): void
+       + displayState(drone: Drone): void
+     }
 
       class IdleState {
-        + dispatch(Drone): void
-        + arrive(Drone): void
-        + dropAgent(Drone): double
-        + refill(Drone): void
-        + fault(Drone): void
-        + reset(Drone): void
-        + displayState(Drone): void
+         + dispatch(drone: Drone): void
+               + arrive(drone: Drone): void
+               + dropAgent(drone: Drone): double
+               + refill(drone: Drone): void
+               + fault(drone: Drone): void
+               + reset(drone: Drone): void
+               + displayState(drone: Drone): void
       }
 
       class RefillingState {
-        + dispatch(Drone): void
-        + arrive(Drone): void
-        + dropAgent(Drone): double
-        + refill(Drone): void
-        + fault(Drone): void
-        + reset(Drone): void
-        + displayState(Drone): void
+        + dispatch(drone: Drone): void
+              + arrive(drone: Drone): void
+              + dropAgent(drone: Drone): double
+              + refill(drone: Drone): void
+              + fault(drone: Drone): void
+              + reset(drone: Drone): void
+              + displayState(drone: Drone): void
       }
 
       class ReturningState {
-        + dispatch(Drone): void
-        + arrive(Drone): void
-        + dropAgent(Drone): double
-        + refill(Drone): void
-        + fault(Drone): void
-        + reset(Drone): void
-        + displayState(Drone): void
+         + dispatch(drone: Drone): void
+               + arrive(drone: Drone): void
+               + dropAgent(drone: Drone): double
+               + refill(drone: Drone): void
+               + fault(drone: Drone): void
+               + reset(drone: Drone): void
+               + displayState(drone: Drone): void
       }
   }
 
   package FireIncidentSubsystem {
     class FireIncident {
-      - socket: DatagramSocket
-      - schedulerAddress: InetAddress
-      - schedulerPort: int
-      + FireIncident(schedulerHost: String, schedulerPort: int)
-      + run(): void
+     - EVENT_FILE: String = "docs/Sample_event_file.csv"
+       - socket: DatagramSocket
+       - schedulerAddress: InetAddress
+       - schedulerPort: int
+
+       + FireIncident(schedulerHost: String, schedulerPort: int) throws SocketException, UnknownHostException
+       + run(): void
+       + main(args: String[]): void
+       - waitForAcknowledgment(event: Event): boolean
     }
 
     class Event {
-      - id: int
-      - time: String
-      - zoneId: int
-      - eventType: EventType
-      - severityLevel: String
-      - assignedDrone: Drone
-      - currentWaterAmountNeeded: double
-      + getId(): int
-      + getTime(): String
-      + getZoneId(): int
-      + getEventType(): EventType
-      + getSeverityLevel(): String
-      + getSeverityWaterAmount(): int
-      + serialize(): String
-      + getCurrentWaterAmountNeeded(): double
-      + setCurrentWaterAmountNeeded(water: double): void
-      + getAssignedDrone(): Drone
-      + setAssignedDrone(drone: Drone): void
+        - id: int
+        - time: String
+        - zoneId: int
+        - eventType: EventType
+        - severityLevel: String
+        - fault: String
+        - assignedDrone: Drone
+        - currentWaterAmountNeeded: double
+
+        + Event(id: int, time: String, zoneId: int, eventType: EventType, severityLevel: String, fault: String)
+        + getId(): int
+        + getTime(): String
+        + getZoneId(): int
+        + getEventType(): EventType
+        + getSeverityLevel(): String
+        + getSeverityWaterAmount(): int
+        + serialize(): String
+        + getCurrentWaterAmountNeeded(): double
+        + setCurrentWaterAmountNeeded(currentWaterAmountNeeded: double): void
+        + getAssignedDrone(): Drone
+        + setAssignedDrone(assignedDrone: Drone): void
+        + getFault(): String
+        + setFault(fault: String): void
+        + isValidEvent(event: Event): boolean
+        + toString(): String
+        + deserialize(data: String): Event
     }
 
     package Helpers {
