@@ -1,7 +1,11 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
+import static java.lang.Math.abs;
+
 public class Zone {
     private int zoneId;
+    private int width;
+    private int length;
     private Coordinates zoneStart;
     private Coordinates zoneEnd;
 
@@ -40,6 +44,14 @@ public class Zone {
      */
     public Coordinates getZoneEnd() {
         return zoneEnd;
+    }
+
+    public int getWidth() {
+        return abs(getZoneStart().getX() - getZoneEnd().getX());
+    }
+
+    public int getLength() {
+        return abs(getZoneStart().getY() - getZoneEnd().getY());
     }
 
     /**
