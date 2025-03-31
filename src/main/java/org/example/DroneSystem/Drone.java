@@ -1,5 +1,6 @@
 package org.example.DroneSystem;
 
+
 import org.example.FireIncidentSubsystem.Event;
 import org.example.DroneSystem.DroneSubsystem;
 
@@ -15,6 +16,7 @@ import java.util.TimerTask;
 public class Drone implements Runnable {
     private Timer faultTimer;
     private static final int FAULT_TIMEOUT = 600000; // Timeout duration: 60 seconds
+    private DroneSubsystem droneSubsystem;
 
     private final int id;
     /**
@@ -49,6 +51,7 @@ public class Drone implements Runnable {
     private int[] lastSentPosition = {0, 0}; // Last position sent to the DroneSubsystem
     private Event currentEvent; // Current event assigned to the drone
     private double batteryDepletionRate;
+
     public Drone(int id, double initialCapacity, DroneSubsystem droneSubsystem, double batteryDepletionRate) {
         this.id = id;
         this.battery = 100;
@@ -59,6 +62,7 @@ public class Drone implements Runnable {
         this.currentEvent = null;
         this.state = new IdleState();
         this.batteryDepletionRate = batteryDepletionRate;
+        this.droneSubsystem = droneSubsystem;
     }
 
     // Setter for the drone's current position
@@ -138,7 +142,13 @@ public class Drone implements Runnable {
                 } else if (state instanceof DroppingAgentState) {
                     System.out.println("\n");
                     state.displayState(this);
+                    Event handledEvent = currentEvent;
                     state.dropAgent(this); // Drop Agent
+
+                    if (currentEvent == null){
+                        System.out.println("Drone " + id + " completed Event " + handledEvent.getId() + ", returning to base.");
+                        droneSubsystem.updateFireZones(handledEvent);
+                    }
                 } else if (state instanceof RefillingState) {
                     System.out.println("\n");
                     state.displayState(this);

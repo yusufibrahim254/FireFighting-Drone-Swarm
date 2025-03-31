@@ -1,5 +1,7 @@
 package org.example.DroneSystem;
 
+import org.example.DisplayConsole.ConsoleView;
+import org.example.DisplayConsole.Home;
 import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.Zones;
 
@@ -19,6 +21,7 @@ public class DroneSubsystem implements Runnable {
     private final DatagramSocket droneSocket; // Socket for Drone communication
     private final List<Drone> drones;
     private final Zones zones;
+    private ConsoleView consoleView;
 
     /**
      * Constructor for the drone subsystem
@@ -32,6 +35,9 @@ public class DroneSubsystem implements Runnable {
         this.droneSocket = new DatagramSocket(dronePort);
         this.drones = new ArrayList<>();
         this.zones = new Zones(zonesFilePath);
+
+        Home home = new Home();
+        this.consoleView = home.getView();
 
         // Calculate the furthest zone's midpoint
         int[] furthestMidpoint = zones.getFurthestZoneMidpoint();
@@ -102,6 +108,8 @@ public class DroneSubsystem implements Runnable {
 
                 // Assign the event to the closest idle drone
                 assignEventToClosestIdleDrone(event);
+
+                consoleView.markFire(event.getZoneId());
 
                 // Send acknowledgment back to Scheduler
                 String ack = "ACK:" + event.getId();
@@ -393,5 +401,9 @@ public class DroneSubsystem implements Runnable {
             }
         }
         return availableDronesCount;
+    }
+
+    public void updateFireZones(Event event){
+        consoleView.clearFireInZone(event.getZoneId());
     }
 }

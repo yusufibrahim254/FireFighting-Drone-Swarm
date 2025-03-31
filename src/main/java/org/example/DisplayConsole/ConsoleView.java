@@ -9,6 +9,7 @@ import java.util.*;
 public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
     private Set<Integer> fires = new HashSet<>();
+    private Set<Integer> extinguishedFires = new HashSet<>();
 
     /**
      * Constructor for the console view
@@ -57,21 +58,27 @@ public class ConsoleView extends JPanel{
 
     public void markFire(int zoneId) {
         fires.add(zoneId);
+        extinguishedFires.remove(zoneId);
         repaint();
     }
 
 
     public void clearFireInZone(int zoneId) {
         fires.remove(zoneId);
+        extinguishedFires.add(zoneId);
         repaint();
     }
 
     public void drawFires(Graphics g) {
-        g.setColor(Color.RED);
+
         for (Zone zone : zones) {
+            int midX = (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
+            int midY = (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
             if (fires.contains(zone.getZoneId())) {
-                int midX = (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
-                int midY = (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
+                g.setColor(Color.RED);
+                g.fillRect(midX, midY, 25, 25);
+            } else if (extinguishedFires.contains(zone.getZoneId())){
+                g.setColor(Color.GREEN);
                 g.fillRect(midX, midY, 25, 25);
             }
         }

@@ -19,7 +19,7 @@ public class Scheduler implements Runnable {
     private final Queue<Event> incidentQueue = new LinkedList<>(); // Queue to store incoming fire incidents
     private final String droneHost; // Hostname or IP address of the Drone Subsystem
     private final int dronePort; // Port number of the Drone Subsystem
-    private ConsoleView consoleView;
+
 
     /**
      * Constructs a Scheduler with the specified port, Drone Subsystem host, and port.
@@ -33,8 +33,7 @@ public class Scheduler implements Runnable {
         this.socket = new DatagramSocket(port);
         this.droneHost = droneHost; // Use the IP address of the DroneSubsystem machine
         this.dronePort = dronePort;
-        Home home = new Home();
-        this.consoleView = home.getView();
+
 
         // Print a message to let the user know the Scheduler is running
         System.out.println("[Scheduler] Listening on Port: " + this.socket.getLocalPort());
@@ -69,8 +68,6 @@ public class Scheduler implements Runnable {
                             incidentQueue.add(event);
                         }
 
-
-                        consoleView.markFire(event.getZoneId());
 
                         // Send acknowledgment back to FireIncident
                         String ack = "ACK:" + event.getId();
