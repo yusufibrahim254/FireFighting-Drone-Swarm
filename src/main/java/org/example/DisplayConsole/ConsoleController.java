@@ -6,7 +6,7 @@ import org.example.FireIncidentSubsystem.Helpers.Zones;
 import java.util.LinkedList;
 
 public class ConsoleController {
-    private Zones zonesModel;
+    private final Zones zonesModel;
 
     /**
      * Constructor for the console controller

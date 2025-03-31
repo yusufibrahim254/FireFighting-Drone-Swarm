@@ -1,6 +1,5 @@
 package org.example.DisplayConsole;
 
-import org.example.FireIncidentSubsystem.Helpers.Coordinates;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
@@ -8,7 +7,7 @@ import java.awt.*;
 import java.util.*;
 
 public class ConsoleView extends JPanel{
-    private LinkedList<Zone> zones;
+    private final LinkedList<Zone> zones;
     private Set<Integer> fires = new HashSet<>();
 
     /**
@@ -39,7 +38,6 @@ public class ConsoleView extends JPanel{
     public void drawZones(Graphics g){
         g.setColor(Color.BLACK);
         for (Zone zone: zones){
-            System.out.println(zone);
             g.drawRect(zone.getZoneStart().getXCoords(), zone.getZoneStart().getYCoords(), zone.getWidth(), zone.getLength());
             g.drawString("Z(" + zone.getZoneId() + ")", zone.getZoneStart().getXCoords() + 5, zone.getZoneStart().getYCoords() + 15);
         }
@@ -77,5 +75,13 @@ public class ConsoleView extends JPanel{
                 g.fillRect(midX, midY, 25, 25);
             }
         }
+    }
+
+    public Set<Integer> getFires() {
+        return fires;
+    }
+
+    public void setFires(Set<Integer> fires) {
+        this.fires = fires;
     }
 }

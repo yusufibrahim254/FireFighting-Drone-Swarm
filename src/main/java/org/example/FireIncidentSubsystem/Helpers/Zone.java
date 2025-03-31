@@ -3,9 +3,9 @@ package org.example.FireIncidentSubsystem.Helpers;
 import static java.lang.Math.abs;
 
 public class Zone {
-    private int zoneId;
-    private Coordinates zoneStart;
-    private Coordinates zoneEnd;
+    private final int zoneId;
+    private final Coordinates zoneStart;
+    private final Coordinates zoneEnd;
 
     /**
      * Zone constructor
@@ -51,6 +51,8 @@ public class Zone {
     public int getLength() {
         return abs(getZoneStart().getYCoords() - getZoneEnd().getYCoords());
     }
+
+
 
     /**
      * Creates a string verison of the current zone

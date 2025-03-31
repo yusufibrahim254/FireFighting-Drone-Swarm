@@ -3,7 +3,6 @@ package org.example.DisplayConsole;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.LinkedList;
 
 /**
