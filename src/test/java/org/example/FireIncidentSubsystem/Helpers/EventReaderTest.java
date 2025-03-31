@@ -9,25 +9,23 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventReaderTest {
-    private Scheduler scheduler;
     private static final String testFile = "docs/Sample_event_file.csv";
 
-//    @BeforeEach
-//    void setUp(){
-//        DroneSubsystem droneSubsystem = new DroneSubsystem();
-//        scheduler = new Scheduler(droneSubsystem);
-//    }
-//
-//    @Test
-//    void readEvents() {
-//        EventReader.readEvents(testFile, scheduler);
-//
-//        assertFalse(scheduler.isEmpty());
-//        Event testEvent = scheduler.getEvent(); // just one event to verify
-//        assertEquals("14:03:15", testEvent.getTime());
-//        assertEquals(3, testEvent.getZoneId());
-//        assertEquals(EventType.FIRE_DETECTED, testEvent.getEventType());
-//        assertEquals("High", testEvent.getSeverityLevel());
-//
-//    }
+    @Test
+    void readEvents() {
+        Event[] events = EventReader.readEvents(testFile);
+
+        assertNotNull(events);
+        assertTrue(events.length > 0);
+
+        Event firstEvent = events[0];
+        assertNotNull(firstEvent);
+
+        int middleIndex = events.length / 2;
+        Event middleEvent = events[middleIndex];
+        assertNotNull(middleEvent);
+
+        Event lastEvent = events[events.length - 1];
+        assertNotNull(lastEvent);
+    }
 }
