@@ -33,14 +33,14 @@ class ZoneTest {
 
     @Test
     void testZoneStartCoords(){
-        assertEquals(start.getX(), zone.getZoneStart().getX(), "Zone start X coords should be 100");
-        assertEquals(start.getY(), zone.getZoneStart().getY(), "Zone start Y coords should be 200");
+        assertEquals(start.getXCoords(), zone.getZoneStart().getXCoords(), "Zone start X coords should be 100");
+        assertEquals(start.getYCoords(), zone.getZoneStart().getYCoords(), "Zone start Y coords should be 200");
     }
 
     @Test
     void testZoneEndCoords(){
-        assertEquals(end.getX(), zone.getZoneEnd().getX(), "Zone end X coords should be 400");
-        assertEquals(end.getY(), zone.getZoneEnd().getY(), "Zone end Y coords should be 500");
+        assertEquals(end.getXCoords(), zone.getZoneEnd().getXCoords(), "Zone end X coords should be 400");
+        assertEquals(end.getYCoords(), zone.getZoneEnd().getYCoords(), "Zone end Y coords should be 500");
     }
 
 }

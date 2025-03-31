@@ -3,11 +3,18 @@ package org.example.DisplayConsole;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.LinkedList;
-import java.util.Set;
 
+/**
+ * The main window for the simulation, the home page
+ */
 public class Home extends JFrame {
+    private ConsoleView view;
 
+    /**
+     * Constructor for the Home gui
+     */
     public Home(){
         setTitle("FireFighting Drone Swarm Simulation");
         setSize(600, 600);
@@ -17,9 +24,17 @@ public class Home extends JFrame {
         String zonesFilePath = "docs/sample_zone_file.csv";
         LinkedList<Zone> zones = controller.getZones(zonesFilePath);
 
-        ConsoleView view = new ConsoleView(zones);
+        view = new ConsoleView(zones);
         add(view);
         setVisible(true);
+    }
+
+    public ConsoleView getView() {
+        return view;
+    }
+
+    public void setView(ConsoleView view) {
+        this.view = view;
     }
 
     public static void main(String[] args) {

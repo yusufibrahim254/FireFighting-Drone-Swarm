@@ -18,12 +18,12 @@ class CoordinatesTest {
 
     @Test
     void testGetX() {
-        assertEquals(100, coordinates.getX());
+        assertEquals(100, coordinates.getXCoords());
     }
 
     @Test
     void testGetY() {
-        assertEquals(200, coordinates.getY());
+        assertEquals(200, coordinates.getYCoords());
     }
 
 }
