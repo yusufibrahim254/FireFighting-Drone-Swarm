@@ -3,6 +3,7 @@ package org.example;
 
 import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.EventType;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.net.DatagramPacket;
@@ -15,15 +16,21 @@ class SchedulerPacketTest {
     private Scheduler scheduler;
     private Event event, faultyEvent;
     private DatagramSocket serverSocket;
-    private final int serverPort = 6000;
+    private int serverPort;
     private final String serverHost = "localhost";
 
     @BeforeEach
     void setUp() throws Exception {
-        serverSocket = new DatagramSocket(serverPort);
-        scheduler = new Scheduler(5000, serverHost, serverPort);
+        serverSocket = new DatagramSocket(0);
+        serverPort = serverSocket.getLocalPort();
+        scheduler = new Scheduler(0, serverHost, serverPort);
         event = new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT");
         faultyEvent = new Event(1, "09:09:09", 2, EventType.DRONE_REQUEST, "Low", "CORRUPTED_MESSAGE");
+    }
+
+    @AfterEach
+    void tearDown() {
+        serverSocket.close();
     }
 
     @Test

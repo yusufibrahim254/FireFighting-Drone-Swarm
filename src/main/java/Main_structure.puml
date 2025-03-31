@@ -1,109 +1,300 @@
 @startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
 
-/' diagram meta data start
-config=StructureConfiguration;
-{
-  "projectClassification": {
-    "searchMode": "OpenProject", // OpenProject, AllProjects
-    "includedProjects": "",
-    "pathEndKeywords": "*.impl",
-    "isClientPath": "",
-    "isClientName": "",
-    "isTestPath": "",
-    "isTestName": "",
-    "isMappingPath": "",
-    "isMappingName": "",
-    "isDataAccessPath": "",
-    "isDataAccessName": "",
-    "isDataStructurePath": "",
-    "isDataStructureName": "",
-    "isInterfaceStructuresPath": "",
-    "isInterfaceStructuresName": "",
-    "isEntryPointPath": "",
-    "isEntryPointName": "",
-    "treatFinalFieldsAsMandatory": false
-  },
-  "graphRestriction": {
-    "classPackageExcludeFilter": "",
-    "classPackageIncludeFilter": "",
-    "classNameExcludeFilter": "",
-    "classNameIncludeFilter": "",
-    "methodNameExcludeFilter": "",
-    "methodNameIncludeFilter": "",
-    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
-    "removeByAnnotation": "",
-    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
-    "removeByClassName": "",
-    "cutMappings": false,
-    "cutEnum": true,
-    "cutTests": true,
-    "cutClient": true,
-    "cutDataAccess": true,
-    "cutInterfaceStructures": true,
-    "cutDataStructures": true,
-    "cutGetterAndSetter": true,
-    "cutConstructors": true
-  },
-  "graphTraversal": {
-    "forwardDepth": 3,
-    "backwardDepth": 3,
-    "classPackageExcludeFilter": "",
-    "classPackageIncludeFilter": "",
-    "classNameExcludeFilter": "",
-    "classNameIncludeFilter": "",
-    "methodNameExcludeFilter": "",
-    "methodNameIncludeFilter": "",
-    "hideMappings": false,
-    "hideDataStructures": false,
-    "hidePrivateMethods": true,
-    "hideInterfaceCalls": true, // indirection: implementation -> interface (is hidden) -> implementation
-    "onlyShowApplicationEntryPoints": false, // root node is included
-    "useMethodCallsForStructureDiagram": "ForwardOnly" // ForwardOnly, BothDirections, No
-  },
-  "details": {
-    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
-    "showClassGenericTypes": true,
-    "showMethods": true,
-    "showMethodParameterNames": true,
-    "showMethodParameterTypes": true,
-    "showMethodReturnType": true,
-    "showPackageLevels": 2,
-    "showDetailedClassStructure": true
-  },
-  "rootClass": "Main",
-  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+package "Main" {
+  class Main {
+    + main(args: String[]): void
+  }
 }
-diagram meta data end '/
 
+package "org.example" {
+  class Scheduler {
+    - socket: DatagramSocket
+    - incidentQueue: Queue<Event>
+    - droneHost: String
+    - dronePort: int
+    + Scheduler(port: int, droneHost: String, dronePort: int)
+    + run(): void
+  }
 
+  package DroneSystem {
+    class BayController {
+      - bayDoorOpen: boolean
+      + BayController()
+      + openBayDoors(): void
+      + closeBayDoors(): void
+      + isBayDoorOpen(): boolean
+    }
 
-digraph g {
-    rankdir="TB"
-    splines=polyline
-    
+    enum CommunicationDroneToSubsystem {
+      LOCATION_UPDATE
+      JOB_DELEGATION
+    }
 
-'nodes 
-subgraph cluster_2390489 { 
-   	label=Main
-	labeljust=l
-	fillcolor="#ececec"
-	style=filled
-   
-   Main2390489[
-	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
-<TR><TD ALIGN="LEFT" >(C)Main</TD></TR>
-<HR/>
-<TR><TD ALIGN="LEFT" >+ main(args: String[])</TD></TR>
-</TABLE>>
-	style=filled
-	margin=0
-	shape=plaintext
-	fillcolor="#FFFFFF"
-];
-} 
+    interface DroneState {
+      + dispatch(drone: Drone): void
+      + arrive(drone: Drone): void
+      + dropAgent(drone: Drone): double
+      + refill(drone: Drone): void
+      + fault(drone: Drone): void
+      + reset(drone: Drone): void
+      + displayState(drone: Drone): void
+    }
 
-'edges    
+    class Drone {
+      - id: int
+      - battery: double
+      - agentCapacity: double
+      - maxAgentCapacity: double
+      - state: DroneState
+      - bayController: BayController
+      - remainingWaterNeeded: double
+      - currentPosition: int[]
+      - incidentPosition: int[]
+      - targetPosition: int[]
+      - lastSentPosition: int[]
+      - currentEvent: Event
+      - batteryDepletionRate: double
+      + setCurrentPosition(position: int[]): void
+      + delegateJob(): void
+      + run(): void
+      + moveTowardsTarget(): void
+      + getMaxAgentCapacity(): double
+      + getAgentCapacity(): double
+      + setAgentCapacity(agentCapacity: double): void
+      + getBayController(): BayController
+      + getRemainingWaterNeeded(): double
+      + setRemainingWaterNeeded(remainingWaterNeeded: double): void
+      + getBatteryLevel(): double
+      + setBatteryLevel(newLevel: int): void
+      + getState(): DroneState
+      + setState(state: DroneState): void
+      + setCurrentEvent(currentEvent: Event): void
+      + getCurrentEvent(): Event
+      + getIncidentPosition(): int[]
+      + setIncidentPosition(incidentPosition: int[]): void
+      + getBatteryDepletionRate(): double
+      + getId(): int
+      + getCurrentPosition(): int[]
+      + setTargetPosition(targetPosition: int[]): void
+      + getTargetPosition(): int[]
+      + getLastSentPosition(): int[]
+      + setLastSentPosition(lastSentPosition: int[]): void
+      + setBatteryDepletionRate(batteryDepletionRate: double): void
+    }
 
-    
+    class DroneEvent {
+      - drone: Drone
+      + DroneEvent(drone: Drone)
+      + processEvent(event: Event, water: double, drone: Drone): double
+      + dropAgent(waterNeeded: double): double
+      + refill(): void
+    }
+
+    class DroneSubsystem {
+      - schedulerSocket: DatagramSocket
+      - droneSocket: DatagramSocket
+      - drones: List<Drone>
+      - zones: Zones
+      + DroneSubsystem(schedulerPort: int, dronePort: int, zonesFilePath: String)
+      + run(): void
+      + getZones(): Zones
+      + getAvailableDrones(event: Event): int
+    }
+
+      class DroppingAgentState {
+        + dispatch(Drone): void
+        + arrive(Drone): void
+        + dropAgent(Drone): double
+        + refill(Drone): void
+        + fault(Drone): void
+        + reset(Drone): void
+        + displayState(Drone): void
+      }
+
+      class EnRouteState {
+        + dispatch(Drone): void
+        + arrive(Drone): void
+        + dropAgent(Drone): double
+        + refill(Drone): void
+        + fault(Drone): void
+        + reset(Drone): void
+        + displayState(Drone): void
+      }
+
+      class FaultedState {
+        + dispatch(Drone): void
+        + arrive(Drone): void
+        + dropAgent(Drone): double
+        + refill(Drone): void
+        + fault(Drone): void
+        + reset(Drone): void
+        + displayState(Drone): void
+      }
+
+      class IdleState {
+        + dispatch(Drone): void
+        + arrive(Drone): void
+        + dropAgent(Drone): double
+        + refill(Drone): void
+        + fault(Drone): void
+        + reset(Drone): void
+        + displayState(Drone): void
+      }
+
+      class RefillingState {
+        + dispatch(Drone): void
+        + arrive(Drone): void
+        + dropAgent(Drone): double
+        + refill(Drone): void
+        + fault(Drone): void
+        + reset(Drone): void
+        + displayState(Drone): void
+      }
+
+      class ReturningState {
+        + dispatch(Drone): void
+        + arrive(Drone): void
+        + dropAgent(Drone): double
+        + refill(Drone): void
+        + fault(Drone): void
+        + reset(Drone): void
+        + displayState(Drone): void
+      }
+  }
+
+  package FireIncidentSubsystem {
+    class FireIncident {
+      - socket: DatagramSocket
+      - schedulerAddress: InetAddress
+      - schedulerPort: int
+      + FireIncident(schedulerHost: String, schedulerPort: int)
+      + run(): void
+    }
+
+    class Event {
+      - id: int
+      - time: String
+      - zoneId: int
+      - eventType: EventType
+      - severityLevel: String
+      - assignedDrone: Drone
+      - currentWaterAmountNeeded: double
+      + getId(): int
+      + getTime(): String
+      + getZoneId(): int
+      + getEventType(): EventType
+      + getSeverityLevel(): String
+      + getSeverityWaterAmount(): int
+      + serialize(): String
+      + getCurrentWaterAmountNeeded(): double
+      + setCurrentWaterAmountNeeded(water: double): void
+      + getAssignedDrone(): Drone
+      + setAssignedDrone(drone: Drone): void
+    }
+
+    package Helpers {
+      class Coordinates {
+        - x: int
+        - y: int
+        + Coordinates(x: int, y: int)
+        + getX(): int
+        + getY(): int
+        + toString(): String
+        + equals(Object): boolean
+      }
+
+      class EventReader {
+        + readEvents(file: String): Event[]
+      }
+
+      enum EventType {
+        FIRE_DETECTED
+        DRONE_REQUEST
+      }
+
+      class Severity {
+        - level: String
+        - waterAmount: int
+        + Severity(level: String)
+        + getLevel(): String
+        + getWaterAmount(): int
+      }
+
+      class Zone {
+        - zoneId: int
+        - zoneStart: Coordinates
+        - zoneEnd: Coordinates
+        + Zone(id: int, start: Coordinates, end: Coordinates)
+        + getZoneId(): int
+        + getZoneStart(): Coordinates
+        + getZoneEnd(): Coordinates
+        + toString(): String
+      }
+
+      class ZoneReader {
+        + ZoneReader()
+        + readZone(id: int, file: String): Zone
+      }
+
+      class Zones {
+        - zoneMap: Map<Integer, int[]>
+        + Zones(file: String)
+        + getZoneMidpoint(id: int): int[]
+        + getFurthestZoneMidpoint(): int[]
+        + isZoneValid(id: int): boolean
+        + toString(): String
+      }
+    }
+  }
 }
+
+' === Relationships ===
+
+' --- Main Dependencies ---
+Main --> Scheduler
+Main --> DroneSubsystem
+Main --> FireIncident
+
+' --- Drone Interactions ---
+Drone --> DroneState
+Drone --> DroneSubsystem
+Drone --> Event
+Drone --> BayController
+
+DroneEvent --> Drone
+DroneSubsystem --> Drone
+DroneSubsystem --> Event
+DroneSubsystem --> FireIncidentSubsystem.Helpers.Zones
+
+' --- DroneState Inheritance ---
+DroneState <|.. DroppingAgentState
+DroneState <|.. EnRouteState
+DroneState <|.. FaultedState
+DroneState <|.. IdleState
+DroneState <|.. RefillingState
+DroneState <|.. ReturningState
+
+' --- Event Relationships ---
+Event --> Drone
+Event --> FireIncidentSubsystem.Helpers.Severity
+Event --> FireIncidentSubsystem.Helpers.EventType
+
+' --- FireIncident and Scheduler ---
+FireIncident --> Event
+Scheduler --> Event
+
+' --- Helpers: Zone Relationships ---
+FireIncidentSubsystem.Helpers.Zone --> FireIncidentSubsystem.Helpers.Coordinates
+FireIncidentSubsystem.Helpers.Zones --> FireIncidentSubsystem.Helpers.Zone
+FireIncidentSubsystem.Helpers.ZoneReader --> FireIncidentSubsystem.Helpers.Zone
+FireIncidentSubsystem.Helpers.ZoneReader --> FireIncidentSubsystem.Helpers.Coordinates
+FireIncidentSubsystem.Helpers.Zones --> FireIncidentSubsystem.Helpers.Coordinates
+
+' --- Helpers: EventReader & Severity ---
+FireIncidentSubsystem.Helpers.EventReader --> Event
+FireIncidentSubsystem.Helpers.EventReader --> FireIncidentSubsystem.Helpers.EventType
+FireIncidentSubsystem.Helpers.Severity --> FireIncidentSubsystem.Helpers.Severity
+
 @enduml
