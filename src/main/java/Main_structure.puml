@@ -266,7 +266,6 @@ Drone --> BayController
 DroneEvent --> Drone
 DroneSubsystem --> Drone
 DroneSubsystem --> Event
-DroneSubsystem --> FireIncidentSubsystem.Helpers.Zones
 
 ' --- DroneState Inheritance ---
 DroneState <|.. DroppingAgentState
@@ -278,23 +277,10 @@ DroneState <|.. ReturningState
 
 ' --- Event Relationships ---
 Event --> Drone
-Event --> FireIncidentSubsystem.Helpers.Severity
-Event --> FireIncidentSubsystem.Helpers.EventType
 
 ' --- FireIncident and Scheduler ---
 FireIncident --> Event
 Scheduler --> Event
 
-' --- Helpers: Zone Relationships ---
-FireIncidentSubsystem.Helpers.Zone --> FireIncidentSubsystem.Helpers.Coordinates
-FireIncidentSubsystem.Helpers.Zones --> FireIncidentSubsystem.Helpers.Zone
-FireIncidentSubsystem.Helpers.ZoneReader --> FireIncidentSubsystem.Helpers.Zone
-FireIncidentSubsystem.Helpers.ZoneReader --> FireIncidentSubsystem.Helpers.Coordinates
-FireIncidentSubsystem.Helpers.Zones --> FireIncidentSubsystem.Helpers.Coordinates
-
-' --- Helpers: EventReader & Severity ---
-FireIncidentSubsystem.Helpers.EventReader --> Event
-FireIncidentSubsystem.Helpers.EventReader --> FireIncidentSubsystem.Helpers.EventType
-FireIncidentSubsystem.Helpers.Severity --> FireIncidentSubsystem.Helpers.Severity
 
 @enduml
