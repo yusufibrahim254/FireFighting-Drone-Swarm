@@ -366,7 +366,7 @@ public class Drone implements Runnable {
             socket.send(sendPacket);
             // Print current position and target position
             if (targetPosition != null) {
-//                System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+               System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
             } else {
                 System.out.println("[Drone " + id + "] Sent position data: " + positionData +
                         ", No target position set.");

@@ -198,6 +198,7 @@ public class DroneSubsystem implements Runnable {
             synchronized (drones){
                 drones.get(droneId).setCurrentPosition(new int[]{x, y});
             }
+            consoleView.updateDronePosition(droneId + 1, x, y);
         } else {
             System.err.println("Invalid location data format: " + locationData);
         }
