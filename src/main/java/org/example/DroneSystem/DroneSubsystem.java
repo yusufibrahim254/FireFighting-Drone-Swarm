@@ -10,6 +10,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class DroneSubsystem implements Runnable {
     private final List<Drone> drones;
     private final Zones zones;
     private ConsoleView consoleView;
+    private final List<Event> activeEvents = new ArrayList<>();
 
     /**
      * Constructor for the drone subsystem
@@ -110,6 +112,9 @@ public class DroneSubsystem implements Runnable {
                 assignEventToClosestIdleDrone(event);
 
                 consoleView.markFire(event.getZoneId());
+                synchronized (activeEvents){
+                    activeEvents.add(event);
+                }
 
                 // Send acknowledgment back to Scheduler
                 String ack = "ACK:" + event.getId();
@@ -299,13 +304,14 @@ public class DroneSubsystem implements Runnable {
             return;
         }
         // 3. If there are no idle drones, assign the event to the closest returning drone
-        else if (closestReturningDrone != null) {
-            System.out.println("A RETURNING DRONE IS FOUND AND ABOUT TO BE ASSIGNED -> (Drone" + closestIdleDrone.getId() +")");
+        else if (closestReturningDrone != null && closestReturningDrone.getAgentCapacity() > 0 && minReturningDistance < minIdleDistance) {
+            System.out.println("A RETURNING DRONE IS FOUND AND ABOUT TO BE ASSIGNED -> (Drone" + closestReturningDrone.getId() +")");
             closestReturningDrone.setTargetPosition(eventLocation);
             closestReturningDrone.setIncidentPosition(eventLocation);
             closestReturningDrone.setCurrentEvent(event);
             return;
-        } else { // No drones available
+        }
+        else { // No drones available
             System.out.println("NO DRONE AVAILABLE FOR DELEGATION");
             // At this point the drone is returning back to 0,0, so if the job is not done, change its target location
 //            if (event.getCurrentWaterAmountNeeded() > 0 && currentAssignee != null) {

@@ -366,7 +366,7 @@ public class Drone implements Runnable {
             socket.send(sendPacket);
             // Print current position and target position
             if (targetPosition != null) {
-               System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+//               System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
             } else {
                 System.out.println("[Drone " + id + "] Sent position data: " + positionData +
                         ", No target position set.");
@@ -442,6 +442,7 @@ public class Drone implements Runnable {
             this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
         } else {
             System.out.println("Drone "+this.id+"'s current event is now NULL");
+            System.out.println("Drone " + this.id + "'s capacity is: " + agentCapacity);
             this.remainingWaterNeeded = 0;
         }
     }

@@ -27,7 +27,7 @@ public class Home extends JFrame {
 
         JLabel label = new JLabel("FireFighting Drone Swarm");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        JButton button1 = new JButton("Right");
+        JButton button1 = new JButton("Status of Drones");
 
         Legend legend = new Legend();
 
