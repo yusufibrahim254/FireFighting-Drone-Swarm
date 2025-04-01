@@ -33,7 +33,8 @@ public class Home extends JFrame {
         Legend legend = new Legend();
         status = new DroneStatusViewer();
 
-        view = new ConsoleView(zones);
+        view = new ConsoleView(zones, controller);
+        controller.setView(view);
         add(view, BorderLayout.CENTER);
         add(legend, BorderLayout.LINE_END);
         add(status.initalizeViewer(), BorderLayout.LINE_START);

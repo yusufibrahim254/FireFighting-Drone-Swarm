@@ -9,21 +9,19 @@ import java.util.*;
 
 public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
-    private Set<Integer> fires = new HashSet<>();
-    private Set<Integer> extinguishedFires = new HashSet<>();
     private static final int GRID_WIDTH = 400;
     private static final int GRID_HEIGHT = 400;
     private static final int CELL_SIZE = 25;
     private static final int DRONE_SIZE = 10;
-    private final Map<Integer, Point> dronePositions = new HashMap<>();
-    private final Map<Integer, DroneState> droneStates = new HashMap<>();
+    private ConsoleController controller;
 
     /**
      * Constructor for the console view
      * @param zones list of zones
      */
-    public ConsoleView(LinkedList<Zone> zones){
+    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController){
         this.zones = zones;
+        this.controller = consoleController;
         setPreferredSize(new Dimension(500, 500));
     }
 
@@ -74,42 +72,30 @@ public class ConsoleView extends JPanel{
         drawDrones(g);
     }
 
-    public void markFire(int zoneId) {
-        fires.add(zoneId);
-        extinguishedFires.remove(zoneId);
-        repaint();
-    }
 
-
-    public void clearFireInZone(int zoneId) {
-        fires.remove(zoneId);
-        extinguishedFires.add(zoneId);
-        repaint();
-    }
 
     public void drawFires(Graphics g) {
         Point offset = getGridOffset();
         for (Zone zone : zones) {
             int midX = offset.x + (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
             int midY = offset.y + (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
-            if (fires.contains(zone.getZoneId())) {
+            if (controller.getFires().contains(zone.getZoneId())) {
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
-            } else if (extinguishedFires.contains(zone.getZoneId())){
+            } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
                 g.setColor(Color.GREEN);
                 g.fillRect(midX, midY, 25, 25);
             }
         }
     }
 
-    public void updateDronePosition(int droneId, int x, int y) {
-        dronePositions.put(droneId, new Point(x, y));
-        repaint();
-    }
+
 
     public void drawDrones(Graphics g) {
         Point offset = getGridOffset();
         g.setColor(Color.BLUE);
+        Map<Integer, Point> dronePositions = controller.getDronePositions();
+        Map<Integer, DroneState> droneStates = controller.getDroneStates();
 
         for (Map.Entry<Integer, Point> entry : dronePositions.entrySet()) {
             int droneId = entry.getKey();
@@ -119,17 +105,7 @@ public class ConsoleView extends JPanel{
 
             DroneState state = droneStates.get(droneId);
 
-            if (state instanceof EnRouteState){
-                g.setColor(Color.BLUE);
-            } else if (state instanceof ReturningState){
-                g.setColor(Color.YELLOW);
-            } else if (state instanceof DroppingAgentState) {
-                g.setColor(Color.MAGENTA);
-            } else if (state instanceof FaultedState){
-                g.setColor(Color.BLACK);
-            } else {
-                g.setColor(Color.GRAY);
-            }
+            getDroneColor(state, g);
 
             g.fillRect(drawx, drawy, DRONE_SIZE, DRONE_SIZE);
             g.setColor(Color.BLACK);
@@ -137,16 +113,43 @@ public class ConsoleView extends JPanel{
         }
     }
 
+    private void getDroneColor(DroneState state, Graphics g){
+        if (state instanceof EnRouteState){
+            g.setColor(Color.BLUE);
+        } else if (state instanceof ReturningState){
+            g.setColor(Color.YELLOW);
+        } else if (state instanceof DroppingAgentState) {
+            g.setColor(Color.MAGENTA);
+        } else if (state instanceof FaultedState){
+            g.setColor(Color.BLACK);
+        } else {
+            g.setColor(Color.GRAY);
+        }
+    }
+
+    // refactor this so that they call the controller instead of the view to controller
+    public void markFire(int zoneId) {
+        controller.markFire(zoneId);
+    }
+
+
+    public void clearFireInZone(int zoneId) {
+        controller.clearFireInZone(zoneId);
+    }
+
     public void updateDroneState(int droneId, DroneState state) {
-        droneStates.put(droneId, state);
-        repaint();
+        controller.updateDroneState(droneId, state);
     }
 
-    public Set<Integer> getFires() {
-        return fires;
+    public void updateDronePosition(int droneId, int x, int y) {
+        controller.updateDronePosition(droneId, x, y);
     }
 
-    public void setFires(Set<Integer> fires) {
-        this.fires = fires;
+    public ConsoleController getController() {
+        return controller;
+    }
+
+    public void setController(ConsoleController controller) {
+        this.controller = controller;
     }
 }
