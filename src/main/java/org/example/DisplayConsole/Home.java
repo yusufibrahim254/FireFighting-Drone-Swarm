@@ -25,7 +25,8 @@ public class Home extends JFrame {
         String zonesFilePath = "docs/sample_zone_file.csv";
         LinkedList<Zone> zones = controller.getZones(zonesFilePath);
 
-        JButton button = new JButton("Left");
+        JLabel label = new JLabel("FireFighting Drone Swarm");
+        label.setHorizontalAlignment(SwingConstants.CENTER);
         JButton button1 = new JButton("Right");
 
         Legend legend = new Legend();
@@ -33,8 +34,8 @@ public class Home extends JFrame {
         view = new ConsoleView(zones);
         add(view, BorderLayout.CENTER);
         add(legend, BorderLayout.LINE_END);
-        add(button, BorderLayout.LINE_START);
-        add(button1, BorderLayout.PAGE_START);
+        add(button1, BorderLayout.LINE_START);
+        add(label, BorderLayout.PAGE_START);
 
         setVisible(true);
     }

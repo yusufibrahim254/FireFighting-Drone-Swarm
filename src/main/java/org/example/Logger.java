@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Represents a sensor that tracks and logs specific events into a text file
  */
-public class Sensor {
+public class Logger {
     private List<String> logs = Collections.synchronizedList(new ArrayList<>());
     private static final String LOG_FILE = "docs/logs/system_event_logs.txt";
     private static final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
@@ -20,7 +20,7 @@ public class Sensor {
     /**
      * Constructor for the sensor
      */
-    public Sensor() {
+    public Logger() {
         try (FileWriter writer = new FileWriter(LOG_FILE, false)){
             writer.write("");
         } catch (IOException e) {
