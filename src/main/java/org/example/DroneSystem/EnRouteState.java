@@ -43,4 +43,9 @@ public class EnRouteState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is EN ROUTE.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "EN_ROUTE";
+    }
 }

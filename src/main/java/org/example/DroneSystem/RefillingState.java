@@ -51,4 +51,9 @@ public class RefillingState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is REFILLING its fire suppressant.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "REFILLING";
+    }
 }

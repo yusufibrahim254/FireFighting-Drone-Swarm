@@ -36,7 +36,7 @@ public class Home extends JFrame {
         view = new ConsoleView(zones);
         add(view, BorderLayout.CENTER);
         add(legend, BorderLayout.LINE_END);
-        add(status, BorderLayout.LINE_START);
+        add(status.initalizeViewer(), BorderLayout.LINE_START);
         add(label, BorderLayout.PAGE_START);
 
         setVisible(true);

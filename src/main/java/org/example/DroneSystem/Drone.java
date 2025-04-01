@@ -144,6 +144,7 @@ public class Drone implements Runnable {
                     System.out.println("\n");
                     state.displayState(this);
                     Event handledEvent = currentEvent;
+                    droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                     double water = state.dropAgent(this); // Drop Agent
 
                     if (currentEvent == null && water == 0){
@@ -154,6 +155,7 @@ public class Drone implements Runnable {
                     System.out.println("\n");
                     state.displayState(this);
                     state.refill(this);
+                    droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                 } else if (state instanceof ReturningState) {
                     System.out.println("\n");
                     state.displayState(this);
@@ -494,16 +496,13 @@ public class Drone implements Runnable {
     @Override
     public String toString() {
         if (currentEvent == null){
-            return "Drone " + id +
-                    " info:\n agentCapacity=" + agentCapacity +
-                    "\n state=" + state.toString() +
+            return "agentCapacity=" + agentCapacity + " L" +
+                    "\n state=" + state.getState(this) +
                     "\n currentPosition=" + Arrays.toString(currentPosition) +
-                    "\n currentEvent=" + 0 +
-                    "\n target zone=" + 0;
+                    "\n Returning to origin at [0,0]";
         }
-        return "Drone " + id +
-                " info:\n agentCapacity=" + agentCapacity +
-                "\n state=" + state.toString() +
+        return "agentCapacity=" + agentCapacity + " L" +
+                "\n state=" + state.getState(this) +
                 "\n currentPosition=" + Arrays.toString(currentPosition) +
                 "\n currentEvent=" + currentEvent.getId() +
                 "\n target zone=" + currentEvent.getZoneId();

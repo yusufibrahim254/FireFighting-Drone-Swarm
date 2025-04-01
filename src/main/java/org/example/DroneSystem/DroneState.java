@@ -11,5 +11,6 @@ public interface DroneState {
     void fault(Drone drone);
     void reset(Drone drone);
     void displayState(Drone drone);
+    String getState(Drone drone);
 }
 

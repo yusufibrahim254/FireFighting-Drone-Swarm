@@ -50,4 +50,9 @@ public class ReturningState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is RETURNING to its original location.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "RETURNING";
+    }
 }

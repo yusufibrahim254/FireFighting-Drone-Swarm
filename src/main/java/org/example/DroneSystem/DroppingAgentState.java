@@ -67,4 +67,9 @@ public class DroppingAgentState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is DROPPING FIRE SUPPRESSANT.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "DROPPING_AGENT";
+    }
 }
