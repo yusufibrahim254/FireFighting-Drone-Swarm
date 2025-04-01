@@ -125,16 +125,19 @@ public class Drone implements Runnable {
                         this.setState(new FaultedState());
                         state.displayState(this);
                         this.setCurrentEvent(null);
+                        droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                     }else if(returnValue.equals("NOZZLE_JAMMED")){
                         // Then go back to original location and reset and should be able to take tasks
                         cleandAndSendEventBackToDroneSubsystem();
                         this.setCurrentEvent(null);
                         this.setState(new FaultedState());
+                        droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                         state.displayState(this);
                         this.setTargetPosition(new int[]{0, 0});
                         moveTowardsTarget();
                         System.out.println("Drone is resetting nozzle...");
                         this.setState(new IdleState());
+                        droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                         state.displayState(this);
                     }
                     if (hasReachedTarget()) {

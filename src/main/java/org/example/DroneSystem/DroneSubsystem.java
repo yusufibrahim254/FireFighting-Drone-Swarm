@@ -169,6 +169,7 @@ public class DroneSubsystem implements Runnable {
                     } else if (type.equals(CommunicationDroneToSubsystem.EVENT_RETURN.name())) {
                         // Handle returned event from stuck drone
                         System.out.println("[DroneSubsystem] Received returned event from stuck drone: " + data);
+
                         Event returnedEvent = Event.deserialize(data);
 
                         // Forward the event back to the Scheduler
