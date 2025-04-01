@@ -1,5 +1,6 @@
 package org.example.FireIncidentSubsystem;
 
+import org.example.DisplayConsole.OperatorView;
 import org.example.FireIncidentSubsystem.Helpers.EventReader;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ public class FireIncident implements Runnable {
     private final DatagramSocket socket; // UDP socket for communication
     private final InetAddress schedulerAddress; // Address of the Scheduler
     private final int schedulerPort; // Port of the Scheduler
+    private OperatorView view;
 
     /**
      * Constructs a FireIncident subsystem with the specified Scheduler host and port.
@@ -27,6 +29,7 @@ public class FireIncident implements Runnable {
         this.socket = new DatagramSocket();
         this.schedulerAddress = InetAddress.getByName(schedulerHost); // Use the IP address of the Scheduler machine
         this.schedulerPort = schedulerPort;
+        this.view = new OperatorView(this);
     }
 
     /**
@@ -57,9 +60,10 @@ public class FireIncident implements Runnable {
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            socket.close(); // Close the socket when done
         }
+//        finally {
+//            socket.close(); // Close the socket when done
+//        }
     }
 
     /**
@@ -76,6 +80,23 @@ public class FireIncident implements Runnable {
         // Log the acknowledgment
         System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment + "\n\n");
         return acknowledgment.equals("ACK" + event.getId());
+    }
+
+    public OperatorView getView() {
+        return view;
+    }
+
+    public void manualSendEvent(Event event) throws IOException {
+        String eventData = event.serialize();
+        byte[] sendData = eventData.getBytes();
+
+        // Send the event to the Scheduler
+        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+        socket.send(sendPacket);
+        System.out.println("[FireIncident -> Scheduler] Sent event from Operator: " + eventData);
+
+        // Wait for acknowledgment from the Scheduler
+        waitForAcknowledgment(event);
     }
 
     /**
