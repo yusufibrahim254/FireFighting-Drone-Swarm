@@ -11,10 +11,11 @@ public class Legend extends JPanel {
 
         add(createLegendItem(Color.RED, "Active Fire"));
         add(createLegendItem(Color.GREEN, "Extinguished Fire"));
-        add(createLegendItem(Color.ORANGE, "Drone outbound"));
-        add(createLegendItem(Color.BLACK, "Drone inbound"));
+        add(createLegendItem(Color.ORANGE, "Drone outbound | Returning"));
+        add(createLegendItem(Color.BLUE, "Drone inbound | En route"));
         add(createLegendItem(Color.MAGENTA, "Drone extinguishing fire")); // template for later
-        add(createLegendItem(Color.GRAY, "No Events"));
+        add(createLegendItem(Color.BLACK, "Drone faulted"));
+        add(createLegendItem(Color.GRAY, "No Events | Idle"));
 
     }
 

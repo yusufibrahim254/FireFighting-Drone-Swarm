@@ -1,9 +1,6 @@
 package org.example.DisplayConsole;
 
-import org.example.DroneSystem.DroneState;
-import org.example.DroneSystem.DroppingAgentState;
-import org.example.DroneSystem.EnRouteState;
-import org.example.DroneSystem.ReturningState;
+import org.example.DroneSystem.*;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
@@ -123,11 +120,13 @@ public class ConsoleView extends JPanel{
             DroneState state = droneStates.get(droneId);
 
             if (state instanceof EnRouteState){
-                g.setColor(Color.BLACK);
+                g.setColor(Color.BLUE);
             } else if (state instanceof ReturningState){
                 g.setColor(Color.YELLOW);
-            } else if (state instanceof DroppingAgentState){
+            } else if (state instanceof DroppingAgentState) {
                 g.setColor(Color.MAGENTA);
+            } else if (state instanceof FaultedState){
+                g.setColor(Color.BLACK);
             } else {
                 g.setColor(Color.GRAY);
             }

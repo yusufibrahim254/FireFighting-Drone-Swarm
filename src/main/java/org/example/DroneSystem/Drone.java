@@ -7,6 +7,7 @@ import org.example.DroneSystem.DroneSubsystem;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -367,6 +368,7 @@ public class Drone implements Runnable {
             // Print current position and target position
             if (targetPosition != null) {
 //               System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+                droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
             } else {
                 System.out.println("[Drone " + id + "] Sent position data: " + positionData +
                         ", No target position set.");
@@ -487,5 +489,23 @@ public class Drone implements Runnable {
 
     public void setBatteryDepletionRate(double batteryDepletionRate) {
         this.batteryDepletionRate = batteryDepletionRate;
+    }
+
+    @Override
+    public String toString() {
+        if (currentEvent == null){
+            return "Drone " + id +
+                    " info:\n agentCapacity=" + agentCapacity +
+                    "\n state=" + state.toString() +
+                    "\n currentPosition=" + Arrays.toString(currentPosition) +
+                    "\n currentEvent=" + 0 +
+                    "\n target zone=" + 0;
+        }
+        return "Drone " + id +
+                " info:\n agentCapacity=" + agentCapacity +
+                "\n state=" + state.toString() +
+                "\n currentPosition=" + Arrays.toString(currentPosition) +
+                "\n currentEvent=" + currentEvent.getId() +
+                "\n target zone=" + currentEvent.getZoneId();
     }
 }

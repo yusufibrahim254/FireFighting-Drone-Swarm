@@ -11,13 +11,14 @@ import java.util.LinkedList;
  */
 public class Home extends JFrame {
     private ConsoleView view;
+    private DroneStatusViewer status;
 
     /**
      * Constructor for the Home gui
      */
     public Home(){
         setTitle("FireFighting Drone Swarm Simulation");
-        setSize(700, 600);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -25,16 +26,17 @@ public class Home extends JFrame {
         String zonesFilePath = "docs/sample_zone_file.csv";
         LinkedList<Zone> zones = controller.getZones(zonesFilePath);
 
-        JLabel label = new JLabel("FireFighting Drone Swarm");
+        JLabel label = new JLabel("FireFighting Drone Swarm - Group 8 Lab A1");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        JButton button1 = new JButton("Status of Drones");
+
 
         Legend legend = new Legend();
+        status = new DroneStatusViewer();
 
         view = new ConsoleView(zones);
         add(view, BorderLayout.CENTER);
         add(legend, BorderLayout.LINE_END);
-        add(button1, BorderLayout.LINE_START);
+        add(status, BorderLayout.LINE_START);
         add(label, BorderLayout.PAGE_START);
 
         setVisible(true);
@@ -48,6 +50,14 @@ public class Home extends JFrame {
 
     public void setView(ConsoleView view) {
         this.view = view;
+    }
+
+    public DroneStatusViewer getStatus() {
+        return status;
+    }
+
+    public void setStatus(DroneStatusViewer status) {
+        this.status = status;
     }
 
     public static void main(String[] args) {

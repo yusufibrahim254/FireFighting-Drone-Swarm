@@ -24,4 +24,6 @@ public class ConsoleController {
     public LinkedList<Zone> getZones(String filePath){
         return zonesModel.loadZonesFromCSV(filePath);
     }
+
+
 }
