@@ -13,6 +13,7 @@ public class ConsoleView extends JPanel{
     private static final int GRID_WIDTH = 400;
     private static final int GRID_HEIGHT = 400;
     private static final int CELL_SIZE = 25;
+    private static final int DRONE_SIZE = 10;
     private final Map<Integer, Point> dronePositions = new HashMap<>();
 
     /**
@@ -68,7 +69,7 @@ public class ConsoleView extends JPanel{
         drawGrid(g);
         drawZones(g);
         drawFires(g);
-        drawDones(g);
+        drawDrones(g);
     }
 
     public void markFire(int zoneId) {
@@ -104,7 +105,7 @@ public class ConsoleView extends JPanel{
         repaint();
     }
 
-    public void drawDones(Graphics g) {
+    public void drawDrones(Graphics g) {
         Point offset = getGridOffset();
         g.setColor(Color.BLUE);
 
@@ -113,10 +114,12 @@ public class ConsoleView extends JPanel{
             int drawx = offset.x + p.x;
             int drawy = offset.y + p.y;
 
-            g.fillRect(drawx, drawy, CELL_SIZE, CELL_SIZE);
+            g.fillRect(drawx, drawy, DRONE_SIZE, DRONE_SIZE);
             g.setColor(Color.BLACK);
+            repaint();
             g.drawString("D" + entry.getKey(), drawx + 3 , drawy + 20);
             g.setColor(Color.MAGENTA);
+            repaint();
         }
     }
 

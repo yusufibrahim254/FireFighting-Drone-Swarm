@@ -143,9 +143,9 @@ public class Drone implements Runnable {
                     System.out.println("\n");
                     state.displayState(this);
                     Event handledEvent = currentEvent;
-                    state.dropAgent(this); // Drop Agent
+                    double water = state.dropAgent(this); // Drop Agent
 
-                    if (currentEvent == null){
+                    if (currentEvent == null && water == 0){
                         System.out.println("Drone " + id + " completed Event " + handledEvent.getId() + ", returning to base.");
                         droneSubsystem.updateFireZones(handledEvent);
                     }
