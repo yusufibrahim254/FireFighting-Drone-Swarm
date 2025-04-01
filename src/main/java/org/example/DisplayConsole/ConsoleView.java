@@ -10,15 +10,23 @@ public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
     private Set<Integer> fires = new HashSet<>();
     private Set<Integer> extinguishedFires = new HashSet<>();
+    private static final int GRID_WIDTH = 400;
+    private static final int GRID_HEIGHT = 400;
+    private static final int CELL_SIZE = 25;
 
     /**
      * Constructor for the console view
      * @param zones list of zones
      */
     public ConsoleView(LinkedList<Zone> zones){
-        super();
         this.zones = zones;
-        setPreferredSize(new Dimension(400, 400));
+        setPreferredSize(new Dimension(500, 500));
+    }
+
+    private Point getGridOffset() {
+        int offsetX = (getWidth() - GRID_WIDTH) / 2;
+        int offsetY = (getHeight() - GRID_HEIGHT) / 2;
+        return new Point(offsetX, offsetY);
     }
 
     /**
@@ -26,10 +34,11 @@ public class ConsoleView extends JPanel{
      * @param g graphics
      */
     public void drawGrid(Graphics g){
+        Point offset = getGridOffset();
         g.setColor(Color.GRAY);
-        for (int i = 0; i <= 400; i+= 25){
-            g.drawLine(i, 0, i, 400);
-            g.drawLine(0, i, 400, i);
+        for (int i = 0; i <= GRID_WIDTH; i+= CELL_SIZE){
+            g.drawLine(offset.x + i, offset.y, offset.x + i, offset.y + GRID_HEIGHT);
+            g.drawLine(offset.x, offset.y + i, offset.x + GRID_WIDTH, offset.y + i);
         }
     }
 
@@ -38,10 +47,13 @@ public class ConsoleView extends JPanel{
      * @param g graphics
      */
     public void drawZones(Graphics g){
+        Point offset = getGridOffset();
         g.setColor(Color.BLACK);
         for (Zone zone: zones){
-            g.drawRect(zone.getZoneStart().getXCoords(), zone.getZoneStart().getYCoords(), zone.getWidth(), zone.getLength());
-            g.drawString("Z(" + zone.getZoneId() + ")", zone.getZoneStart().getXCoords() + 3, zone.getZoneStart().getYCoords() + 15);
+            int x = offset.x + zone.getZoneStart().getXCoords();
+            int y = offset.y + zone.getZoneStart().getYCoords();
+            g.drawRect(x, y, zone.getWidth(), zone.getLength());
+            g.drawString("Z(" + zone.getZoneId() + ")", x + 5, y + 15);
         }
     }
 
@@ -71,10 +83,10 @@ public class ConsoleView extends JPanel{
     }
 
     public void drawFires(Graphics g) {
-
+        Point offset = getGridOffset();
         for (Zone zone : zones) {
-            int midX = (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
-            int midY = (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
+            int midX = offset.x + (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
+            int midY = offset.y + (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
             if (fires.contains(zone.getZoneId())) {
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
