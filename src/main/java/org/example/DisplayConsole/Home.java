@@ -3,6 +3,7 @@ package org.example.DisplayConsole;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.LinkedList;
 
 /**
@@ -16,17 +17,29 @@ public class Home extends JFrame {
      */
     public Home(){
         setTitle("FireFighting Drone Swarm Simulation");
-        setSize(600, 600);
+        setSize(700, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         ConsoleController controller = new ConsoleController();
         String zonesFilePath = "docs/sample_zone_file.csv";
         LinkedList<Zone> zones = controller.getZones(zonesFilePath);
 
+        JButton button = new JButton("Left");
+        JButton button1 = new JButton("Right");
+
+        Legend legend = new Legend();
+
         view = new ConsoleView(zones);
-        add(view);
+        add(view, BorderLayout.CENTER);
+        add(legend, BorderLayout.LINE_END);
+        add(button, BorderLayout.LINE_START);
+        add(button1, BorderLayout.PAGE_START);
+
         setVisible(true);
     }
+
+
 
     public ConsoleView getView() {
         return view;

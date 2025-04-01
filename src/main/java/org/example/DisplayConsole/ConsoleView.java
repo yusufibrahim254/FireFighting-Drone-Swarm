@@ -16,8 +16,9 @@ public class ConsoleView extends JPanel{
      * @param zones list of zones
      */
     public ConsoleView(LinkedList<Zone> zones){
+        super();
         this.zones = zones;
-        setPreferredSize(new Dimension(500, 500));
+        setPreferredSize(new Dimension(400, 400));
     }
 
     /**
@@ -40,7 +41,7 @@ public class ConsoleView extends JPanel{
         g.setColor(Color.BLACK);
         for (Zone zone: zones){
             g.drawRect(zone.getZoneStart().getXCoords(), zone.getZoneStart().getYCoords(), zone.getWidth(), zone.getLength());
-            g.drawString("Z(" + zone.getZoneId() + ")", zone.getZoneStart().getXCoords() + 5, zone.getZoneStart().getYCoords() + 15);
+            g.drawString("Z(" + zone.getZoneId() + ")", zone.getZoneStart().getXCoords() + 3, zone.getZoneStart().getYCoords() + 15);
         }
     }
 
