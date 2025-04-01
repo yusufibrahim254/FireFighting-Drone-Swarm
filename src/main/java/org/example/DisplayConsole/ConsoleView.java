@@ -1,5 +1,9 @@
 package org.example.DisplayConsole;
 
+import org.example.DroneSystem.DroneState;
+import org.example.DroneSystem.DroppingAgentState;
+import org.example.DroneSystem.EnRouteState;
+import org.example.DroneSystem.ReturningState;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
@@ -15,6 +19,7 @@ public class ConsoleView extends JPanel{
     private static final int CELL_SIZE = 25;
     private static final int DRONE_SIZE = 10;
     private final Map<Integer, Point> dronePositions = new HashMap<>();
+    private final Map<Integer, DroneState> droneStates = new HashMap<>();
 
     /**
      * Constructor for the console view
@@ -110,17 +115,32 @@ public class ConsoleView extends JPanel{
         g.setColor(Color.BLUE);
 
         for (Map.Entry<Integer, Point> entry : dronePositions.entrySet()) {
+            int droneId = entry.getKey();
             Point p = entry.getValue();
             int drawx = offset.x + p.x;
             int drawy = offset.y + p.y;
 
+            DroneState state = droneStates.get(droneId);
+
+            if (state instanceof EnRouteState){
+                g.setColor(Color.BLACK);
+            } else if (state instanceof ReturningState){
+                g.setColor(Color.YELLOW);
+            } else if (state instanceof DroppingAgentState){
+                g.setColor(Color.MAGENTA);
+            } else {
+                g.setColor(Color.GRAY);
+            }
+
             g.fillRect(drawx, drawy, DRONE_SIZE, DRONE_SIZE);
             g.setColor(Color.BLACK);
-            repaint();
             g.drawString("D" + entry.getKey(), drawx + 3 , drawy + 20);
-            g.setColor(Color.MAGENTA);
-            repaint();
         }
+    }
+
+    public void updateDroneState(int droneId, DroneState state) {
+        droneStates.put(droneId, state);
+        repaint();
     }
 
     public Set<Integer> getFires() {

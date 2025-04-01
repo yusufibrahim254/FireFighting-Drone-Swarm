@@ -199,6 +199,8 @@ public class DroneSubsystem implements Runnable {
                 drones.get(droneId).setCurrentPosition(new int[]{x, y});
             }
             consoleView.updateDronePosition(droneId + 1, x, y);
+            consoleView.updateDroneState(droneId + 1, drones.get(droneId).getState());
+
         } else {
             System.err.println("Invalid location data format: " + locationData);
         }
@@ -320,6 +322,10 @@ public class DroneSubsystem implements Runnable {
      */
     private double calculateDistance(int[] point1, int[] point2) {
         return Math.sqrt(Math.pow(point1[0] - point2[0], 2) + Math.pow(point1[1] - point2[1], 2));
+    }
+
+    public void updateDroneStateInConsole(int droneId, DroneState state) {
+        consoleView.updateDroneState(droneId, state);
     }
 
     /**

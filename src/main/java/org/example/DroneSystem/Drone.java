@@ -431,6 +431,7 @@ public class Drone implements Runnable {
 
     public void setState(DroneState state) {
         this.state = state;
+        droneSubsystem.updateDroneStateInConsole(this.id, state);
     }
 
     public void setCurrentEvent(Event currentEvent) {
