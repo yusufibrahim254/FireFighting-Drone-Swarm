@@ -5,6 +5,7 @@ import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class ConsoleView extends JPanel{
@@ -12,11 +13,12 @@ public class ConsoleView extends JPanel{
     private static final int GRID_WIDTH = 400;
     private static final int GRID_HEIGHT = 400;
     private static final int CELL_SIZE = 25;
-    private static final int DRONE_SIZE = 10;
+    private static final int DRONE_SIZE = 25;
     private ConsoleController controller;
     private Image fireImage;
     private Image extinguishedImage;
 
+    private Image droneImage;
 
     /**
      * Constructor for the console view
@@ -26,8 +28,9 @@ public class ConsoleView extends JPanel{
         this.zones = zones;
         this.controller = consoleController;
         setPreferredSize(new Dimension(500, 500));
-        fireImage = new ImageIcon("docs/Icons/fireImage.png").getImage();
-        extinguishedImage = new ImageIcon("docs/Icons/extinguished.png").getImage();
+        fireImage = new ImageIcon("docs/icons/fireImage.png").getImage();
+        extinguishedImage = new ImageIcon("docs/icons/extinguished.png").getImage();
+        droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();
     }
 
     private Point getGridOffset() {
@@ -120,25 +123,47 @@ public class ConsoleView extends JPanel{
 
             getDroneColor(state, g);
 
-            g.fillRect(drawx, drawy, DRONE_SIZE, DRONE_SIZE);
+//            g.fillRect(drawx, drawy, DRONE_SIZE, DRONE_SIZE);
+            g.drawImage(getTintedDroneImage(state, g), drawx, drawy, DRONE_SIZE, DRONE_SIZE, this);
             g.setColor(Color.BLACK);
             g.drawString("D" + entry.getKey(), drawx + 3 , drawy + 20);
         }
     }
 
-    private void getDroneColor(DroneState state, Graphics g){
+    private Color getDroneColor(DroneState state, Graphics g){
         if (state instanceof EnRouteState){
             g.setColor(Color.BLUE);
+            return Color.BLUE;
         } else if (state instanceof ReturningState){
             g.setColor(Color.YELLOW);
+            return Color.YELLOW;
         } else if (state instanceof DroppingAgentState) {
             g.setColor(Color.MAGENTA);
+            return Color.MAGENTA;
         } else if (state instanceof FaultedState){
             g.setColor(Color.BLACK);
+            return Color.BLACK;
         } else {
             g.setColor(Color.GRAY);
+            return Color.GRAY;
         }
     }
+
+    private Image getTintedDroneImage(DroneState state, Graphics g) {
+        Color tint = getDroneColor(state, g); // Get corresponding color
+        BufferedImage tintedImage = new BufferedImage(droneImage.getWidth(null), droneImage.getHeight(null), BufferedImage.TRANSLUCENT);
+        Graphics2D g2d = tintedImage.createGraphics();
+
+        g2d.drawImage(droneImage, 0, 0, null);
+
+        g2d.setComposite(AlphaComposite.SrcAtop);
+        g2d.setColor(tint);
+        g2d.fillRect(0, 0, tintedImage.getWidth(), tintedImage.getHeight());
+
+        g2d.dispose();
+        return tintedImage;
+    }
+
 
     // refactor this so that they call the controller instead of the view to controller
     public void markFire(int zoneId) {
