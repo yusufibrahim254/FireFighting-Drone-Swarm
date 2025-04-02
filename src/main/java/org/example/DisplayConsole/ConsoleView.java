@@ -14,6 +14,9 @@ public class ConsoleView extends JPanel{
     private static final int CELL_SIZE = 25;
     private static final int DRONE_SIZE = 10;
     private ConsoleController controller;
+    private Image fireImage;
+    private Image extinguishedImage;
+
 
     /**
      * Constructor for the console view
@@ -23,6 +26,8 @@ public class ConsoleView extends JPanel{
         this.zones = zones;
         this.controller = consoleController;
         setPreferredSize(new Dimension(500, 500));
+        fireImage = new ImageIcon("docs/Icons/fireImage.png").getImage();
+        extinguishedImage = new ImageIcon("docs/Icons/extinguished.png").getImage();
     }
 
     private Point getGridOffset() {
@@ -76,15 +81,23 @@ public class ConsoleView extends JPanel{
 
     public void drawFires(Graphics g) {
         Point offset = getGridOffset();
+        int imgWidth = 55;
+        int imgHeight = 65;
+
         for (Zone zone : zones) {
             int midX = offset.x + (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
             int midY = offset.y + (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
+            int drawX = midX - imgWidth / 2;
+            int drawY = midY - imgHeight / 2;
+
             if (controller.getFires().contains(zone.getZoneId())) {
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
+                g.drawImage(fireImage, drawX, drawY, imgWidth, imgHeight, null);
             } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
                 g.setColor(Color.GREEN);
                 g.fillRect(midX, midY, 25, 25);
+                g.drawImage(extinguishedImage, drawX, drawY, 85, 75, null);
             }
         }
     }
