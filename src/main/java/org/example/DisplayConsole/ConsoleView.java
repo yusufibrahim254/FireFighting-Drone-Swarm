@@ -10,8 +10,8 @@ import java.util.*;
 
 public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
-    private static final int GRID_WIDTH = 400;
-    private static final int GRID_HEIGHT = 400;
+    private int GRID_WIDTH;
+    private int GRID_HEIGHT;
     private static final int CELL_SIZE = 25;
     private static final int DRONE_SIZE = 25;
     private ConsoleController controller;
@@ -24,10 +24,14 @@ public class ConsoleView extends JPanel{
      * Constructor for the console view
      * @param zones list of zones
      */
-    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController){
+    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController, int gridWidth, int gridHeight){
+        this.GRID_WIDTH = gridWidth;
+        this.GRID_HEIGHT = gridHeight;
         this.zones = zones;
         this.controller = consoleController;
-        setPreferredSize(new Dimension(500, 500));
+        setPreferredSize(new Dimension(GRID_WIDTH, GRID_HEIGHT));
+        revalidate();
+        repaint();
         fireImage = new ImageIcon("docs/icons/fireImage.png").getImage();
         extinguishedImage = new ImageIcon("docs/icons/extinguished.png").getImage();
         droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();

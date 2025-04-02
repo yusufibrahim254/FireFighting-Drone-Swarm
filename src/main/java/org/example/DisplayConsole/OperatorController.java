@@ -2,16 +2,20 @@ package org.example.DisplayConsole;
 
 import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.EventType;
+import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Random;
 
 
 public class OperatorController {
     private OperatorView view;
+    private ConsoleController controller;
     public OperatorController(OperatorView view){
         this.view = view;
+        this.controller = new ConsoleController();
     }
 
     public void generateEvent(EventType eventType){
@@ -19,8 +23,9 @@ public class OperatorController {
 
         JTextField timeField = new JTextField();
 
-        Integer[] zoneIds = {1, 2, 3, 4};
-        JComboBox<Integer> zoneDropdown = new JComboBox<>(zoneIds);
+//        Integer[] zoneIds = {1, 2, 3, 4};
+        LinkedList<Zone> zoneIds = controller.getZones("docs/sample_zone_file.csv");
+        JComboBox<Object> zoneDropdown = new JComboBox<>(zoneIds.toArray());
 
         String[] severityLevels = {"Low", "Moderate", "High"};
         JComboBox<String> severityDropdown = new JComboBox<>(severityLevels);
@@ -49,13 +54,14 @@ public class OperatorController {
 
         if (result == JOptionPane.OK_OPTION) {
             String time = timeField.getText();
-            int zoneId = (Integer) zoneDropdown.getSelectedItem();
+            Zone zoneId = (Zone) zoneDropdown.getSelectedItem();
+            System.out.println(zoneId);
             String severity = severityDropdown.getSelectedItem().toString();
             String fault = faultDropdown.getSelectedItem().toString();
 
             EventType faultType = EventType.valueOf(fault);
 
-            Event event = new Event(eventId, time, zoneId, eventType, severity, fault);
+            Event event = new Event(eventId, time, zoneId.getZoneId(), eventType, severity, fault);
 
             try {
                 view.getFireIncidentSubsystem().manualSendEvent(event);
