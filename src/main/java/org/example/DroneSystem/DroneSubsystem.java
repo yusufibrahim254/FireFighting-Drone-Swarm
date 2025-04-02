@@ -1,9 +1,6 @@
 package org.example.DroneSystem;
 
-import org.example.DisplayConsole.ConsoleController;
-import org.example.DisplayConsole.ConsoleView;
-import org.example.DisplayConsole.DroneStatusViewer;
-import org.example.DisplayConsole.Home;
+import org.example.DisplayConsole.*;
 import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.Zones;
 
@@ -27,6 +24,7 @@ public class DroneSubsystem implements Runnable {
     private ConsoleView consoleView;
     private ConsoleController consoleController;
     private DroneStatusViewer droneStatusViewer;
+    private EventDashboard eventDashboard;
     private final List<Event> activeEvents = new ArrayList<>();
 
     /**
@@ -45,7 +43,7 @@ public class DroneSubsystem implements Runnable {
         Home home = new Home();
         this.consoleView = home.getView();
         this.droneStatusViewer = home.getStatus();
-
+        this.eventDashboard = home.getDashboard();
 
         // Calculate the furthest zone's midpoint
         int[] furthestMidpoint = zones.getFurthestZoneMidpoint();
@@ -122,6 +120,7 @@ public class DroneSubsystem implements Runnable {
                 synchronized (activeEvents){
                     activeEvents.add(event);
                 }
+                eventDashboard.addFireEvent(event.getZoneId(), event.getSeverityWaterAmount());
 
                 // Send acknowledgment back to Scheduler
                 String ack = "ACK:" + event.getId();
@@ -430,5 +429,9 @@ public class DroneSubsystem implements Runnable {
 
     public DroneStatusViewer getDroneStatusViewer() {
         return droneStatusViewer;
+    }
+
+    public EventDashboard getEventDashboard() {
+        return eventDashboard;
     }
 }

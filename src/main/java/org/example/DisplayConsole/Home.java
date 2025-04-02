@@ -12,6 +12,7 @@ import java.util.LinkedList;
 public class Home extends JFrame {
     private ConsoleView view;
     private DroneStatusViewer status;
+    private EventDashboard dashboard;
 
     /**
      * Constructor for the Home gui
@@ -31,6 +32,7 @@ public class Home extends JFrame {
 
 
         Legend legend = new Legend();
+        dashboard = new EventDashboard();
         status = new DroneStatusViewer();
 
         int[] grid = getGridMetrics();
@@ -44,6 +46,7 @@ public class Home extends JFrame {
         add(legend, BorderLayout.LINE_END);
         add(status.initalizeViewer(), BorderLayout.LINE_START);
         add(label, BorderLayout.PAGE_START);
+        add(dashboard, BorderLayout.PAGE_END);
 
         setVisible(true);
     }
@@ -64,6 +67,10 @@ public class Home extends JFrame {
 
     public void setStatus(DroneStatusViewer status) {
         this.status = status;
+    }
+
+    public EventDashboard getDashboard() {
+        return dashboard;
     }
 
     public int[] getGridMetrics(){

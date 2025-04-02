@@ -148,11 +148,13 @@ public class Drone implements Runnable {
                     state.displayState(this);
                     Event handledEvent = currentEvent;
                     droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
+                    droneSubsystem.getEventDashboard().updateFireProgress(handledEvent.getZoneId(), (int) this.agentCapacity);
                     double water = state.dropAgent(this); // Drop Agent
 
                     if (currentEvent == null && water == 0){
                         System.out.println("Drone " + id + " completed Event " + handledEvent.getId() + ", returning to base.");
                         droneSubsystem.updateFireZones(handledEvent);
+                        droneSubsystem.getEventDashboard().removeFireEvent(handledEvent.getZoneId());
                     }
                 } else if (state instanceof RefillingState) {
                     System.out.println("\n");
