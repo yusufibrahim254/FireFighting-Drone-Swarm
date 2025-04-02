@@ -10,6 +10,7 @@ public class EventDashboard extends JPanel {
     private final Map<Integer, Integer> totalWaterNeeded;
 
     public EventDashboard() {
+        setBorder(BorderFactory.createTitledBorder("Event Dashboard"));
         setLayout(new GridLayout(0, 1));
         eventProgressBars = new HashMap<>();
         totalWaterNeeded = new HashMap<>();
