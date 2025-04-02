@@ -44,7 +44,7 @@ public class Home extends JFrame {
         controller.setView(view);
         add(pane, BorderLayout.CENTER);
         add(legend, BorderLayout.LINE_END);
-        add(status.initalizeViewer(), BorderLayout.LINE_START);
+        add(status.initializeViewer(), BorderLayout.LINE_START);
         add(label, BorderLayout.PAGE_START);
         add(dashboard, BorderLayout.PAGE_END);
 

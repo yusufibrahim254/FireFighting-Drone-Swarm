@@ -130,7 +130,7 @@ public class ConsoleView extends JPanel{
 //            g.fillRect(drawx, drawy, DRONE_SIZE, DRONE_SIZE);
             g.drawImage(getTintedDroneImage(state, g), drawx, drawy, DRONE_SIZE, DRONE_SIZE, this);
             g.setColor(Color.BLACK);
-            g.drawString("D" + entry.getKey(), drawx + 3 , drawy + 20);
+            g.drawString("D" + entry.getKey(), drawx + 10 , drawy + 35);
         }
     }
 

@@ -7,14 +7,24 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents the Drone Status Viewer, monitors the drones and their states during the simulation
+ */
 public class DroneStatusViewer extends JPanel {
     private final Map<Drone, JPanel> dronePanels = new HashMap<>();
 
+    /**
+     * Constructor for the DroneStatusViewer
+     */
     public DroneStatusViewer(){
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Drone Status Viewer"));
     }
 
+    /**
+     * Add drone to the viewer
+     * @param drone the drone
+     */
     public void addDroneToViewer(Drone drone){
         String formattedText = "<html>" + drone.toString().replace("\n", "<br>") + "</html>";
 
@@ -36,7 +46,11 @@ public class DroneStatusViewer extends JPanel {
         this.repaint();
     }
 
-    public JScrollPane initalizeViewer() {
+    /**
+     * Places the viewer into a scroll pane to allow it to be scrollable
+     * @return the scroll pane
+     */
+    public JScrollPane initializeViewer() {
         JScrollPane scrollPane = new JScrollPane(this);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);

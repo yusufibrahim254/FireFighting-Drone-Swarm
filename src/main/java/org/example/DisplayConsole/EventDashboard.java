@@ -5,10 +5,17 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents the event dashboard, monitors and tracks all events occurring
+ * during the simulation and progression bar to completion
+ */
 public class EventDashboard extends JPanel {
     private final Map<Integer, JProgressBar> eventProgressBars;
     private final Map<Integer, Integer> totalWaterNeeded;
 
+    /**
+     * Constructor for the event dashboard
+     */
     public EventDashboard() {
         setBorder(BorderFactory.createTitledBorder("Event Dashboard"));
         setLayout(new GridLayout(0, 1));
