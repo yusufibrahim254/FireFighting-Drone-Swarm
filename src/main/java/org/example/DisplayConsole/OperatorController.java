@@ -24,8 +24,11 @@ public class OperatorController {
         JTextField timeField = new JTextField();
 
 //        Integer[] zoneIds = {1, 2, 3, 4};
-        LinkedList<Zone> zoneIds = controller.getZones("docs/sample_zone_file.csv");
-        JComboBox<Object> zoneDropdown = new JComboBox<>(zoneIds.toArray());
+        LinkedList<Zone> zoneIds = controller.getZones();
+        JComboBox<Zone> zoneDropdown = new JComboBox<>();
+        for (Zone zone: zoneIds){
+            zoneDropdown.addItem(zone);
+        }
 
         String[] severityLevels = {"Low", "Moderate", "High"};
         JComboBox<String> severityDropdown = new JComboBox<>(severityLevels);

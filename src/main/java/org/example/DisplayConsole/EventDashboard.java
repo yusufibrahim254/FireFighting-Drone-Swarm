@@ -12,6 +12,7 @@ import java.util.Map;
 public class EventDashboard extends JPanel {
     private final Map<Integer, JProgressBar> eventProgressBars;
     private final Map<Integer, Integer> totalWaterNeeded;
+    private final Map<Integer, JLabel> eventLabels;
 
     /**
      * Constructor for the event dashboard
@@ -21,6 +22,7 @@ public class EventDashboard extends JPanel {
         setLayout(new GridLayout(0, 1));
         eventProgressBars = new HashMap<>();
         totalWaterNeeded = new HashMap<>();
+        eventLabels = new HashMap<>();
     }
 
 
@@ -31,7 +33,9 @@ public class EventDashboard extends JPanel {
             progressBar.setString("0L / " + waterNeeded + "L");
             eventProgressBars.put(zoneId, progressBar);
             totalWaterNeeded.put(zoneId, waterNeeded);
-            add(new JLabel("Fire at Zone " + zoneId + " - Remaining water needed to extinguish fire:"));
+            JLabel eventInfo = new JLabel("Fire at Zone " + zoneId + " - Remaining water needed to extinguish fire:");
+            eventLabels.put(zoneId, eventInfo);
+            add(eventInfo);
             add(progressBar);
             revalidate();
             repaint();
@@ -40,6 +44,7 @@ public class EventDashboard extends JPanel {
 
     public void updateFireProgress(int zoneId, int waterDropped) {
         JProgressBar progressBar = eventProgressBars.get(zoneId);
+        JLabel eventLabel = eventLabels.get(zoneId);
         if (progressBar != null) {
             int newProgress = progressBar.getValue() + waterDropped;
             newProgress = Math.min(newProgress, totalWaterNeeded.get(zoneId));
@@ -51,8 +56,11 @@ public class EventDashboard extends JPanel {
     public void removeFireEvent(int zoneId) {
         if (eventProgressBars.containsKey(zoneId)) {
             remove(eventProgressBars.get(zoneId));
+            remove(eventLabels.get(zoneId));
             eventProgressBars.remove(zoneId);
             totalWaterNeeded.remove(zoneId);
+            eventLabels.remove(zoneId);
+
             revalidate();
             repaint();
         }

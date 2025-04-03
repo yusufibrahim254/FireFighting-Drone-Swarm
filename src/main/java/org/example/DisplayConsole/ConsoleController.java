@@ -29,11 +29,10 @@ public class ConsoleController {
 
     /**
      * Load the zones into a linked list
-     * @param filePath zone CSV
      * @return linked list of all zones
      */
-    public LinkedList<Zone> getZones(String filePath){
-        return zonesModel.loadZonesFromCSV(filePath);
+    public LinkedList<Zone> getZones(){
+        return zonesModel.getZoneList();
     }
 
     /**

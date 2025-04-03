@@ -24,8 +24,7 @@ public class Home extends JFrame {
         setLayout(new BorderLayout());
 
         ConsoleController controller = new ConsoleController();
-        String zonesFilePath = "docs/sample_zone_file.csv";
-        LinkedList<Zone> zones = controller.getZones(zonesFilePath);
+        LinkedList<Zone> zones = controller.getZones();
 
         JLabel label = new JLabel("FireFighting Drone Swarm - Group 8 Lab A1");
         label.setHorizontalAlignment(SwingConstants.CENTER);

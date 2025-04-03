@@ -159,4 +159,8 @@ public class Zones {
         }
         return furthestMidpoint;
     }
+
+    public LinkedList<Zone> getZoneList() {
+        return zoneList;
+    }
 }

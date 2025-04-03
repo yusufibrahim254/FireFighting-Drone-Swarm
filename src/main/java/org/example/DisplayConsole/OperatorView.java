@@ -28,6 +28,8 @@ public class OperatorView extends JFrame {
 
         requestDroneButton.setFocusable(false);
         fireDetectedButton.setFocusable(false);
+        requestDroneButton.setForeground(Color.BLUE);
+        fireDetectedButton.setForeground(Color.RED);
 
         requestDroneButton.addActionListener(new ActionListener() {
             @Override
