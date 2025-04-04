@@ -6,12 +6,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/**
+ * Represents the legend, explaining all icons in the console (drone icons, fire icons, etc.)
+ */
 public class Legend extends JPanel {
     private final ImageIcon droneIcon;
     private final ImageIcon fireIcon;
     private final ImageIcon extinguishedIcon;
     private final int imageSize = 20; // Adjust image size as needed
 
+    /**
+     * Constructor for Legend
+     */
     public Legend() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Legend"));
@@ -29,29 +35,46 @@ public class Legend extends JPanel {
         add(createLegendItem(Color.GRAY, "No Events | Idle"));
     }
 
-    private JPanel createLegendItem(ImageIcon icon, String text) {
+    /**
+     * Create an item in the legend that has a specific icon
+     * @param icon icon of the item
+     * @param description description of the item
+     * @return the new item for the legend
+     */
+    public JPanel createLegendItem(ImageIcon icon, String description) {
         JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel iconLabel = new JLabel(icon);
-        JLabel textLabel = new JLabel(text);
+        JLabel textLabel = new JLabel(description);
 
         itemPanel.add(iconLabel);
         itemPanel.add(textLabel);
         return itemPanel;
     }
 
-    private JPanel createLegendItem(Color tint, String text) {
+    /**
+     * Creates an item in the legend that has a specific color scheme applied to icon
+     * @param tint tint for the item's icon
+     * @param description description of the item
+     * @return the new item for the legend
+     */
+    public JPanel createLegendItem(Color tint, String description) {
         JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JLabel droneIconLabel = new JLabel();
         droneIconLabel.setIcon(new ImageIcon(getTintedDroneImage(tint)));
 
-        JLabel textLabel = new JLabel(text);
+        JLabel textLabel = new JLabel(description);
 
         itemPanel.add(droneIconLabel);
         itemPanel.add(textLabel);
         return itemPanel;
     }
 
+    /**
+     * Get the tinted image of the drone
+     * @param tint the tint to apply on drone image
+     * @return the tinted drone image
+     */
     private Image getTintedDroneImage(Color tint) {
         Image img = droneIcon.getImage();
         BufferedImage tintedImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TRANSLUCENT);
@@ -67,7 +90,12 @@ public class Legend extends JPanel {
         return tintedImage;
     }
 
-    private Image resizeImage(String path) {
+    /**
+     * Resize the image
+     * @param path location of the image
+     * @return the resized image
+     */
+    public Image resizeImage(String path) {
         ImageIcon icon = new ImageIcon(path);
         return icon.getImage().getScaledInstance(imageSize, imageSize, Image.SCALE_SMOOTH);
     }

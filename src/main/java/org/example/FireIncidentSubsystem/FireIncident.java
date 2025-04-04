@@ -82,10 +82,19 @@ public class FireIncident implements Runnable {
         return acknowledgment.equals("ACK" + event.getId());
     }
 
+    /**
+     * Gets the operator view
+     * @return the operator view
+     */
     public OperatorView getView() {
         return view;
     }
 
+    /**
+     * Sends event to scheduler manually instead of polling through a list of events
+     * @param event the event to send
+     * @throws IOException if i/o error occurs
+     */
     public void manualSendEvent(Event event) throws IOException {
         String eventData = event.serialize();
         byte[] sendData = eventData.getBytes();

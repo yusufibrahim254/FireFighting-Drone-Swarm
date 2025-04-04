@@ -25,7 +25,11 @@ public class EventDashboard extends JPanel {
         eventLabels = new HashMap<>();
     }
 
-
+    /**
+     * Adds a fire event to the dashboard
+     * @param zoneId the zone id of the ongoing fire
+     * @param waterNeeded the amount of water needed to extinguish fire
+     */
     public void addFireEvent(int zoneId, int waterNeeded) {
         if (!eventProgressBars.containsKey(zoneId)) {
             JProgressBar progressBar = new JProgressBar(0, waterNeeded);
@@ -42,6 +46,11 @@ public class EventDashboard extends JPanel {
         }
     }
 
+    /**
+     * Update the progress of the fire event
+     * @param zoneId the zone id of the fire
+     * @param waterDropped the amount of water dropped on fire so far
+     */
     public void updateFireProgress(int zoneId, int waterDropped) {
         JProgressBar progressBar = eventProgressBars.get(zoneId);
         JLabel eventLabel = eventLabels.get(zoneId);
@@ -53,6 +62,10 @@ public class EventDashboard extends JPanel {
         }
     }
 
+    /**
+     * Removes fire event from the dashboard
+     * @param zoneId the zone id
+     */
     public void removeFireEvent(int zoneId) {
         if (eventProgressBars.containsKey(zoneId)) {
             remove(eventProgressBars.get(zoneId));

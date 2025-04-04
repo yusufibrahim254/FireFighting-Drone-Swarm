@@ -44,10 +44,18 @@ public class Zone {
         return zoneEnd;
     }
 
+    /**
+     * Get the width of the zone
+     * @return the zone width
+     */
     public int getWidth() {
         return abs(getZoneStart().getXCoords() - getZoneEnd().getXCoords());
     }
 
+    /**
+     * Get the length of the zone
+     * @return the zone length
+     */
     public int getLength() {
         return abs(getZoneStart().getYCoords() - getZoneEnd().getYCoords());
     }

@@ -7,9 +7,16 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Represents the view for the operator GUI, the presentation and interface to get inputs from operator
+ */
 public class OperatorView extends JFrame {
     private FireIncident fireIncidentSubsystem;
 
+    /**
+     * Constructor for the operator GUI
+     * @param fireIncidentSubsystem the fire incident subsystem to send event requests to
+     */
     public OperatorView(FireIncident fireIncidentSubsystem){
         this.fireIncidentSubsystem = fireIncidentSubsystem;
         setTitle("FireFighting Drone Swarm Operator System");
@@ -22,6 +29,10 @@ public class OperatorView extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * The operator buttons to take in the inputs
+     * @param controller the operator controller handling logic
+     */
     public void operatorButtons(OperatorController controller){
         JButton requestDroneButton = new JButton("Request Drone");
         JButton fireDetectedButton = new JButton("Fire Detected");
@@ -48,6 +59,10 @@ public class OperatorView extends JFrame {
         this.add(fireDetectedButton);
     }
 
+    /**
+     * Gets the fire incident subsystem reference
+     * @return the reference to the fire incident subsystem
+     */
     public FireIncident getFireIncidentSubsystem() {
         return fireIncidentSubsystem;
     }

@@ -8,6 +8,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+/**
+ * Represents the console interface, showcasing the active simulation of fires and firefighting drones
+ */
 public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
     private int GRID_WIDTH;
@@ -37,6 +40,10 @@ public class ConsoleView extends JPanel{
         droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();
     }
 
+    /**
+     * Get the offset for the grid
+     * @return the grid offset
+     */
     private Point getGridOffset() {
         int offsetX = (getWidth() - GRID_WIDTH) / 2;
         int offsetY = (getHeight() - GRID_HEIGHT) / 2;
@@ -85,7 +92,10 @@ public class ConsoleView extends JPanel{
     }
 
 
-
+    /**
+     * Draw the fires on the GUI
+     * @param g graphics
+     */
     public void drawFires(Graphics g) {
         Point offset = getGridOffset();
         int imgWidth = 55;
@@ -110,7 +120,10 @@ public class ConsoleView extends JPanel{
     }
 
 
-
+    /**
+     * Draw the drones on the GUI
+     * @param g graphics
+     */
     public void drawDrones(Graphics g) {
         Point offset = getGridOffset();
         g.setColor(Color.BLUE);
@@ -134,6 +147,12 @@ public class ConsoleView extends JPanel{
         }
     }
 
+    /**
+     * Get the color of the drone based on its state
+     * @param state the state of the drone
+     * @param g graphics
+     * @return the color the drone should be
+     */
     private Color getDroneColor(DroneState state, Graphics g){
         if (state instanceof EnRouteState){
             g.setColor(Color.BLUE);
@@ -153,6 +172,12 @@ public class ConsoleView extends JPanel{
         }
     }
 
+    /**
+     * Get the color to tint the drone based on its state
+     * @param state the state of the drone
+     * @param g graphics
+     * @return the tint the drone should have
+     */
     private Image getTintedDroneImage(DroneState state, Graphics g) {
         Color tint = getDroneColor(state, g); // Get corresponding color
         BufferedImage tintedImage = new BufferedImage(droneImage.getWidth(null), droneImage.getHeight(null), BufferedImage.TRANSLUCENT);
@@ -170,27 +195,54 @@ public class ConsoleView extends JPanel{
 
 
     // refactor this so that they call the controller instead of the view to controller
+
+    /**
+     * Mark a fire in a zone on the GUI
+     * @param zoneId the zone id
+     */
     public void markFire(int zoneId) {
         controller.markFire(zoneId);
     }
 
-
+    /**
+     * Clears the fire from a zone on the GUI
+     * @param zoneId the zone id
+     */
     public void clearFireInZone(int zoneId) {
         controller.clearFireInZone(zoneId);
     }
 
+    /**
+     * Updates the drone state on the GUI
+     * @param droneId the id of the drone
+     * @param state the state of the drone
+     */
     public void updateDroneState(int droneId, DroneState state) {
         controller.updateDroneState(droneId, state);
     }
 
+    /**
+     * Updates the drone location on the GUI
+     * @param droneId the id of the drone
+     * @param x the x coords of the drone
+     * @param y the y coords of the drone
+     */
     public void updateDronePosition(int droneId, int x, int y) {
         controller.updateDronePosition(droneId, x, y);
     }
 
+    /**
+     * Gets the console controller
+     * @return the controller
+     */
     public ConsoleController getController() {
         return controller;
     }
 
+    /**
+     * Sets a new controller for the console
+     * @param controller the controller
+     */
     public void setController(ConsoleController controller) {
         this.controller = controller;
     }

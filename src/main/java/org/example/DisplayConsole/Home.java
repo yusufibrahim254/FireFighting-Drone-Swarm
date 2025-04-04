@@ -12,7 +12,7 @@ import java.util.LinkedList;
 public class Home extends JFrame {
     private ConsoleView view;
     private DroneStatusViewer status;
-    private EventDashboard dashboard;
+    private final EventDashboard dashboard;
 
     /**
      * Constructor for the Home gui
@@ -51,27 +51,34 @@ public class Home extends JFrame {
     }
 
 
-
+    /**
+     * Gets the console view
+     * @return the console view
+     */
     public ConsoleView getView() {
         return view;
     }
 
-    public void setView(ConsoleView view) {
-        this.view = view;
-    }
-
+    /**
+     * Gets the drone status viewer
+     * @return the drone status viewer
+     */
     public DroneStatusViewer getStatus() {
         return status;
     }
 
-    public void setStatus(DroneStatusViewer status) {
-        this.status = status;
-    }
-
+    /**
+     * Gets the event dashboard
+     * @return the event dashboard
+     */
     public EventDashboard getDashboard() {
         return dashboard;
     }
 
+    /**
+     * Get the metrics of the size of the grid
+     * @return the metrics for the grid
+     */
     public int[] getGridMetrics(){
         JTextField widthField = new JTextField();
         JTextField heightField = new JTextField();
@@ -90,7 +97,4 @@ public class Home extends JFrame {
         return null;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(Home::new);
-    }
 }

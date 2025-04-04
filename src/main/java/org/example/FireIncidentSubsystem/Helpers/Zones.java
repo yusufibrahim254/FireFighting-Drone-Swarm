@@ -160,6 +160,10 @@ public class Zones {
         return furthestMidpoint;
     }
 
+    /**
+     * Get the list of zones
+     * @return list of zones
+     */
     public LinkedList<Zone> getZoneList() {
         return zoneList;
     }

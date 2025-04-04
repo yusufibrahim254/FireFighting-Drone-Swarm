@@ -9,21 +9,31 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Random;
 
-
+/**
+ * Represents the controller for the operator GUI, managing and controlling the logic
+ */
 public class OperatorController {
     private OperatorView view;
     private ConsoleController controller;
+
+    /**
+     * Constructor for the operator controller
+     * @param view the operator view
+     */
     public OperatorController(OperatorView view){
         this.view = view;
         this.controller = new ConsoleController();
     }
 
+    /**
+     * Generate an event to be sent to the scheduler
+     * @param eventType the type of event
+     */
     public void generateEvent(EventType eventType){
         int eventId = new Random().nextInt(900) + 100;
 
         JTextField timeField = new JTextField();
 
-//        Integer[] zoneIds = {1, 2, 3, 4};
         LinkedList<Zone> zoneIds = controller.getZones();
         JComboBox<Zone> zoneDropdown = new JComboBox<>();
         for (Zone zone: zoneIds){
@@ -62,8 +72,6 @@ public class OperatorController {
             String severity = severityDropdown.getSelectedItem().toString();
             String fault = faultDropdown.getSelectedItem().toString();
 
-            EventType faultType = EventType.valueOf(fault);
-
             Event event = new Event(eventId, time, zoneId.getZoneId(), eventType, severity, fault);
 
             try {
@@ -74,11 +82,16 @@ public class OperatorController {
         }
     }
 
+    /**
+     * Generate a drone request event
+     */
     public void sendDroneRequest() {
         generateEvent(EventType.DRONE_REQUEST);
     }
 
-
+    /**
+     * Generate a fire detected event
+     */
     public void sendFireDetected() {
         generateEvent(EventType.FIRE_DETECTED);
     }
