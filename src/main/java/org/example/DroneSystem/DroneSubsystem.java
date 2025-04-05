@@ -9,7 +9,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +25,8 @@ public class DroneSubsystem implements Runnable {
     private DroneStatusViewer droneStatusViewer;
     private EventDashboard eventDashboard;
     private final List<Event> activeEvents = new ArrayList<>();
+    private final List<Event> completedEvents = new ArrayList<>();
+    private int totalEventsCount = 0;
 
     /**
      * Constructor for the drone subsystem
@@ -115,6 +116,7 @@ public class DroneSubsystem implements Runnable {
 
                 // Assign the event to the closest idle drone
                 assignEventToClosestIdleDrone(event);
+                totalEventsCount++;
 
                 consoleView.markFire(event.getZoneId());
                 synchronized (activeEvents){
@@ -272,8 +274,13 @@ public class DroneSubsystem implements Runnable {
 
                 // Assign the original event to the closest idle drone
                 if (closestIdleDrone != null) {
+                    event.setAssignedTime(System.currentTimeMillis()); // Set the assigned time for the new event
                     System.out.println("IDLE DRONE FOUND ----------------------- (Drone "+ closestIdleDrone.getId()+")");
                     System.out.println("The two DRONES are switching roles now \n--------------------------------");
+
+                    // Calculate the distance from the drones location to the event location
+                    double distance = calculateDistance(closestIdleDrone, eventLocation);
+                    event.setDistanceTraveled(distance);
 
                     // Reassign the en route drone to the new event
                     closestEnRouteDrone.setTargetPosition(eventLocation);
@@ -434,4 +441,50 @@ public class DroneSubsystem implements Runnable {
     public EventDashboard getEventDashboard() {
         return eventDashboard;
     }
+
+    // Method to mark an event as completed
+    public void markEventCompleted(Event event) {
+        synchronized(drones) {
+            completedEvents.add(event);
+            if(completedEvents.size() == totalEventsCount) { // Check if all events are completed
+                printPerformanceSummary(); // Print the summary
+            }
+        }
+    }
+
+    private void printPerformanceSummary() {
+        System.out.println("\n\n========== ALL FIRES EXTINGUISHED ==========");
+        long totalResponseTime = 0;
+        long totalExtinguishTime = 0;
+        long totalSystemTime = 0;
+        double totalDistance = 0.0;
+
+        for (Event e : completedEvents) {
+            long responseTime = e.getAssignedTime() - e.getReceivedTime();      // time from arrival to assigned
+            long extinguishTime = e.getExtinguishedTime() - e.getAssignedTime();  // time from assigned to done
+            long sysTime = e.getExtinguishedTime() - e.getReceivedTime();// total time in the system
+
+            totalResponseTime += responseTime;
+            totalExtinguishTime += extinguishTime;
+            totalSystemTime += sysTime;
+            totalDistance += e.getDistanceTraveled();
+
+            System.out.println("--------------------------------------------");
+            System.out.println("Event ID: " + e.getId());
+            System.out.println("Response Time (ms):      " + responseTime);
+            System.out.println("Extinguish Time (ms):    " + extinguishTime);
+            System.out.println("Total Time (ms):         " + sysTime);
+            System.out.println("Distance Traveled:       " + e.getDistanceTraveled());
+        }
+
+        int count = completedEvents.size();
+        System.out.println("--------------------------------------------");
+        System.out.println("Number of events: " + count);
+        System.out.println("Avg Response Time (ms):   " + (totalResponseTime   / (double) count));
+        System.out.println("Avg Extinguish Time (ms): " + (totalExtinguishTime / (double) count));
+        System.out.println("Avg Total Time (ms):      " + (totalSystemTime     / (double) count));
+        System.out.println("Sum of Distances:         " + totalDistance);
+        System.out.println("========== END OF LOG METRICS ==========\n\n");
+    }
 }
+

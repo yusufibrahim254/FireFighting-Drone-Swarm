@@ -64,6 +64,7 @@ public class Scheduler implements Runnable {
                     // Deserialize the event and add it to the queue
                     Event event = Event.deserialize(message);
                     if (event.isValidEvent(event)) {
+                        event.setReceivedTime(System.currentTimeMillis()); // Set the received time
                         synchronized (incidentQueue) {
                             incidentQueue.add(event);
                         }
