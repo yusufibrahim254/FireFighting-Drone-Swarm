@@ -6,6 +6,10 @@ import org.example.FireIncidentSubsystem.Helpers.EventReader;
 import java.io.IOException;
 import java.net.*;
 
+import java.io.PrintWriter;
+import java.io.FileWriter;
+
+
 /**
  * The FireIncident class represents the Fire Incident Subsystem, which reads fire events
  * from a file and sends them to the Scheduler via UDP for processing.
@@ -40,6 +44,8 @@ public class FireIncident implements Runnable {
     public void run() {
         System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
         boolean acknowledged;
+        long startTime = System.nanoTime(); // Start timing
+
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
             for (Event event : events) {
@@ -56,6 +62,18 @@ public class FireIncident implements Runnable {
                 acknowledged = waitForAcknowledgment(event);
 
                 Thread.sleep(10000); // events sent every 10 seconds
+            }
+
+            long endTime = System.nanoTime(); // End timing
+            double durationMs = (endTime - startTime) / 1_000_000.0;
+            System.out.println("[FireIncident] Total processing time: " + durationMs + " ms");
+
+            // Append the total time taken to process all fires in the current run to the "timings.csv" file
+            // If the file doesn't exist, create it then append to it
+            try (PrintWriter out = new PrintWriter(new FileWriter("timings.csv", true))) {
+                out.println(durationMs);
+            } catch (IOException e) {
+                System.err.println("Could not write to timings.csv: " + e.getMessage());
             }
 
         } catch (IOException | InterruptedException e) {
