@@ -153,6 +153,7 @@ public class ConsoleView extends JPanel{
 
             // if the zone has an extinguiushed fire, draw the extinguished fire on the GUI
             } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
+                g.setColor(Color.BLACK);
                 g.fillRect(midX, midY, 25, 25);
                 g.drawImage(extinguishedImage, drawX - 135, drawY - 120, 185, 175, null);
 
@@ -166,7 +167,7 @@ public class ConsoleView extends JPanel{
                         @Override
                         public void run() {
                             controller.getExtinguishedFires().remove(zoneId);
-                            extinguishedTimersSet.remove(zoneId); // allow it to be reused again later
+                            extinguishedTimersSet.remove(zoneId);
                             repaint();
                         }
                     }, 5000);
@@ -175,6 +176,20 @@ public class ConsoleView extends JPanel{
         }
     }
 
+    public JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+
+        JMenuItem exportReport = new JMenuItem("Export Performance Report");
+        exportReport.addActionListener(e -> {
+            controller.generatePerformanceReport();
+            JOptionPane.showMessageDialog(this, "Report saved to performance_report.txt");
+        });
+
+        fileMenu.add(exportReport);
+        menuBar.add(fileMenu);
+        return menuBar;
+    }
 
     /**
      * Draw the drones on the GUI

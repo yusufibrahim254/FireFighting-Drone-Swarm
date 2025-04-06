@@ -3,6 +3,7 @@ package org.example.DisplayConsole;
 import org.example.DroneSystem.DroneState;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 import org.example.FireIncidentSubsystem.Helpers.Zones;
+import org.example.DroneSystem.DroneSubsystem;
 
 import java.awt.*;
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Controls the functionality of the simulation console
  */
 public class ConsoleController {
+    private DroneSubsystem droneSubsystem;
     private final Zones zonesModel;
     private Set<Integer> fires = new HashSet<>();
     private Set<Integer> extinguishedFires = new HashSet<>();
@@ -107,6 +109,18 @@ public class ConsoleController {
      */
     public Map<Integer, DroneState> getDroneStates() {
         return droneStates;
+    }
+
+    public void setDroneSubsystem(DroneSubsystem droneSubsystem) {
+        this.droneSubsystem = droneSubsystem;
+    }
+
+    public void generatePerformanceReport() {
+        if (droneSubsystem != null) {
+            droneSubsystem.printPerformanceSummary();
+        } else {
+            System.err.println("[ConsoleController] DroneSubsystem is null!");
+        }
     }
 
     /**

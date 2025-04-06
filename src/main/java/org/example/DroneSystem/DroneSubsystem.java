@@ -45,6 +45,8 @@ public class DroneSubsystem implements Runnable {
 
         Home home = new Home();
         this.consoleView = home.getView();
+        this.consoleController = consoleView.getController();
+        this.consoleController.setDroneSubsystem(this);
         this.droneStatusViewer = home.getStatus();
         this.eventDashboard = home.getDashboard();
 
@@ -459,7 +461,7 @@ public class DroneSubsystem implements Runnable {
      * The summary includes details such as response times, extinguish times, total times, and distances traveled
      * Method is called when all events are completed
      */
-    private void printPerformanceSummary() {
+    public void printPerformanceSummary() {
         // Object to collect our report line by line
         StringBuilder summaryBuilder = new StringBuilder();
 

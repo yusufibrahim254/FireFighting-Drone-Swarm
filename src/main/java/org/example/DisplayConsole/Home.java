@@ -37,6 +37,8 @@ public class Home extends JFrame {
 
 
         view = new ConsoleView(zones, controller);
+        setJMenuBar(view.createMenuBar());
+
         int[] grid = getGridMetrics();
         view.setGrid(grid[0], grid[1]);
         JScrollPane pane = new JScrollPane(view);
