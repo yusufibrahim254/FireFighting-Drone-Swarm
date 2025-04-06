@@ -186,7 +186,7 @@ public class Drone implements Runnable {
         startFaultTimer(); // Start the timer when movement begins
         double cruisingSpeed = 4; // m/s (cruise speed)
         double acceleration = 7; // m/s²
-        double timeStep = 1; // seconds per step
+        double timeStep = 10; // seconds per step (default is 1, for demo use 10)
         double currentSpeed = 0; // Start at rest
         double timeElapsed = 0; // Time elapsed
         boolean isCruising = false; // Flag to track if the drone has reached cruising speed
@@ -501,19 +501,32 @@ public class Drone implements Runnable {
 
     @Override
     public String toString() {
+        String faultStatus;
+
+        if (currentEvent == null) {
+            faultStatus = "Pending...";
+        } else if (currentEvent.getFault() == null) {
+            faultStatus = "NO_FAULT";
+        } else {
+            faultStatus = currentEvent.getFault();
+        }
+
         if (state instanceof IdleState && Arrays.equals(currentPosition, new int[]{0, 0})){
             return "state=" + state.getState(this) +
                     "\n currentPosition=" + Arrays.toString(currentPosition) +
-                    "\n At home base";
+                    "\n At home base" +
+                    "\n Fault Status=" + faultStatus;
         } else if (currentEvent == null) {
             return "state=" + state.getState(this) +
                     "\n currentPosition=" + Arrays.toString(currentPosition) +
-                    "\n Returning to origin at [0,0]";
+                    "\n Returning to origin at [0,0]" +
+                    "\n Fault Status=" + faultStatus;
         }
         return "state=" + state.getState(this) +
                 "\n currentPosition=" + Arrays.toString(currentPosition) +
                 "\n currentEvent=" + currentEvent.getId() +
-                "\n target zone=" + currentEvent.getZoneId();
+                "\n target zone=" + currentEvent.getZoneId() +
+                "\n Fault Status=" + faultStatus;
     }
 
     public DroneSubsystem getDroneSubsystem() {
