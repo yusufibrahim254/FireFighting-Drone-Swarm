@@ -1,6 +1,5 @@
 package org.example.DisplayConsole;
 
-import org.example.DroneSystem.DroneState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +12,7 @@ public class Legend extends JPanel {
     private final ImageIcon droneIcon;
     private final ImageIcon fireIcon;
     private final ImageIcon extinguishedIcon;
-    private final int imageSize = 20; // Adjust image size as needed
+    private final int imageSize = 20;
 
     /**
      * Constructor for Legend
@@ -31,7 +30,7 @@ public class Legend extends JPanel {
         add(createLegendItem(Color.YELLOW, "Drone outbound | Returning"));
         add(createLegendItem(Color.BLUE, "Drone inbound | En route"));
         add(createLegendItem(Color.MAGENTA, "Drone extinguishing fire"));
-        add(createLegendItem(Color.BLACK, "Drone faulted"));
+        add(createLegendItem(Color.RED, "Drone faulted"));
         add(createLegendItem(Color.GRAY, "No Events | Idle"));
     }
 

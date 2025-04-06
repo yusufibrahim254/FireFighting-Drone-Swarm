@@ -124,4 +124,15 @@ public class ConsoleController {
     public void setView(ConsoleView view) {
         this.view = view;
     }
+
+    /**
+     * Get the size of the farthest zone to get a minimum grid size to cover all zones
+     * @return minimum grid size
+     */
+    public int[] getZoneSize(){
+        int[] farMidPoint = zonesModel.getFurthestZoneMidpoint();
+        // by getting the farthest midpoint, and multiplying by 4 (2 will cover the zone edges)
+        // this ensures that the grid will cover all the zones perfectly
+        return new int[]{(farMidPoint[0]*4), (farMidPoint[1])*4};
+    }
 }

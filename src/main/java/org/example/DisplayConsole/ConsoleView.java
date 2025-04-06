@@ -5,39 +5,68 @@ import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.Timer;
 
 /**
  * Represents the console interface, showcasing the active simulation of fires and firefighting drones
  */
 public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
+    private final Set<Integer> extinguishedTimersSet = new HashSet<>();
     private int GRID_WIDTH;
     private int GRID_HEIGHT;
     private static final int CELL_SIZE = 25;
     private static final int DRONE_SIZE = 25;
     private ConsoleController controller;
-    private Image fireImage;
-    private Image extinguishedImage;
+    private final Image fireImage;
+    private final Image extinguishedImage;
 
-    private Image droneImage;
+    private final Image droneImage;
 
     /**
      * Constructor for the console view
      * @param zones list of zones
      */
-    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController, int gridWidth, int gridHeight){
-        this.GRID_WIDTH = gridWidth;
-        this.GRID_HEIGHT = gridHeight;
+    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController){
+
         this.zones = zones;
         this.controller = consoleController;
-        setPreferredSize(new Dimension(GRID_WIDTH, GRID_HEIGHT));
+
         revalidate();
         repaint();
         fireImage = new ImageIcon("docs/icons/fireImage.png").getImage();
         extinguishedImage = new ImageIcon("docs/icons/extinguished.png").getImage();
         droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();
+        ToolTipManager.sharedInstance().registerComponent(this);
+    }
+
+    /**
+     * Display the coordinates that the mouse is hovering over
+     * @param event the {@code MouseEvent} that initiated the
+     *              {@code ToolTip} display
+     * @return Coordinates of mouse
+     */
+    @Override
+    public String getToolTipText(MouseEvent event) {
+        Point offset = getGridOffset();
+        int x = event.getX() - offset.x;
+        int y = event.getY() - offset.y;
+        if (x >= 0 && x <= GRID_WIDTH && y >= 0 && y <= GRID_HEIGHT) {
+            return String.format("Coords: (%d, %d)", x, y);
+        }
+
+        return null;
+    }
+
+    public void setGrid(int gridWidth, int gridHeight){
+        this.GRID_WIDTH = gridWidth;
+        this.GRID_HEIGHT = gridHeight;
+        setPreferredSize(new Dimension(GRID_WIDTH, GRID_HEIGHT));
+        revalidate();
+        repaint();
     }
 
     /**
@@ -111,10 +140,26 @@ public class ConsoleView extends JPanel{
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
                 g.drawImage(fireImage, drawX, drawY, imgWidth, imgHeight, null);
+
             } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
-                g.setColor(Color.GREEN);
                 g.fillRect(midX, midY, 25, 25);
-                g.drawImage(extinguishedImage, drawX, drawY, 85, 75, null);
+                g.drawImage(extinguishedImage, drawX - 135, drawY - 120, 185, 175, null);
+
+                int zoneId = zone.getZoneId();
+
+                if (!extinguishedTimersSet.contains(zoneId)) {
+                    extinguishedTimersSet.add(zoneId);
+
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            controller.getExtinguishedFires().remove(zoneId);
+                            extinguishedTimersSet.remove(zoneId); // allow it to be reused again later
+                            repaint();
+                        }
+                    }, 5000);
+                }
             }
         }
     }
@@ -164,8 +209,8 @@ public class ConsoleView extends JPanel{
             g.setColor(Color.MAGENTA);
             return Color.MAGENTA;
         } else if (state instanceof FaultedState){
-            g.setColor(Color.BLACK);
-            return Color.BLACK;
+            g.setColor(Color.RED);
+            return Color.RED;
         } else {
             g.setColor(Color.GRAY);
             return Color.GRAY;
