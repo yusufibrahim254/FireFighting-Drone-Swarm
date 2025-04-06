@@ -253,7 +253,7 @@ public class Drone implements Runnable {
                 // Once the first few seconds of acceleration elapsed, go down to cruising speed
                 if (timeElapsed > 3) {
                     isCruising = true;
-                    currentSpeed = cruisingSpeed;
+                    currentSpeed = cruisingSpeed * 50;
                 }
 
                 // Calculate next position

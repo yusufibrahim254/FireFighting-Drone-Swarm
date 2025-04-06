@@ -4,6 +4,8 @@ import org.example.DisplayConsole.*;
 import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.Zones;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -452,39 +454,86 @@ public class DroneSubsystem implements Runnable {
         }
     }
 
+    /**
+     * Writes a performance summary for all completed events to a text file named "performance_report.txt"
+     * The summary includes details such as response times, extinguish times, total times, and distances traveled
+     * Method is called when all events are completed
+     */
     private void printPerformanceSummary() {
-        System.out.println("\n\n========== ALL FIRES EXTINGUISHED ==========");
+        // Object to collect our report line by line
+        StringBuilder summaryBuilder = new StringBuilder();
+
+        // Title for the report
+        summaryBuilder.append("========== ALL FIRES EXTINGUISHED ==========\n");
+
+        // totals for events
         long totalResponseTime = 0;
         long totalExtinguishTime = 0;
         long totalSystemTime = 0;
-        double totalDistance = 0.0;
+        double totalDistanceTraveled = 0.0;
 
-        for (Event e : completedEvents) {
-            long responseTime = e.getAssignedTime() - e.getReceivedTime();      // time from arrival to assigned
-            long extinguishTime = e.getExtinguishedTime() - e.getAssignedTime();  // time from assigned to done
-            long sysTime = e.getExtinguishedTime() - e.getReceivedTime();// total time in the system
+        // Loop event to gather metrics
+        for (Event event : completedEvents) {
+            // time from event creation to assignment
+            long eventResponseTime = event.getAssignedTime() - event.getReceivedTime();
 
-            totalResponseTime += responseTime;
-            totalExtinguishTime += extinguishTime;
-            totalSystemTime += sysTime;
-            totalDistance += e.getDistanceTraveled();
+            // time from assignment to full extinguishment
+            long eventExtinguishTime = event.getExtinguishedTime() - event.getAssignedTime();
 
-            System.out.println("--------------------------------------------");
-            System.out.println("Event ID: " + e.getId());
-            System.out.println("Response Time (ms):      " + responseTime);
-            System.out.println("Extinguish Time (ms):    " + extinguishTime);
-            System.out.println("Total Time (ms):         " + sysTime);
-            System.out.println("Distance Traveled:       " + e.getDistanceTraveled());
+            // time the event spent in the system (from creation to extinguishment)
+            long eventTotalTime = event.getExtinguishedTime() - event.getReceivedTime();
+
+            // distance the assigned drone had to travel
+            double eventDistanceTraveled = event.getDistanceTraveled();
+
+            // add to the totals
+            totalResponseTime += eventResponseTime;
+            totalExtinguishTime += eventExtinguishTime;
+            totalSystemTime += eventTotalTime;
+            totalDistanceTraveled += eventDistanceTraveled;
+
+            // format report
+            summaryBuilder.append("--------------------------------------------\n");
+            summaryBuilder.append("Event ID: ").append(event.getId()).append("\n");
+            summaryBuilder.append("Response Time (ms):       ").append(eventResponseTime).append("\n");
+            summaryBuilder.append("Extinguish Time (ms):     ").append(eventExtinguishTime).append("\n");
+            summaryBuilder.append("Total Time (ms):          ").append(eventTotalTime).append("\n");
+            summaryBuilder.append("Distance Traveled:        ").append(eventDistanceTraveled).append("\n");
         }
 
-        int count = completedEvents.size();
-        System.out.println("--------------------------------------------");
-        System.out.println("Number of events: " + count);
-        System.out.println("Avg Response Time (ms):   " + (totalResponseTime   / (double) count));
-        System.out.println("Avg Extinguish Time (ms): " + (totalExtinguishTime / (double) count));
-        System.out.println("Avg Total Time (ms):      " + (totalSystemTime     / (double) count));
-        System.out.println("Sum of Distances:         " + totalDistance);
-        System.out.println("========== END OF LOG METRICS ==========\n\n");
+        // total number of events
+        int totalCompletedEvents = completedEvents.size();
+
+        // format report
+        summaryBuilder.append("--------------------------------------------\n");
+        summaryBuilder.append("Number of events: ").append(totalCompletedEvents).append("\n");
+
+        // compute average times
+        summaryBuilder.append("Average Response Time (ms):    ")
+                .append(totalCompletedEvents == 0 ? 0 : (totalResponseTime / (double) totalCompletedEvents))
+                .append("\n");
+
+        summaryBuilder.append("Average Extinguish Time (ms):  ")
+                .append(totalCompletedEvents == 0 ? 0 : (totalExtinguishTime / (double) totalCompletedEvents))
+                .append("\n");
+
+        summaryBuilder.append("Average Total Time (ms):       ")
+                .append(totalCompletedEvents == 0 ? 0 : (totalSystemTime / (double) totalCompletedEvents))
+                .append("\n");
+
+        // add all the distances
+        summaryBuilder.append("Sum of Distances:              ").append(totalDistanceTraveled).append("\n");
+
+        // End of report
+        summaryBuilder.append("========== END OF SIMULATION METRICS ==========\n");
+
+        // Write this text to a file
+        // False cause we want to overwrite the file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("performance_report.txt", false))) {
+            writer.write(summaryBuilder.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
