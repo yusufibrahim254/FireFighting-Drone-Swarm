@@ -124,4 +124,9 @@ public class ConsoleController {
     public void setView(ConsoleView view) {
         this.view = view;
     }
+
+    public int[] getZoneSize(){
+        int[] farMidPoint = zonesModel.getFurthestZoneMidpoint();
+        return new int[]{(farMidPoint[0]*4), (farMidPoint[1])*4};
+    }
 }

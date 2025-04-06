@@ -8,6 +8,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -500,14 +501,16 @@ public class Drone implements Runnable {
 
     @Override
     public String toString() {
-        if (currentEvent == null){
-            return "agentCapacity=" + agentCapacity + " L" +
-                    "\n state=" + state.getState(this) +
+        if (state instanceof IdleState && Arrays.equals(currentPosition, new int[]{0, 0})){
+            return "state=" + state.getState(this) +
+                    "\n currentPosition=" + Arrays.toString(currentPosition) +
+                    "\n At home base";
+        } else if (currentEvent == null) {
+            return "state=" + state.getState(this) +
                     "\n currentPosition=" + Arrays.toString(currentPosition) +
                     "\n Returning to origin at [0,0]";
         }
-        return "agentCapacity=" + agentCapacity + " L" +
-                "\n state=" + state.getState(this) +
+        return "state=" + state.getState(this) +
                 "\n currentPosition=" + Arrays.toString(currentPosition) +
                 "\n currentEvent=" + currentEvent.getId() +
                 "\n target zone=" + currentEvent.getZoneId();

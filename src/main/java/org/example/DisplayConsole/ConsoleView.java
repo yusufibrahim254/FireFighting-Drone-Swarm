@@ -29,17 +29,24 @@ public class ConsoleView extends JPanel{
      * Constructor for the console view
      * @param zones list of zones
      */
-    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController, int gridWidth, int gridHeight){
-        this.GRID_WIDTH = gridWidth;
-        this.GRID_HEIGHT = gridHeight;
+    public ConsoleView(LinkedList<Zone> zones, ConsoleController consoleController){
+
         this.zones = zones;
         this.controller = consoleController;
-        setPreferredSize(new Dimension(GRID_WIDTH, GRID_HEIGHT));
+
         revalidate();
         repaint();
         fireImage = new ImageIcon("docs/icons/fireImage.png").getImage();
         extinguishedImage = new ImageIcon("docs/icons/extinguished.png").getImage();
         droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();
+    }
+
+    public void setGrid(int gridWidth, int gridHeight){
+        this.GRID_WIDTH = gridWidth;
+        this.GRID_HEIGHT = gridHeight;
+        setPreferredSize(new Dimension(GRID_WIDTH, GRID_HEIGHT));
+        revalidate();
+        repaint();
     }
 
     /**
@@ -182,8 +189,8 @@ public class ConsoleView extends JPanel{
             g.setColor(Color.MAGENTA);
             return Color.MAGENTA;
         } else if (state instanceof FaultedState){
-            g.setColor(Color.BLACK);
-            return Color.BLACK;
+            g.setColor(Color.RED);
+            return Color.RED;
         } else {
             g.setColor(Color.GRAY);
             return Color.GRAY;

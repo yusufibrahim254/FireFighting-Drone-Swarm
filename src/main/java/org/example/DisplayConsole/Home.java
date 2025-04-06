@@ -34,8 +34,10 @@ public class Home extends JFrame {
         dashboard = new EventDashboard();
         status = new DroneStatusViewer();
 
+
+        view = new ConsoleView(zones, controller);
         int[] grid = getGridMetrics();
-        view = new ConsoleView(zones, controller, grid[0], grid[1]);
+        view.setGrid(grid[0], grid[1]);
         JScrollPane pane = new JScrollPane(view);
 
         pane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -80,21 +82,7 @@ public class Home extends JFrame {
      * @return the metrics for the grid
      */
     public int[] getGridMetrics(){
-        JTextField widthField = new JTextField();
-        JTextField heightField = new JTextField();
-        JPanel panel = new JPanel(new GridLayout(2, 2));
-        panel.add(new JLabel("Grid Width:"));
-        panel.add(widthField);
-        panel.add(new JLabel("Grid Height:"));
-        panel.add(heightField);
-
-        int result = JOptionPane.showConfirmDialog(null, panel, "Enter Grid Size", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
-            int gridWidth = Integer.parseInt(widthField.getText());
-            int gridHeight = Integer.parseInt(heightField.getText());
-            return new int[]{gridWidth, gridHeight};
-        }
-        return null;
+        return view.getController().getZoneSize();
     }
 
 }
