@@ -11,7 +11,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+/**
+ * Integration tests for validating communication between different components (Scheduler, FireIncident, DroneSubsystem).
+ */
 class IntegrationTest {
     private DatagramSocket schedulerSocket;
     private DatagramSocket fireIncidentSocket;
@@ -19,6 +21,9 @@ class IntegrationTest {
     private DatagramSocket droneSubsystemSocket;
     private final String host = "localhost";
 
+    /**
+     * Sets up the test environment by initializing the sockets for the scheduler, fire incident, and drone subsystem.
+     */
     @BeforeEach
     void setUp() throws Exception {
         schedulerSocket = new DatagramSocket(0);
@@ -31,6 +36,9 @@ class IntegrationTest {
         droneSubsystemPort = droneSubsystemSocket.getLocalPort();
     }
 
+    /**
+     * Closes the sockets after each test to release resources.
+     */
     @AfterEach
     void tearDown() {
         schedulerSocket.close();
@@ -38,9 +46,12 @@ class IntegrationTest {
         droneSubsystemSocket.close();
     }
 
+    /**
+     * Integration test to verify packet communication between the scheduler and the drone subsystem.
+     * It sends a message from the scheduler to the drone subsystem and verifies the response.
+     */
     @Test
     void testPacketCommunication() throws Exception {
-        // thread to act as scheduler
         Thread schedulerThread = new Thread(() -> {
             try {
                 byte[] receiveData = new byte[1024];
@@ -48,6 +59,7 @@ class IntegrationTest {
                 schedulerSocket.receive(receivePacket);
                 String receivedMessage = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
+                // Respond with acknowledgment message
                 String responseMessage = "ACK: " + receivedMessage;
                 byte[] sendData = responseMessage.getBytes();
                 InetAddress clientAddress = receivePacket.getAddress();
@@ -59,6 +71,7 @@ class IntegrationTest {
             }
         });
 
+        // Thread to act as drone subsystem
         Thread droneThread = new Thread(() -> {
             try {
                 byte[] receiveData = new byte[1024];
@@ -66,6 +79,7 @@ class IntegrationTest {
                 droneSubsystemSocket.receive(receivePacket);
                 String receivedMessage = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
+                // Respond with acknowledgment message
                 String responseMessage = "ACK: " + receivedMessage;
                 byte[] sendData = responseMessage.getBytes();
                 InetAddress clientAddress = receivePacket.getAddress();
@@ -84,7 +98,7 @@ class IntegrationTest {
         FireIncident fireIncident = new FireIncident(host, schedulerPort);
         new Thread(fireIncident).start();
 
-        // Send event from scheduler to drone
+        // Send event from scheduler to drone subsystem
         Scheduler scheduler = new Scheduler(0, host, droneSubsystemPort);
         boolean result = scheduler.sendEventToDrone(new Event(1, "12:12:12", 2, EventType.DRONE_REQUEST, "High", "NO_FAULT"));
         assertTrue(result);
