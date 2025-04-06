@@ -512,4 +512,8 @@ public class Drone implements Runnable {
                 "\n currentEvent=" + currentEvent.getId() +
                 "\n target zone=" + currentEvent.getZoneId();
     }
+
+    public DroneSubsystem getDroneSubsystem() {
+        return this.droneSubsystem;
+    }
 }

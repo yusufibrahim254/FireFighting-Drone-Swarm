@@ -7,12 +7,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.Timer;
 
 /**
  * Represents the console interface, showcasing the active simulation of fires and firefighting drones
  */
 public class ConsoleView extends JPanel{
     private final LinkedList<Zone> zones;
+    private final Set<Integer> extinguishedTimersSet = new HashSet<>();
     private int GRID_WIDTH;
     private int GRID_HEIGHT;
     private static final int CELL_SIZE = 25;
@@ -111,10 +113,26 @@ public class ConsoleView extends JPanel{
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
                 g.drawImage(fireImage, drawX, drawY, imgWidth, imgHeight, null);
+
             } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
-                g.setColor(Color.GREEN);
                 g.fillRect(midX, midY, 25, 25);
-                g.drawImage(extinguishedImage, drawX, drawY, 85, 75, null);
+                g.drawImage(extinguishedImage, drawX - 135, drawY - 120, 185, 175, null);
+
+                int zoneId = zone.getZoneId();
+
+                if (!extinguishedTimersSet.contains(zoneId)) {
+                    extinguishedTimersSet.add(zoneId);
+
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            controller.getExtinguishedFires().remove(zoneId);
+                            extinguishedTimersSet.remove(zoneId); // allow it to be reused again later
+                            repaint();
+                        }
+                    }, 5000);
+                }
             }
         }
     }

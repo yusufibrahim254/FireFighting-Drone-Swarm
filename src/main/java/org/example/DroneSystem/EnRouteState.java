@@ -13,7 +13,7 @@ public class EnRouteState implements DroneState {
     @Override
     public void arrive(Drone drone) {
         System.out.println("\n\nDrone " + drone.getId() + " arrived and state is set to DROPPING AGENT.");
-        drone.setState(new DroppingAgentState());
+        drone.setState(new DroppingAgentState(drone.getDroneSubsystem()));
     }
 
     @Override

@@ -76,4 +76,9 @@ public class DroppingAgentState implements DroneState {
     public String getState(Drone drone) {
         return "DROPPING_AGENT";
     }
+
+    public DroppingAgentState(DroneSubsystem droneSubsystem) {
+        this.droneSubsystem = droneSubsystem;
+    }
+
 }
