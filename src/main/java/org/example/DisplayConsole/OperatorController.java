@@ -34,15 +34,18 @@ public class OperatorController {
 
         JTextField timeField = new JTextField();
 
+        // get operator choice of zone
         LinkedList<Zone> zoneIds = controller.getZones();
         JComboBox<Zone> zoneDropdown = new JComboBox<>();
         for (Zone zone: zoneIds){
             zoneDropdown.addItem(zone);
         }
 
+        // get operator choice of severity
         String[] severityLevels = {"Low", "Moderate", "High"};
         JComboBox<String> severityDropdown = new JComboBox<>(severityLevels);
 
+        // get operator choice of fault type
         EventType[] faultTypes = {
                 EventType.NO_FAULT,
                 EventType.DRONE_STUCK,
@@ -51,6 +54,7 @@ public class OperatorController {
         };
         JComboBox<EventType> faultDropdown = new JComboBox<>(faultTypes);
 
+        // add it all in a panel to put in the option pane
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(new JLabel("Time:"));
@@ -65,7 +69,9 @@ public class OperatorController {
         int result = JOptionPane.showConfirmDialog(null, panel, "Create an Event",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
+        // verify operator clicked ok
         if (result == JOptionPane.OK_OPTION) {
+            // validate inputted info
             String time = timeField.getText();
             Zone zoneId = (Zone) zoneDropdown.getSelectedItem();
             System.out.println(zoneId);
@@ -74,6 +80,7 @@ public class OperatorController {
 
             Event event = new Event(eventId, time, zoneId.getZoneId(), eventType, severity, fault);
 
+            // send the new event to the scheduler manually
             try {
                 view.getFireIncidentSubsystem().manualSendEvent(event);
             } catch (IOException e) {

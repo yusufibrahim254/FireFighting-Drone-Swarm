@@ -9,7 +9,7 @@ import org.example.DroneSystem.DroneSubsystem;
  * It is designed to run these instances in separate threads to simulate a real-life, real-time concurrent system.
  */
 
-public class Main {
+public class Main { // deprecated 
 
     /**
      * The starting point of the firefighting drone swarm system.

@@ -31,6 +31,7 @@ public class EventDashboard extends JPanel {
      * @param waterNeeded the amount of water needed to extinguish fire
      */
     public void addFireEvent(int zoneId, int waterNeeded) {
+        // check if event already exists, otherwise add to the dashboard
         if (!eventProgressBars.containsKey(zoneId)) {
             JProgressBar progressBar = new JProgressBar(0, waterNeeded);
             progressBar.setStringPainted(true);
@@ -54,7 +55,7 @@ public class EventDashboard extends JPanel {
     public void updateFireProgress(int zoneId, int waterDropped) {
         JProgressBar progressBar = eventProgressBars.get(zoneId);
         JLabel eventLabel = eventLabels.get(zoneId);
-        if (progressBar != null) {
+        if (progressBar != null) { // event exists in dashboard, update it
             int newProgress = progressBar.getValue() + waterDropped;
             newProgress = Math.min(newProgress, totalWaterNeeded.get(zoneId));
             progressBar.setValue(newProgress);
@@ -67,6 +68,7 @@ public class EventDashboard extends JPanel {
      * @param zoneId the zone id
      */
     public void removeFireEvent(int zoneId) {
+        // check if event exists in dashboard, then remove it
         if (eventProgressBars.containsKey(zoneId)) {
             remove(eventProgressBars.get(zoneId));
             remove(eventLabels.get(zoneId));

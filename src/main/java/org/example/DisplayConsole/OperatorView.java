@@ -37,17 +37,21 @@ public class OperatorView extends JFrame {
         JButton requestDroneButton = new JButton("Request Drone");
         JButton fireDetectedButton = new JButton("Fire Detected");
 
+        // remove focus off buttons and color code the text
         requestDroneButton.setFocusable(false);
         fireDetectedButton.setFocusable(false);
         requestDroneButton.setForeground(Color.BLUE);
         fireDetectedButton.setForeground(Color.RED);
 
+        // action listener for if operator requests a drone
         requestDroneButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 controller.sendDroneRequest();
             }
         });
+
+        // action listener for if operator detects a fire
         fireDetectedButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

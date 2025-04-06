@@ -23,13 +23,14 @@ public class Home extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
+        // set up controller and get the zones
         ConsoleController controller = new ConsoleController();
         LinkedList<Zone> zones = controller.getZones();
 
         JLabel label = new JLabel("FireFighting Drone Swarm - Group 8 Lab A1");
         label.setHorizontalAlignment(SwingConstants.CENTER);
 
-
+        // initialize the legend, dashboard and status viewer
         Legend legend = new Legend();
         dashboard = new EventDashboard();
         status = new DroneStatusViewer();
@@ -40,6 +41,7 @@ public class Home extends JFrame {
         view.setGrid(grid[0], grid[1]);
         JScrollPane pane = new JScrollPane(view);
 
+        // put console in scroll pane to allow to be scrollable
         pane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         controller.setView(view);

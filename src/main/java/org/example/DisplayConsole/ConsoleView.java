@@ -40,6 +40,7 @@ public class ConsoleView extends JPanel{
         fireImage = new ImageIcon("docs/icons/fireImage.png").getImage();
         extinguishedImage = new ImageIcon("docs/icons/extinguished.png").getImage();
         droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();
+        // ensure the tool tip display the coordinates
         ToolTipManager.sharedInstance().registerComponent(this);
     }
 
@@ -51,9 +52,12 @@ public class ConsoleView extends JPanel{
      */
     @Override
     public String getToolTipText(MouseEvent event) {
+        // get the offset and x,y coordinates
         Point offset = getGridOffset();
         int x = event.getX() - offset.x;
         int y = event.getY() - offset.y;
+
+        // ensure only display tooltip within the grid
         if (x >= 0 && x <= GRID_WIDTH && y >= 0 && y <= GRID_HEIGHT) {
             return String.format("Coords: (%d, %d)", x, y);
         }
@@ -61,6 +65,11 @@ public class ConsoleView extends JPanel{
         return null;
     }
 
+    /**
+     * Set the grid on the GUI
+     * @param gridWidth the width of the grid
+     * @param gridHeight the height of the grid
+     */
     public void setGrid(int gridWidth, int gridHeight){
         this.GRID_WIDTH = gridWidth;
         this.GRID_HEIGHT = gridHeight;
@@ -136,11 +145,13 @@ public class ConsoleView extends JPanel{
             int drawX = midX - imgWidth / 2;
             int drawY = midY - imgHeight / 2;
 
+            // if the zone has a fire ongoing, draw the fire on the GUI
             if (controller.getFires().contains(zone.getZoneId())) {
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
                 g.drawImage(fireImage, drawX, drawY, imgWidth, imgHeight, null);
 
+            // if the zone has an extinguiushed fire, draw the extinguished fire on the GUI
             } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
                 g.fillRect(midX, midY, 25, 25);
                 g.drawImage(extinguishedImage, drawX - 135, drawY - 120, 185, 175, null);

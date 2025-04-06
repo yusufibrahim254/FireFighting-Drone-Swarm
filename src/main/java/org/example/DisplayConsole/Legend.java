@@ -25,6 +25,7 @@ public class Legend extends JPanel {
         droneIcon = new ImageIcon(resizeImage("docs/icons/droneIcon.png"));
         extinguishedIcon = new ImageIcon(resizeImage("docs/icons/extinguished.png"));
 
+        // add each item to the legend
         add(createLegendItem(fireIcon, "Active Fire"));
         add(createLegendItem(extinguishedIcon, "Extinguished Fire"));
         add(createLegendItem(Color.YELLOW, "Drone outbound | Returning"));

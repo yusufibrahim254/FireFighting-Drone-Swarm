@@ -29,15 +29,20 @@ public class DroneStatusViewer extends JPanel {
      * @param drone the drone
      */
     public void addDroneToViewer(Drone drone){
+        // format the drone string to html
         String formattedText = "<html>" + drone.toString().replace("\n", "<br>") + "</html>";
 
+        // if drone is not already in the panel, add it
         if (!dronePanels.containsKey(drone)) {
             JPanel dronePanel = new JPanel();
             dronePanel.setLayout(new BoxLayout(dronePanel, BoxLayout.Y_AXIS));
+
+            // box for the drone info
             dronePanel.setBorder(BorderFactory.createTitledBorder("Drone " + drone.getId()));
             JLabel droneLabel = new JLabel(formattedText);
             droneLabel.setVerticalAlignment(SwingConstants.CENTER);
 
+            // track and measure the drone tank and battery
             JProgressBar agentBar = new JProgressBar(0, MAX_AGENT_CAPACITY);
             agentBar.setStringPainted(true);
             agentBar.setToolTipText("Tank (L)");
@@ -49,13 +54,13 @@ public class DroneStatusViewer extends JPanel {
             agentBars.put(drone, agentBar);
             batteryBars.put(drone, batteryBar);
 
-
+            // add them all in to the drone panel
             dronePanel.add(droneLabel);
             dronePanel.add(agentBar);
             dronePanel.add(batteryBar);
             dronePanels.put(drone, dronePanel);
             this.add(dronePanel);
-        } else {
+        } else { // already in the viewer, so update its info
             JPanel dronePanel = dronePanels.get(drone);
             for (Component comp : dronePanel.getComponents()) {
                 if (comp instanceof JLabel) {
@@ -64,6 +69,7 @@ public class DroneStatusViewer extends JPanel {
                 }
             }
         }
+        // initialize the bars (tank and battery)
         agentBars.get(drone).setValue((int) drone.getAgentCapacity());
         agentBars.get(drone).setString(String.format("Tank: %.1fL / %dL", drone.getAgentCapacity(), MAX_AGENT_CAPACITY));
 
