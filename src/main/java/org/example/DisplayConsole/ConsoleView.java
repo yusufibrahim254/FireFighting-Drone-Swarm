@@ -5,6 +5,7 @@ import org.example.FireIncidentSubsystem.Helpers.Zone;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.Timer;
@@ -20,10 +21,10 @@ public class ConsoleView extends JPanel{
     private static final int CELL_SIZE = 25;
     private static final int DRONE_SIZE = 25;
     private ConsoleController controller;
-    private Image fireImage;
-    private Image extinguishedImage;
+    private final Image fireImage;
+    private final Image extinguishedImage;
 
-    private Image droneImage;
+    private final Image droneImage;
 
     /**
      * Constructor for the console view
@@ -39,6 +40,25 @@ public class ConsoleView extends JPanel{
         fireImage = new ImageIcon("docs/icons/fireImage.png").getImage();
         extinguishedImage = new ImageIcon("docs/icons/extinguished.png").getImage();
         droneImage = new ImageIcon("docs/icons/droneIcon.png").getImage();
+        ToolTipManager.sharedInstance().registerComponent(this);
+    }
+
+    /**
+     * Display the coordinates that the mouse is hovering over
+     * @param event the {@code MouseEvent} that initiated the
+     *              {@code ToolTip} display
+     * @return Coordinates of mouse
+     */
+    @Override
+    public String getToolTipText(MouseEvent event) {
+        Point offset = getGridOffset();
+        int x = event.getX() - offset.x;
+        int y = event.getY() - offset.y;
+        if (x >= 0 && x <= GRID_WIDTH && y >= 0 && y <= GRID_HEIGHT) {
+            return String.format("Coords: (%d, %d)", x, y);
+        }
+
+        return null;
     }
 
     public void setGrid(int gridWidth, int gridHeight){
