@@ -39,7 +39,7 @@ public class DroppingAgentState implements DroneState {
             drone.delegateJob();
         } else {
             // it means the fire is off, so remove the event from the drone
-            currentEvent.setExtinguishedTime(System.currentTimeMillis()); // Set the time when the fire was extinguished
+            currentEvent.setExtinguishedTime(System.currentTimeMillis() - droneSubsystem.getSimulationStartTime());
             droneSubsystem.markEventCompleted(currentEvent);
             System.out.println("Event completed, fire extinguished");
 //            drone.getDroneSubsystem().removeEvent(drone.getCurrentEvent().getZoneId());
