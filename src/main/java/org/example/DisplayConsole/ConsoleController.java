@@ -1,6 +1,7 @@
 package org.example.DisplayConsole;
 
 import org.example.DroneSystem.DroneState;
+import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.Zone;
 import org.example.FireIncidentSubsystem.Helpers.Zones;
 import org.example.DroneSystem.DroneSubsystem;
@@ -148,5 +149,15 @@ public class ConsoleController {
         // by getting the farthest midpoint, and multiplying by 4 (2 will cover the zone edges)
         // this ensures that the grid will cover all the zones perfectly
         return new int[]{(farMidPoint[0]*4), (farMidPoint[1])*4};
+    }
+
+    public String getFireSeverity(int zoneId) {
+
+        for (Event event : droneSubsystem.getActiveEvents()) {
+            if (event.getZoneId() == zoneId) {
+                return event.getSeverityLevel();
+            }
+        }
+        return "";
     }
 }

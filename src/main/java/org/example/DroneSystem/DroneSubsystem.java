@@ -614,5 +614,9 @@ public class DroneSubsystem implements Runnable {
     public long getSimulationStartTime() {
         return this.simulationStartTime;
     }
+
+    public List<Event> getActiveEvents() {
+        return activeEvents;
+    }
 }
 

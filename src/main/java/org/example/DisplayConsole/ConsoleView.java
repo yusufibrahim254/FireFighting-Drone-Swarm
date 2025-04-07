@@ -136,14 +136,35 @@ public class ConsoleView extends JPanel{
      */
     public void drawFires(Graphics g) {
         Point offset = getGridOffset();
-        int imgWidth = 55;
-        int imgHeight = 65;
 
         for (Zone zone : zones) {
             int midX = offset.x + (zone.getZoneStart().getXCoords() + zone.getZoneEnd().getXCoords()) / 2;
             int midY = offset.y + (zone.getZoneStart().getYCoords() + zone.getZoneEnd().getYCoords()) / 2;
-            int drawX = midX - imgWidth / 2;
-            int drawY = midY - imgHeight / 2;
+
+            String severity = controller.getFireSeverity(zone.getZoneId());
+
+            int imgWidth = 0, imgHeight = 0;
+            int drawX = 0, drawY = 0;
+            switch (severity) {
+                case "Moderate" -> {
+                    imgWidth = 55;
+                    imgHeight = 65;
+                    drawX = midX - imgWidth / 2;
+                    drawY = midY - imgHeight / 2;
+                }
+                case "High" -> {
+                    imgWidth = 80;
+                    imgHeight = 95;
+                    drawX = (midX - imgWidth / 2) + 12;
+                    drawY = (midY - imgHeight / 2) + 18;
+                }
+                default -> {
+                    imgWidth = 30;
+                    imgHeight = 35;
+                    drawX = (midX - imgWidth / 2);
+                    drawY = (midY - imgHeight / 2);
+                }
+            }
 
             // if the zone has a fire ongoing, draw the fire on the GUI
             if (controller.getFires().contains(zone.getZoneId())) {

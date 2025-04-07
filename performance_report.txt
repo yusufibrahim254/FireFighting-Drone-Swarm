@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ========== ALL FIRES EXTINGUISHED ==========
 --------------------------------------------
 Event ID: 1
@@ -30,3 +31,5 @@ Average Extinguish Time (ms):  8.7198924330725E11
 Average Total Time (ms):       1.74397846600825E12
 Sum of Distances:              707.1067811865476
 ========== END OF SIMULATION METRICS ==========
+=======
+>>>>>>> Stashed changes
