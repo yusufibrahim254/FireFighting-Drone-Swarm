@@ -60,7 +60,7 @@ class DroneEventTest {
      */
     @Test
     void dropAgent() throws InterruptedException {
-        drone.setState(new DroppingAgentState());
+        drone.setState(new DroppingAgentState(drone.getDroneSubsystem()));
         double result = droneEvent.dropAgent(5.0);
         assertEquals(0.0, result);
     }
