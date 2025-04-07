@@ -3,6 +3,7 @@ package org.example.DroneSystem;
 
 import org.example.FireIncidentSubsystem.Event;
 import org.example.DroneSystem.DroneSubsystem;
+import org.example.FireIncidentSubsystem.Helpers.EventType;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -237,7 +238,6 @@ public class Drone implements Runnable {
                     continue;
                 } else {
                     cleandAndSendEventBackToDroneSubsystem();
-
                     return "DRONE_STUCK";
                 }
             }
@@ -347,7 +347,7 @@ public class Drone implements Runnable {
                 this.currentEvent.getZoneId(),
                 this.currentEvent.getEventType(),
                 this.currentEvent.getSeverityLevel(),
-                null);
+                EventType.NO_FAULT.toString());
 
         // Send the event back to DroneSubsystem
         try (DatagramSocket socket = new DatagramSocket()) {
@@ -361,6 +361,7 @@ public class Drone implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        droneSubsystem.removeEvent(currentEvent.getZoneId());
     }
 
     /**
