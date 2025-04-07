@@ -104,19 +104,26 @@ public class DroneSubsystem implements Runnable {
                 event.setReceivedTime(System.currentTimeMillis() - simulationStartTime);
 
 //                // Check if the zone already has an event
-//                for(Event currentEvent: activeEvents){
-//                    if(currentEvent.getZoneId() == event.getZoneId()){
-//                        // Send a message so it can be added to the back of the queue
-//                        String noAck = "ACK: ZONE_IS_BUSY";
-//                        byte[] sendData = noAck.getBytes();
-//                        InetAddress schedulerAddress = receivePacket.getAddress();
-//                        int schedulerPort = receivePacket.getPort();
-//                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
-//                        schedulerSocket.send(sendPacket);
-//                        continue;
-//
-//                    }
-//                }
+                boolean zoneIsBusy = false;
+                System.out.println("ABOUT TO CHECK THE ACTIVE EVENTS");
+                for(Event currentEvent: activeEvents){
+                    if(currentEvent.getZoneId() == event.getZoneId()){
+                        zoneIsBusy = true;
+                        break;
+
+                    }
+                }
+
+                if (zoneIsBusy) {
+                    // Send a message so it can be added to the back of the queue
+                    String noAck = "ACK: ZONE_IS_BUSY";
+                    byte[] sendData = noAck.getBytes();
+                    InetAddress schedulerAddress = receivePacket.getAddress();
+                    int schedulerPort = receivePacket.getPort();
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+                    schedulerSocket.send(sendPacket);
+                    continue; // This will now work as intended
+                }
 
                 // Check if there are any idle drone, if not send a message back right away
 //                System.out.println("The number of idle drones is "+ numberOfIdleDrones);
@@ -173,7 +180,6 @@ public class DroneSubsystem implements Runnable {
             for (int i = 0; i < activeEvents.size(); i++) {
                 Event event = activeEvents.get(i);
                 if (event.getZoneId() == zoneId) {
-                    System.out.println("THe event has been found and it is being removed --------------------------->>>>>>>>");
                     // Remove the event from the list
                     Event removedEvent = activeEvents.remove(i);
 
@@ -185,7 +191,6 @@ public class DroneSubsystem implements Runnable {
                     if (removedEvent.getAssignedDrone() != null) {
                         removedEvent.getAssignedDrone().setCurrentEvent(null);
                     }
-
                     return true;
                 }
             }
