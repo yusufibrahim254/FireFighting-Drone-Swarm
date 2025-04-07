@@ -108,7 +108,7 @@ public class Scheduler implements Runnable {
                         }
                         System.out.println("Sending event to DroneSubsystem");
                     } else {
-                            System.out.println("[Scheduler] Retrying corrupted event: " + event.getId());
+                            System.out.println("[Scheduler] Retrying corrupted event or busy zone: " + event.getId());
                     }
                 }
                 // Avoid tight looping
@@ -153,6 +153,16 @@ public class Scheduler implements Runnable {
             String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
 
             System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + acknowledgment);
+
+            if ("ACK: ZONE_IS_BUSY".equalsIgnoreCase(acknowledgment)) {
+                // Add the event to the back of the queue
+                synchronized (incidentQueue) {
+                    incidentQueue.poll(); // Remove from front
+                    incidentQueue.add(event); // Add to back
+                }
+                System.out.println("[Scheduler] Zone is busy, requeued event: " + event.getId());
+                return false;
+            }
 
             if ("ACK: NO".equalsIgnoreCase(acknowledgment)) {
                 System.out.println("[Scheduler] No available drones. Will retry later...");

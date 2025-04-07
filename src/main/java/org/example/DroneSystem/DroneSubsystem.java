@@ -29,6 +29,7 @@ public class DroneSubsystem implements Runnable {
     private final List<Event> activeEvents = new ArrayList<>();
     private final List<Event> completedEvents = new ArrayList<>();
     private int totalEventsCount = 0;
+    private int nextAssignmentIndex = 0; // Tracks where to start searching for available drones
 
     /**
      * Constructor for the drone subsystem
@@ -98,6 +99,21 @@ public class DroneSubsystem implements Runnable {
                 // Deserialize the event
                 Event event = Event.deserialize(eventData);
 
+//                // Check if the zone already has an event
+//                for(Event currentEvent: activeEvents){
+//                    if(currentEvent.getZoneId() == event.getZoneId()){
+//                        // Send a message so it can be added to the back of the queue
+//                        String noAck = "ACK: ZONE_IS_BUSY";
+//                        byte[] sendData = noAck.getBytes();
+//                        InetAddress schedulerAddress = receivePacket.getAddress();
+//                        int schedulerPort = receivePacket.getPort();
+//                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+//                        schedulerSocket.send(sendPacket);
+//                        continue;
+//
+//                    }
+//                }
+
                 // Check if there are any idle drone, if not send a message back right away
 //                System.out.println("The number of idle drones is "+ numberOfIdleDrones);
                 if(getAvailableDrones(event) < 1){
@@ -139,6 +155,37 @@ public class DroneSubsystem implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+    /**
+     * Removes an event from the activeEvents list based on zone ID
+     *
+     * @param zoneId The zone ID of the event to remove
+     * @return true if the event was successfully removed, false otherwise
+     */
+    public boolean removeEvent(int zoneId) {
+        synchronized (activeEvents) {
+            // Find the event with matching zone ID
+            for (int i = 0; i < activeEvents.size(); i++) {
+                Event event = activeEvents.get(i);
+                if (event.getZoneId() == zoneId) {
+                    System.out.println("THe event has been found and it is being removed --------------------------->>>>>>>>");
+                    // Remove the event from the list
+                    Event removedEvent = activeEvents.remove(i);
+
+                    // Clean up associated resources
+                    consoleView.clearFireInZone(zoneId);
+                    eventDashboard.removeFireEvent(zoneId);
+
+                    // Clear drone assignment if exists
+                    if (removedEvent.getAssignedDrone() != null) {
+                        removedEvent.getAssignedDrone().setCurrentEvent(null);
+                    }
+
+                    return true;
+                }
+            }
+            return false;
         }
     }
     /**
@@ -239,8 +286,14 @@ public class DroneSubsystem implements Runnable {
         double minEnRouteDistance = Double.MAX_VALUE;
         double minReturningDistance = Double.MAX_VALUE;
 
+        // Track which drone was assigned for updating nextAssignmentIndex
+        Drone assignedDrone = null;
+
         // Find the closest idle drone, en route drone with the same severity, and returning drone
-        for (Drone drone : drones) {
+        for (int i=0; i < this.drones.size(); i++) {
+            int startingIndex = (nextAssignmentIndex + i) % this.drones.size();
+            Drone drone = this.drones.get(startingIndex);
+
             if(drone.getState() instanceof FaultedState){
                 continue;
             }
@@ -278,11 +331,10 @@ public class DroneSubsystem implements Runnable {
 
                 // Assign the original event to the closest idle drone
                 if (closestIdleDrone != null) {
-                    event.setAssignedTime(System.currentTimeMillis()); // Set the assigned time for the new event
+                    event.setAssignedTime(System.currentTimeMillis());
                     System.out.println("IDLE DRONE FOUND ----------------------- (Drone "+ closestIdleDrone.getId()+")");
                     System.out.println("The two DRONES are switching roles now \n--------------------------------");
 
-                    // Calculate the distance from the drones location to the event location
                     double distance = calculateDistance(closestIdleDrone, eventLocation);
                     event.setDistanceTraveled(distance);
 
@@ -304,9 +356,11 @@ public class DroneSubsystem implements Runnable {
                     System.out.println("Drone " + closestIdleDrone.getId() + " 's new target is " + originalEventLocation[0] + "," + originalEventLocation[1] + " With Event ID: "+originalEvent.getId());
                     System.out.println("Drone " + closestEnRouteDrone.getId() + " 's new target is " + eventLocation[0] + "," + eventLocation[1]+ " With Event ID: "+event.getId());
                     System.out.println("\n\n---------------------------------");
+
+                    // Update next assignment index to be after the idle drone that was assigned
+                    assignedDrone = closestIdleDrone;
                 }
             }
-            return;
         }
         // 2. If no matching en route drone was found, assign the event to the closest idle drone
         else if (closestIdleDrone != null) {
@@ -319,7 +373,9 @@ public class DroneSubsystem implements Runnable {
                 currentAssignee.setCurrentEvent(null);
             }
             closestIdleDrone.setCurrentEvent(event);
-            return;
+
+            // Update next assignment index to be after this drone
+            assignedDrone = closestIdleDrone;
         }
         // 3. If there are no idle drones, assign the event to the closest returning drone
         else if (closestReturningDrone != null && closestReturningDrone.getAgentCapacity() > 0 && minReturningDistance < minIdleDistance) {
@@ -327,14 +383,21 @@ public class DroneSubsystem implements Runnable {
             closestReturningDrone.setTargetPosition(eventLocation);
             closestReturningDrone.setIncidentPosition(eventLocation);
             closestReturningDrone.setCurrentEvent(event);
-            return;
+
+            // Update next assignment index to be after this drone
+            assignedDrone = closestReturningDrone;
         }
         else { // No drones available
             System.out.println("NO DRONE AVAILABLE FOR DELEGATION");
-            // At this point the drone is returning back to 0,0, so if the job is not done, change its target location
-//            if (event.getCurrentWaterAmountNeeded() > 0 && currentAssignee != null) {
-//                currentAssignee.setTargetPosition(zones.getZoneMidpoint(event.getZoneId()));
-//            }
+        }
+
+        // Update nextAssignmentIndex if a drone was assigned
+        if (assignedDrone != null) {
+            nextAssignmentIndex = ((assignedDrone.getId()-1) % drones.size()) + 1;
+            if (nextAssignmentIndex >= drones.size()) {
+                nextAssignmentIndex = 0;  // Wrap around if needed
+            }
+            System.out.println("Next assignment will start from drone index: " + nextAssignmentIndex);
         }
     }
     /**

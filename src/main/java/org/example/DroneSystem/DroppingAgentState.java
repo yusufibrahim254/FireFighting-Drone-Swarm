@@ -42,6 +42,7 @@ public class DroppingAgentState implements DroneState {
             currentEvent.setExtinguishedTime(System.currentTimeMillis()); // Set the time when the fire was extinguished
             droneSubsystem.markEventCompleted(currentEvent);
             System.out.println("Event completed, fire extinguished");
+//            drone.getDroneSubsystem().removeEvent(drone.getCurrentEvent().getZoneId());
             drone.setCurrentEvent(null);
         }
         drone.setTargetPosition(new int[]{0, 0});
