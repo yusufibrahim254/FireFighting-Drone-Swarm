@@ -336,7 +336,7 @@ public class DroneSubsystem implements Runnable {
 
                 // Assign the original event to the closest idle drone
                 if (closestIdleDrone != null) {
-                    event.setAssignedTime(System.currentTimeMillis());
+//                    event.setAssignedTime(System.currentTimeMillis());
                     System.out.println("IDLE DRONE FOUND ----------------------- (Drone "+ closestIdleDrone.getId()+")");
                     System.out.println("The two DRONES are switching roles now \n--------------------------------");
 
