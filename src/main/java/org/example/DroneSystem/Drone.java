@@ -156,6 +156,7 @@ public class Drone implements Runnable {
                         System.out.println("Drone " + id + " completed Event " + handledEvent.getId() + ", returning to base.");
                         droneSubsystem.updateFireZones(handledEvent);
                         droneSubsystem.getEventDashboard().removeFireEvent(handledEvent.getZoneId());
+                        droneSubsystem.removeEvent(handledEvent.getZoneId());
                     }
                 } else if (state instanceof RefillingState) {
                     System.out.println("\n");
@@ -512,21 +513,21 @@ public class Drone implements Runnable {
         }
 
         if (state instanceof IdleState && Arrays.equals(currentPosition, new int[]{0, 0})){
-            return "state=" + state.getState(this) +
-                    "\n currentPosition=" + Arrays.toString(currentPosition) +
+            return "State = " + state.getState(this) +
+                    "\n Location = " + Arrays.toString(currentPosition) +
                     "\n At home base" +
-                    "\n Fault Status=" + faultStatus;
+                    "\n Fault Status = " + faultStatus;
         } else if (currentEvent == null) {
-            return "state=" + state.getState(this) +
-                    "\n currentPosition=" + Arrays.toString(currentPosition) +
+            return "State = " + state.getState(this) +
+                    "\n Location = " + Arrays.toString(currentPosition) +
                     "\n Returning to origin at [0,0]" +
-                    "\n Fault Status=" + faultStatus;
+                    "\n Fault Status = " + faultStatus;
         }
-        return "state=" + state.getState(this) +
-                "\n currentPosition=" + Arrays.toString(currentPosition) +
-                "\n currentEvent=" + currentEvent.getId() +
-                "\n target zone=" + currentEvent.getZoneId() +
-                "\n Fault Status=" + faultStatus;
+        return "State = " + state.getState(this) +
+                "\n Location = " + Arrays.toString(currentPosition) +
+                "\n Tasked Event = " + currentEvent.getId() +
+                "\n Destination = Zone " + currentEvent.getZoneId() +
+                "\n Fault Status = " + faultStatus;
     }
 
     public DroneSubsystem getDroneSubsystem() {

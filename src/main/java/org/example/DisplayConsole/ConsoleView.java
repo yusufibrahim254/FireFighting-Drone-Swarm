@@ -145,38 +145,45 @@ public class ConsoleView extends JPanel{
 
             int imgWidth = 0, imgHeight = 0;
             int drawX = 0, drawY = 0;
-            switch (severity) {
-                case "Moderate" -> {
-                    imgWidth = 55;
-                    imgHeight = 65;
-                    drawX = midX - imgWidth / 2;
-                    drawY = midY - imgHeight / 2;
-                }
-                case "High" -> {
-                    imgWidth = 80;
-                    imgHeight = 95;
-                    drawX = (midX - imgWidth / 2) + 12;
-                    drawY = (midY - imgHeight / 2) + 18;
-                }
-                default -> {
-                    imgWidth = 30;
-                    imgHeight = 35;
-                    drawX = (midX - imgWidth / 2);
-                    drawY = (midY - imgHeight / 2);
-                }
-            }
+
 
             // if the zone has a fire ongoing, draw the fire on the GUI
             if (controller.getFires().contains(zone.getZoneId())) {
+
+                switch (severity) {
+                    case "Moderate" -> {
+                        imgWidth = 55;
+                        imgHeight = 65;
+                        drawX = (midX - imgWidth / 2) + 12;
+                        drawY = (midY - imgHeight / 2);
+                    }
+                    case "High" -> {
+                        imgWidth = 80;
+                        imgHeight = 95;
+                        drawX = (midX - imgWidth / 2) + 12;
+                        drawY = (midY - imgHeight / 2) + 18;
+                    }
+                    default -> {
+                        imgWidth = 30;
+                        imgHeight = 35;
+                        drawX = (midX - imgWidth / 2) + 12;
+                        drawY = (midY - imgHeight / 2) + 10;
+                    }
+                }
+
                 g.setColor(Color.RED);
                 g.fillRect(midX, midY, 25, 25);
                 g.drawImage(fireImage, drawX, drawY, imgWidth, imgHeight, null);
 
             // if the zone has an extinguiushed fire, draw the extinguished fire on the GUI
             } else if (controller.getExtinguishedFires().contains(zone.getZoneId())){
+                int extWidth = 185;
+                int extHeight = 175;
+                drawX = midX - extWidth / 2;
+                drawY = midY - extHeight / 2;
                 g.setColor(Color.BLACK);
                 g.fillRect(midX, midY, 25, 25);
-                g.drawImage(extinguishedImage, drawX - 135, drawY - 120, 185, 175, null);
+                g.drawImage(extinguishedImage, drawX - 70, drawY - 70, extWidth, extHeight, null);
 
                 int zoneId = zone.getZoneId();
 

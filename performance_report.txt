@@ -1,14 +1,20 @@
 ========== ALL FIRES EXTINGUISHED ==========
 --------------------------------------------
 Event ID: 1
-Response Time (ms):       11394
-Extinguish Time (ms):     9864
-Total Time (ms):          21258
-Distance Traveled:        212.13203435596427
+Response Time (ms):       1
+Extinguish Time (ms):     12118
+Total Time (ms):          12119
+Distance Traveled:        0.0
 --------------------------------------------
-Number of events: 1
-Average Response Time (ms):    11394.0
-Average Extinguish Time (ms):  9864.0
-Average Total Time (ms):       21258.0
-Sum of Distances:              212.13203435596427
+Event ID: 220
+Response Time (ms):       11989
+Extinguish Time (ms):     12023
+Total Time (ms):          24012
+Distance Traveled:        0.0
+--------------------------------------------
+Number of events: 2
+Average Response Time (ms):    5995.0
+Average Extinguish Time (ms):  12070.5
+Average Total Time (ms):       18065.5
+Sum of Distances:              0.0
 ========== END OF SIMULATION METRICS ==========

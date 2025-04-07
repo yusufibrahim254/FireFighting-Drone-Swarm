@@ -19,7 +19,7 @@ public class Home extends JFrame {
      */
     public Home(){
         setTitle("FireFighting Drone Swarm Simulation");
-        setSize(900, 600);
+        setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
