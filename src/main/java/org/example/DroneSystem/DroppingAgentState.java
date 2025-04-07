@@ -6,6 +6,8 @@ import org.example.FireIncidentSubsystem.Event;
  * State class represents the drone is currently dropping agent.
  */
 public class DroppingAgentState implements DroneState {
+    private DroneSubsystem droneSubsystem;
+
     @Override
     public void dispatch(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is currently dropping agent. Cannot be dispatched.");
@@ -37,7 +39,10 @@ public class DroppingAgentState implements DroneState {
             drone.delegateJob();
         } else {
             // it means the fire is off, so remove the event from the drone
+            currentEvent.setExtinguishedTime(System.currentTimeMillis() - droneSubsystem.getSimulationStartTime());
+            droneSubsystem.markEventCompleted(currentEvent);
             System.out.println("Event completed, fire extinguished");
+//            drone.getDroneSubsystem().removeEvent(drone.getCurrentEvent().getZoneId());
             drone.setCurrentEvent(null);
         }
         drone.setTargetPosition(new int[]{0, 0});
@@ -67,4 +72,14 @@ public class DroppingAgentState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is DROPPING FIRE SUPPRESSANT.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "DROPPING_AGENT";
+    }
+
+    public DroppingAgentState(DroneSubsystem droneSubsystem) {
+        this.droneSubsystem = droneSubsystem;
+    }
+
 }

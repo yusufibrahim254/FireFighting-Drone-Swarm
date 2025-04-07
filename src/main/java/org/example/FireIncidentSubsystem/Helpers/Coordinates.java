@@ -1,6 +1,8 @@
 package org.example.FireIncidentSubsystem.Helpers;
 
-public class Coordinates {
+import java.awt.*;
+
+public class Coordinates extends Point {
     private int x;
     private int y;
 
@@ -18,7 +20,7 @@ public class Coordinates {
      * Get the x coordinates
      * @return the x coordinates
      */
-    public int getX() {
+    public int getXCoords() {
         return x;
     }
 
@@ -26,7 +28,7 @@ public class Coordinates {
      * Get the y coordinates
      * @return the y coordinates
      */
-    public int getY() {
+    public int getYCoords() {
         return y;
     }
 

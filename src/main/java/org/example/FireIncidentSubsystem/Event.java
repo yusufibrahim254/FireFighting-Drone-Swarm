@@ -15,6 +15,10 @@ public class Event {
     private final String severityLevel; // Severity level of the event
     private String fault;
     private Drone assignedDrone;
+    private long receivedTime;       // Time when scheduler first sees this event
+    private long assignedTime;       // when DroneSubsystem assigns  drone
+    private long extinguishedTime;   // Drone is done extinguishing the fire
+    private double distanceTraveled; // distance traveled by the drone to the fire
 
     private double currentWaterAmountNeeded;
     /**
@@ -209,6 +213,70 @@ public class Event {
 
     public void setFault(String fault){
         this.fault = fault;
+    }
+
+    /**
+     * Gets the time when the event was received
+     * @return the time when the event was received
+     */
+    public long getReceivedTime() {
+        return receivedTime;
+    }
+
+    /**
+     * Sets the time when the event was received
+     * @param receivedTime the time when the event was received
+     */
+    public void setReceivedTime(long receivedTime) {
+        this.receivedTime = receivedTime;
+    }
+
+    /**
+     * Gets the time when the event was assigned
+     * @return the time when the event was assigned
+     */
+    public long getAssignedTime() {
+        return assignedTime;
+    }
+
+    /**
+     * Sets the time when the event was assigned
+     * @param assignedTime the time when the event was assigned
+     */
+    public void setAssignedTime(long assignedTime) {
+        this.assignedTime = assignedTime;
+    }
+
+    /**
+     * Gets the time when the event was extinguished
+     * @return the time when the event was extinguished
+     */
+    public long getExtinguishedTime() {
+        return extinguishedTime;
+    }
+
+    /**
+     * Sets the time when the event was extinguished
+     * @param extinguishedTime the time when the event was extinguished
+     */
+    public void setExtinguishedTime(long extinguishedTime) {
+        this.extinguishedTime = extinguishedTime;
+    }
+
+    /**
+     * Gets the distance traveled by the drone to the fire
+     * @return the distance traveled by the drone to the fire
+     */
+    public double getDistanceTraveled() {
+        return distanceTraveled;
+    }
+
+    /**
+     * Sets the distance traveled by the drone to the fire
+     * @param distanceTraveled the distance traveled by the drone to the fire
+     */
+    public void setDistanceTraveled(double distanceTraveled) {
+        this.distanceTraveled = distanceTraveled;
     }
 
 }

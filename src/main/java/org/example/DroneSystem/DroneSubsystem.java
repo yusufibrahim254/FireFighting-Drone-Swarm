@@ -1,8 +1,11 @@
 package org.example.DroneSystem;
 
+import org.example.DisplayConsole.*;
 import org.example.FireIncidentSubsystem.Event;
 import org.example.FireIncidentSubsystem.Helpers.Zones;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -19,6 +22,15 @@ public class DroneSubsystem implements Runnable {
     private final DatagramSocket droneSocket; // Socket for Drone communication
     private final List<Drone> drones;
     private final Zones zones;
+    private ConsoleView consoleView;
+    private ConsoleController consoleController;
+    private DroneStatusViewer droneStatusViewer;
+    private EventDashboard eventDashboard;
+    private final List<Event> activeEvents = new ArrayList<>();
+    private final List<Event> completedEvents = new ArrayList<>();
+    private int totalEventsCount = 0;
+    private int nextAssignmentIndex = 0; // Tracks where to start searching for available drones
+    private final long simulationStartTime;
 
     /**
      * Constructor for the drone subsystem
@@ -32,6 +44,14 @@ public class DroneSubsystem implements Runnable {
         this.droneSocket = new DatagramSocket(dronePort);
         this.drones = new ArrayList<>();
         this.zones = new Zones(zonesFilePath);
+        this.simulationStartTime = System.currentTimeMillis();  // Record current time
+
+        Home home = new Home();
+        this.consoleView = home.getView();
+        this.consoleController = consoleView.getController();
+        this.consoleController.setDroneSubsystem(this);
+        this.droneStatusViewer = home.getStatus();
+        this.eventDashboard = home.getDashboard();
 
         // Calculate the furthest zone's midpoint
         int[] furthestMidpoint = zones.getFurthestZoneMidpoint();
@@ -43,7 +63,8 @@ public class DroneSubsystem implements Runnable {
 
         // Initialize the fleet with 10 drones
         for (int i = 1; i <= 10; i++) {
-            drones.add(new Drone(i, 15, this, batteryDepletionRate));
+            Drone newDrone = new Drone(i, 15, this, batteryDepletionRate);
+            drones.add(newDrone);
         }
 
         // Start each drone in a separate thread
@@ -80,6 +101,23 @@ public class DroneSubsystem implements Runnable {
                 // Deserialize the event
                 Event event = Event.deserialize(eventData);
 
+                event.setReceivedTime(System.currentTimeMillis() - simulationStartTime);
+
+//                // Check if the zone already has an event
+//                for(Event currentEvent: activeEvents){
+//                    if(currentEvent.getZoneId() == event.getZoneId()){
+//                        // Send a message so it can be added to the back of the queue
+//                        String noAck = "ACK: ZONE_IS_BUSY";
+//                        byte[] sendData = noAck.getBytes();
+//                        InetAddress schedulerAddress = receivePacket.getAddress();
+//                        int schedulerPort = receivePacket.getPort();
+//                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+//                        schedulerSocket.send(sendPacket);
+//                        continue;
+//
+//                    }
+//                }
+
                 // Check if there are any idle drone, if not send a message back right away
 //                System.out.println("The number of idle drones is "+ numberOfIdleDrones);
                 if(getAvailableDrones(event) < 1){
@@ -102,6 +140,13 @@ public class DroneSubsystem implements Runnable {
 
                 // Assign the event to the closest idle drone
                 assignEventToClosestIdleDrone(event);
+                totalEventsCount++;
+
+                consoleView.markFire(event.getZoneId());
+                synchronized (activeEvents){
+                    activeEvents.add(event);
+                }
+                eventDashboard.addFireEvent(event.getZoneId(), event.getSeverityWaterAmount());
 
                 // Send acknowledgment back to Scheduler
                 String ack = "ACK:" + event.getId();
@@ -114,6 +159,37 @@ public class DroneSubsystem implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+    /**
+     * Removes an event from the activeEvents list based on zone ID
+     *
+     * @param zoneId The zone ID of the event to remove
+     * @return true if the event was successfully removed, false otherwise
+     */
+    public boolean removeEvent(int zoneId) {
+        synchronized (activeEvents) {
+            // Find the event with matching zone ID
+            for (int i = 0; i < activeEvents.size(); i++) {
+                Event event = activeEvents.get(i);
+                if (event.getZoneId() == zoneId) {
+                    System.out.println("THe event has been found and it is being removed --------------------------->>>>>>>>");
+                    // Remove the event from the list
+                    Event removedEvent = activeEvents.remove(i);
+
+                    // Clean up associated resources
+                    consoleView.clearFireInZone(zoneId);
+                    eventDashboard.removeFireEvent(zoneId);
+
+                    // Clear drone assignment if exists
+                    if (removedEvent.getAssignedDrone() != null) {
+                        removedEvent.getAssignedDrone().setCurrentEvent(null);
+                    }
+
+                    return true;
+                }
+            }
+            return false;
         }
     }
     /**
@@ -149,6 +225,7 @@ public class DroneSubsystem implements Runnable {
                     } else if (type.equals(CommunicationDroneToSubsystem.EVENT_RETURN.name())) {
                         // Handle returned event from stuck drone
                         System.out.println("[DroneSubsystem] Received returned event from stuck drone: " + data);
+
                         Event returnedEvent = Event.deserialize(data);
 
                         // Forward the event back to the Scheduler
@@ -190,6 +267,9 @@ public class DroneSubsystem implements Runnable {
             synchronized (drones){
                 drones.get(droneId).setCurrentPosition(new int[]{x, y});
             }
+            consoleView.updateDronePosition(droneId + 1, x, y);
+            consoleView.updateDroneState(droneId + 1, drones.get(droneId).getState());
+
         } else {
             System.err.println("Invalid location data format: " + locationData);
         }
@@ -210,8 +290,14 @@ public class DroneSubsystem implements Runnable {
         double minEnRouteDistance = Double.MAX_VALUE;
         double minReturningDistance = Double.MAX_VALUE;
 
+        // Track which drone was assigned for updating nextAssignmentIndex
+        Drone assignedDrone = null;
+
         // Find the closest idle drone, en route drone with the same severity, and returning drone
-        for (Drone drone : drones) {
+        for (int i=0; i < this.drones.size(); i++) {
+            int startingIndex = (nextAssignmentIndex + i) % this.drones.size();
+            Drone drone = this.drones.get(startingIndex);
+
             if(drone.getState() instanceof FaultedState){
                 continue;
             }
@@ -244,13 +330,18 @@ public class DroneSubsystem implements Runnable {
         // 1. If a matching en route drone is found, reassign it to the new event and give its previous event to the closest idle drone
         if (closestEnRouteDrone != null && minEnRouteDistance < minIdleDistance) {
             Event originalEvent = closestEnRouteDrone.getCurrentEvent();
+            event.setAssignedTime(System.currentTimeMillis() - simulationStartTime);
             if (originalEvent != null) {
                 int[] originalEventLocation = zones.getZoneMidpoint(originalEvent.getZoneId());
 
                 // Assign the original event to the closest idle drone
                 if (closestIdleDrone != null) {
+//                    event.setAssignedTime(System.currentTimeMillis());
                     System.out.println("IDLE DRONE FOUND ----------------------- (Drone "+ closestIdleDrone.getId()+")");
                     System.out.println("The two DRONES are switching roles now \n--------------------------------");
+
+                    double distance = calculateDistance(closestIdleDrone, eventLocation);
+                    event.setDistanceTraveled(distance);
 
                     // Reassign the en route drone to the new event
                     closestEnRouteDrone.setTargetPosition(eventLocation);
@@ -270,13 +361,16 @@ public class DroneSubsystem implements Runnable {
                     System.out.println("Drone " + closestIdleDrone.getId() + " 's new target is " + originalEventLocation[0] + "," + originalEventLocation[1] + " With Event ID: "+originalEvent.getId());
                     System.out.println("Drone " + closestEnRouteDrone.getId() + " 's new target is " + eventLocation[0] + "," + eventLocation[1]+ " With Event ID: "+event.getId());
                     System.out.println("\n\n---------------------------------");
+
+                    // Update next assignment index to be after the idle drone that was assigned
+                    assignedDrone = closestIdleDrone;
                 }
             }
-            return;
         }
         // 2. If no matching en route drone was found, assign the event to the closest idle drone
         else if (closestIdleDrone != null) {
             System.out.println("IDLE DRONE IS FOUND AND ABOUT TO BE ASSIGNED--------------------------(Drone "+ closestIdleDrone.getId()+")");
+            event.setAssignedTime(System.currentTimeMillis() - simulationStartTime);
             closestIdleDrone.setTargetPosition(eventLocation);
             closestIdleDrone.setIncidentPosition(eventLocation);
 
@@ -285,21 +379,32 @@ public class DroneSubsystem implements Runnable {
                 currentAssignee.setCurrentEvent(null);
             }
             closestIdleDrone.setCurrentEvent(event);
-            return;
+
+            // Update next assignment index to be after this drone
+            assignedDrone = closestIdleDrone;
         }
         // 3. If there are no idle drones, assign the event to the closest returning drone
-        else if (closestReturningDrone != null) {
-            System.out.println("A RETURNING DRONE IS FOUND AND ABOUT TO BE ASSIGNED -> (Drone" + closestIdleDrone.getId() +")");
+        else if (closestReturningDrone != null && closestReturningDrone.getAgentCapacity() > 0 && minReturningDistance < minIdleDistance) {
+            System.out.println("A RETURNING DRONE IS FOUND AND ABOUT TO BE ASSIGNED -> (Drone" + closestReturningDrone.getId() +")");
+            event.setAssignedTime(System.currentTimeMillis() - simulationStartTime);
             closestReturningDrone.setTargetPosition(eventLocation);
             closestReturningDrone.setIncidentPosition(eventLocation);
             closestReturningDrone.setCurrentEvent(event);
-            return;
-        } else { // No drones available
+
+            // Update next assignment index to be after this drone
+            assignedDrone = closestReturningDrone;
+        }
+        else { // No drones available
             System.out.println("NO DRONE AVAILABLE FOR DELEGATION");
-            // At this point the drone is returning back to 0,0, so if the job is not done, change its target location
-//            if (event.getCurrentWaterAmountNeeded() > 0 && currentAssignee != null) {
-//                currentAssignee.setTargetPosition(zones.getZoneMidpoint(event.getZoneId()));
-//            }
+        }
+
+        // Update nextAssignmentIndex if a drone was assigned
+        if (assignedDrone != null) {
+            nextAssignmentIndex = ((assignedDrone.getId()-1) % drones.size()) + 1;
+            if (nextAssignmentIndex >= drones.size()) {
+                nextAssignmentIndex = 0;  // Wrap around if needed
+            }
+            System.out.println("Next assignment will start from drone index: " + nextAssignmentIndex);
         }
     }
     /**
@@ -311,6 +416,10 @@ public class DroneSubsystem implements Runnable {
      */
     private double calculateDistance(int[] point1, int[] point2) {
         return Math.sqrt(Math.pow(point1[0] - point2[0], 2) + Math.pow(point1[1] - point2[1], 2));
+    }
+
+    public void updateDroneStateInConsole(int droneId, DroneState state) {
+        consoleView.updateDroneState(droneId, state);
     }
 
     /**
@@ -394,4 +503,120 @@ public class DroneSubsystem implements Runnable {
         }
         return availableDronesCount;
     }
+
+    public void updateFireZones(Event event){
+        consoleView.clearFireInZone(event.getZoneId());
+    }
+
+    public DroneStatusViewer getDroneStatusViewer() {
+        return droneStatusViewer;
+    }
+
+    public EventDashboard getEventDashboard() {
+        return eventDashboard;
+    }
+
+    // Method to mark an event as completed
+    public void markEventCompleted(Event event) {
+        synchronized(drones) {
+            completedEvents.add(event);
+            if(completedEvents.size() == totalEventsCount) { // Check if all events are completed
+                printPerformanceSummary(); // Print the summary
+            }
+        }
+    }
+
+    /**
+     * Writes a performance summary for all completed events to a text file named "performance_report.txt"
+     * The summary includes details such as response times, extinguish times, total times, and distances traveled
+     * Method is called when all events are completed
+     */
+    public void printPerformanceSummary() {
+        // Object to collect our report line by line
+        StringBuilder summaryBuilder = new StringBuilder();
+
+        // Title for the report
+        summaryBuilder.append("========== ALL FIRES EXTINGUISHED ==========\n");
+
+        // totals for events
+        long totalResponseTime = 0;
+        long totalExtinguishTime = 0;
+        long totalSystemTime = 0;
+        double totalDistanceTraveled = 0.0;
+
+        // Loop event to gather metrics
+        for (Event event : completedEvents) {
+            // time from event creation to assignment
+            long eventResponseTime = event.getAssignedTime() - event.getReceivedTime();
+
+            // time from assignment to full extinguishment
+            long eventExtinguishTime = event.getExtinguishedTime() - event.getAssignedTime();
+
+            // time the event spent in the system (from creation to extinguishment)
+            long eventTotalTime = event.getExtinguishedTime() - event.getReceivedTime();
+
+            // distance the assigned drone had to travel
+            double eventDistanceTraveled = event.getDistanceTraveled();
+
+            // add to the totals
+            totalResponseTime += eventResponseTime;
+            totalExtinguishTime += eventExtinguishTime;
+            totalSystemTime += eventTotalTime;
+            totalDistanceTraveled += eventDistanceTraveled;
+
+            // format report
+            summaryBuilder.append("--------------------------------------------\n");
+            summaryBuilder.append("Event ID: ").append(event.getId()).append("\n");
+            summaryBuilder.append("Response Time (ms):       ").append(eventResponseTime).append("\n");
+            summaryBuilder.append("Extinguish Time (ms):     ").append(eventExtinguishTime).append("\n");
+            summaryBuilder.append("Total Time (ms):          ").append(eventTotalTime).append("\n");
+            summaryBuilder.append("Distance Traveled:        ").append(eventDistanceTraveled).append("\n");
+        }
+
+        // total number of events
+        int totalCompletedEvents = completedEvents.size();
+
+        // format report
+        summaryBuilder.append("--------------------------------------------\n");
+        summaryBuilder.append("Number of events: ").append(totalCompletedEvents).append("\n");
+
+        // compute average times
+        summaryBuilder.append("Average Response Time (ms):    ")
+                .append(totalCompletedEvents == 0 ? 0 : (totalResponseTime / (double) totalCompletedEvents))
+                .append("\n");
+
+        summaryBuilder.append("Average Extinguish Time (ms):  ")
+                .append(totalCompletedEvents == 0 ? 0 : (totalExtinguishTime / (double) totalCompletedEvents))
+                .append("\n");
+
+        summaryBuilder.append("Average Total Time (ms):       ")
+                .append(totalCompletedEvents == 0 ? 0 : (totalSystemTime / (double) totalCompletedEvents))
+                .append("\n");
+
+        // add all the distances
+        summaryBuilder.append("Sum of Distances:              ").append(totalDistanceTraveled).append("\n");
+
+        // End of report
+        summaryBuilder.append("========== END OF SIMULATION METRICS ==========\n");
+
+        // Write this text to a file
+        // False cause we want to overwrite the file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("performance_report.txt", false))) {
+            writer.write(summaryBuilder.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Returns the time (in milliseconds since the Unix epoch) at which this DroneSubsystem started.
+     */
+    public long getSimulationStartTime() {
+        return this.simulationStartTime;
+    }
+
+    public List<Event> getActiveEvents() {
+        return activeEvents;
+    }
 }
+

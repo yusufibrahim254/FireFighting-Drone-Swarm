@@ -25,7 +25,7 @@ public class DroneEvent {
      * @return The remaining agent needed after the drone's contribution2
      */
     public double processEvent(Event event, double waterNeeded, Drone drone) {
-        drone.setState(new DroppingAgentState());
+        drone.setState(new DroppingAgentState(drone.getDroneSubsystem()));
         double agentCapacity = drone.getAgentCapacity();
         if (agentCapacity > waterNeeded){
             drone.setAgentCapacity(agentCapacity - waterNeeded);

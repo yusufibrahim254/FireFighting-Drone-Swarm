@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.DisplayConsole.ConsoleView;
+import org.example.DisplayConsole.Home;
 import org.example.FireIncidentSubsystem.Event;
 
 import java.io.IOException;
@@ -18,6 +20,7 @@ public class Scheduler implements Runnable {
     private final String droneHost; // Hostname or IP address of the Drone Subsystem
     private final int dronePort; // Port number of the Drone Subsystem
 
+
     /**
      * Constructs a Scheduler with the specified port, Drone Subsystem host, and port.
      *
@@ -30,6 +33,7 @@ public class Scheduler implements Runnable {
         this.socket = new DatagramSocket(port);
         this.droneHost = droneHost; // Use the IP address of the DroneSubsystem machine
         this.dronePort = dronePort;
+
 
         // Print a message to let the user know the Scheduler is running
         System.out.println("[Scheduler] Listening on Port: " + this.socket.getLocalPort());
@@ -60,9 +64,11 @@ public class Scheduler implements Runnable {
                     // Deserialize the event and add it to the queue
                     Event event = Event.deserialize(message);
                     if (event.isValidEvent(event)) {
+//                        event.setReceivedTime(System.currentTimeMillis()); // Set the received time
                         synchronized (incidentQueue) {
                             incidentQueue.add(event);
                         }
+
 
                         // Send acknowledgment back to FireIncident
                         String ack = "ACK:" + event.getId();
@@ -102,7 +108,7 @@ public class Scheduler implements Runnable {
                         }
                         System.out.println("Sending event to DroneSubsystem");
                     } else {
-                            System.out.println("[Scheduler] Retrying corrupted event: " + event.getId());
+                            System.out.println("[Scheduler] Retrying corrupted event or busy zone: " + event.getId());
                     }
                 }
                 // Avoid tight looping
@@ -147,6 +153,16 @@ public class Scheduler implements Runnable {
             String acknowledgment = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
 
             System.out.println("[Scheduler <- DroneSubsystem] Received acknowledgment: " + acknowledgment);
+
+            if ("ACK: ZONE_IS_BUSY".equalsIgnoreCase(acknowledgment)) {
+                // Add the event to the back of the queue
+                synchronized (incidentQueue) {
+                    incidentQueue.poll(); // Remove from front
+                    incidentQueue.add(event); // Add to back
+                }
+                System.out.println("[Scheduler] Zone is busy, requeued event: " + event.getId());
+                return false;
+            }
 
             if ("ACK: NO".equalsIgnoreCase(acknowledgment)) {
                 System.out.println("[Scheduler] No available drones. Will retry later...");

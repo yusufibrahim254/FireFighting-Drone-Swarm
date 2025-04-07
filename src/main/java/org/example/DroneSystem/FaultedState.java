@@ -43,4 +43,9 @@ public class FaultedState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is FAULTED. Needs reset.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "FAULTED";
+    }
 }

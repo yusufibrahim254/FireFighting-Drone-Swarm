@@ -41,4 +41,9 @@ public class IdleState implements DroneState {
     public void displayState(Drone drone) {
         System.out.println("Drone " + drone.getId() + " is in IDLE state.");
     }
+
+    @Override
+    public String getState(Drone drone) {
+        return "IDLE";
+    }
 }

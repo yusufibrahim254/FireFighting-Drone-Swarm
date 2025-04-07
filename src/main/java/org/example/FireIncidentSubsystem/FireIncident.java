@@ -1,9 +1,14 @@
 package org.example.FireIncidentSubsystem;
 
+import org.example.DisplayConsole.OperatorView;
 import org.example.FireIncidentSubsystem.Helpers.EventReader;
 
 import java.io.IOException;
 import java.net.*;
+
+import java.io.PrintWriter;
+import java.io.FileWriter;
+
 
 /**
  * The FireIncident class represents the Fire Incident Subsystem, which reads fire events
@@ -14,6 +19,7 @@ public class FireIncident implements Runnable {
     private final DatagramSocket socket; // UDP socket for communication
     private final InetAddress schedulerAddress; // Address of the Scheduler
     private final int schedulerPort; // Port of the Scheduler
+    private OperatorView view;
 
     /**
      * Constructs a FireIncident subsystem with the specified Scheduler host and port.
@@ -27,6 +33,7 @@ public class FireIncident implements Runnable {
         this.socket = new DatagramSocket();
         this.schedulerAddress = InetAddress.getByName(schedulerHost); // Use the IP address of the Scheduler machine
         this.schedulerPort = schedulerPort;
+        this.view = new OperatorView(this);
     }
 
     /**
@@ -37,6 +44,8 @@ public class FireIncident implements Runnable {
     public void run() {
         System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
         boolean acknowledged;
+        long startTime = System.nanoTime(); // Start timing
+
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
             for (Event event : events) {
@@ -54,26 +63,25 @@ public class FireIncident implements Runnable {
 
                 Thread.sleep(10000); // events sent every 10 seconds
             }
-//            for(int i =0 ; i< 1; i++){
-////                 Serialize the event to a string
-//                String eventData = events[0].serialize();
-//                byte[] sendData = eventData.getBytes();
-//
-//                // Send the event to the Scheduler
-//                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
-//                socket.send(sendPacket);
-//                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
-//
-//                // Wait for acknowledgment from the Scheduler
-//                acknowledged = waitForAcknowledgment(events[0]);
-//
-//                Thread.sleep(10000); // events sent every 10 seconds
-//            }
+
+            long endTime = System.nanoTime(); // End timing
+            double durationMs = (endTime - startTime) / 1_000_000.0;
+            System.out.println("[FireIncident] Total processing time: " + durationMs + " ms");
+
+            // Append the total time taken to process all fires in the current run to the "timings.csv" file
+            // If the file doesn't exist, create it then append to it
+            try (PrintWriter out = new PrintWriter(new FileWriter("timings.csv", true))) {
+                out.println(durationMs);
+            } catch (IOException e) {
+                System.err.println("Could not write to timings.csv: " + e.getMessage());
+            }
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            socket.close(); // Close the socket when done
         }
+//        finally {
+//            socket.close(); // Close the socket when done
+//        }
     }
 
     /**
@@ -90,6 +98,32 @@ public class FireIncident implements Runnable {
         // Log the acknowledgment
         System.out.println("[FireIncident <- Scheduler] Received acknowledgment: " + acknowledgment + "\n\n");
         return acknowledgment.equals("ACK" + event.getId());
+    }
+
+    /**
+     * Gets the operator view
+     * @return the operator view
+     */
+    public OperatorView getView() {
+        return view;
+    }
+
+    /**
+     * Sends event to scheduler manually instead of polling through a list of events
+     * @param event the event to send
+     * @throws IOException if i/o error occurs
+     */
+    public void manualSendEvent(Event event) throws IOException {
+        String eventData = event.serialize();
+        byte[] sendData = eventData.getBytes();
+
+        // Send the event to the Scheduler
+        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+        socket.send(sendPacket);
+        System.out.println("[FireIncident -> Scheduler] Sent event from Operator: " + eventData);
+
+        // Wait for acknowledgment from the Scheduler
+        waitForAcknowledgment(event);
     }
 
     /**

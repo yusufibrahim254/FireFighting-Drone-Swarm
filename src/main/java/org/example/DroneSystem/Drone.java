@@ -1,11 +1,14 @@
 package org.example.DroneSystem;
 
+
 import org.example.FireIncidentSubsystem.Event;
 import org.example.DroneSystem.DroneSubsystem;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -15,6 +18,7 @@ import java.util.TimerTask;
 public class Drone implements Runnable {
     private Timer faultTimer;
     private static final int FAULT_TIMEOUT = 600000; // Timeout duration: 60 seconds
+    private DroneSubsystem droneSubsystem;
 
     private final int id;
     /**
@@ -49,6 +53,7 @@ public class Drone implements Runnable {
     private int[] lastSentPosition = {0, 0}; // Last position sent to the DroneSubsystem
     private Event currentEvent; // Current event assigned to the drone
     private double batteryDepletionRate;
+
     public Drone(int id, double initialCapacity, DroneSubsystem droneSubsystem, double batteryDepletionRate) {
         this.id = id;
         this.battery = 100;
@@ -59,6 +64,7 @@ public class Drone implements Runnable {
         this.currentEvent = null;
         this.state = new IdleState();
         this.batteryDepletionRate = batteryDepletionRate;
+        this.droneSubsystem = droneSubsystem;
     }
 
     // Setter for the drone's current position
@@ -120,16 +126,19 @@ public class Drone implements Runnable {
                         this.setState(new FaultedState());
                         state.displayState(this);
                         this.setCurrentEvent(null);
+                        droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                     }else if(returnValue.equals("NOZZLE_JAMMED")){
                         // Then go back to original location and reset and should be able to take tasks
                         cleandAndSendEventBackToDroneSubsystem();
                         this.setCurrentEvent(null);
                         this.setState(new FaultedState());
+                        droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                         state.displayState(this);
                         this.setTargetPosition(new int[]{0, 0});
                         moveTowardsTarget();
                         System.out.println("Drone is resetting nozzle...");
                         this.setState(new IdleState());
+                        droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                         state.displayState(this);
                     }
                     if (hasReachedTarget()) {
@@ -138,11 +147,22 @@ public class Drone implements Runnable {
                 } else if (state instanceof DroppingAgentState) {
                     System.out.println("\n");
                     state.displayState(this);
-                    state.dropAgent(this); // Drop Agent
+                    Event handledEvent = currentEvent;
+                    droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
+                    droneSubsystem.getEventDashboard().updateFireProgress(handledEvent.getZoneId(), (int) this.agentCapacity);
+                    double water = state.dropAgent(this); // Drop Agent
+
+                    if (currentEvent == null && water == 0){
+                        System.out.println("Drone " + id + " completed Event " + handledEvent.getId() + ", returning to base.");
+                        droneSubsystem.updateFireZones(handledEvent);
+                        droneSubsystem.getEventDashboard().removeFireEvent(handledEvent.getZoneId());
+                        droneSubsystem.removeEvent(handledEvent.getZoneId());
+                    }
                 } else if (state instanceof RefillingState) {
                     System.out.println("\n");
                     state.displayState(this);
                     state.refill(this);
+                    droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
                 } else if (state instanceof ReturningState) {
                     System.out.println("\n");
                     state.displayState(this);
@@ -167,7 +187,7 @@ public class Drone implements Runnable {
         startFaultTimer(); // Start the timer when movement begins
         double cruisingSpeed = 4; // m/s (cruise speed)
         double acceleration = 7; // m/s²
-        double timeStep = 1; // seconds per step
+        double timeStep = 10; // seconds per step (default is 1, for demo use 10)
         double currentSpeed = 0; // Start at rest
         double timeElapsed = 0; // Time elapsed
         boolean isCruising = false; // Flag to track if the drone has reached cruising speed
@@ -356,7 +376,8 @@ public class Drone implements Runnable {
             socket.send(sendPacket);
             // Print current position and target position
             if (targetPosition != null) {
-//                System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+//               System.out.println("[Drone " + id + " -> DroneSubsystem] Sent position data: " + positionData + ", Target position: (" + targetPosition[0] + ", " + targetPosition[1] + ")");
+                droneSubsystem.getDroneStatusViewer().addDroneToViewer(this);
             } else {
                 System.out.println("[Drone " + id + "] Sent position data: " + positionData +
                         ", No target position set.");
@@ -421,6 +442,7 @@ public class Drone implements Runnable {
 
     public void setState(DroneState state) {
         this.state = state;
+        droneSubsystem.updateDroneStateInConsole(this.id, state);
     }
 
     public void setCurrentEvent(Event currentEvent) {
@@ -431,6 +453,7 @@ public class Drone implements Runnable {
             this.remainingWaterNeeded = currentEvent.getSeverityWaterAmount();
         } else {
             System.out.println("Drone "+this.id+"'s current event is now NULL");
+            System.out.println("Drone " + this.id + "'s capacity is: " + agentCapacity);
             this.remainingWaterNeeded = 0;
         }
     }
@@ -475,5 +498,39 @@ public class Drone implements Runnable {
 
     public void setBatteryDepletionRate(double batteryDepletionRate) {
         this.batteryDepletionRate = batteryDepletionRate;
+    }
+
+    @Override
+    public String toString() {
+        String faultStatus;
+
+        if (currentEvent == null) {
+            faultStatus = "Pending...";
+        } else if (currentEvent.getFault() == null) {
+            faultStatus = "NO_FAULT";
+        } else {
+            faultStatus = currentEvent.getFault();
+        }
+
+        if (state instanceof IdleState && Arrays.equals(currentPosition, new int[]{0, 0})){
+            return "State = " + state.getState(this) +
+                    "\n Location = " + Arrays.toString(currentPosition) +
+                    "\n At home base" +
+                    "\n Fault Status = " + faultStatus;
+        } else if (currentEvent == null) {
+            return "State = " + state.getState(this) +
+                    "\n Location = " + Arrays.toString(currentPosition) +
+                    "\n Returning to origin at [0,0]" +
+                    "\n Fault Status = " + faultStatus;
+        }
+        return "State = " + state.getState(this) +
+                "\n Location = " + Arrays.toString(currentPosition) +
+                "\n Tasked Event = " + currentEvent.getId() +
+                "\n Destination = Zone " + currentEvent.getZoneId() +
+                "\n Fault Status = " + faultStatus;
+    }
+
+    public DroneSubsystem getDroneSubsystem() {
+        return this.droneSubsystem;
     }
 }
