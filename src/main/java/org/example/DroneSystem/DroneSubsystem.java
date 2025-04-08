@@ -376,6 +376,8 @@ public class DroneSubsystem implements Runnable {
         else if (closestIdleDrone != null) {
             System.out.println("IDLE DRONE IS FOUND AND ABOUT TO BE ASSIGNED--------------------------(Drone "+ closestIdleDrone.getId()+")");
             event.setAssignedTime(System.currentTimeMillis() - simulationStartTime);
+            double distance = calculateDistance(closestIdleDrone, eventLocation);
+            event.setDistanceTraveled(distance);
             closestIdleDrone.setTargetPosition(eventLocation);
             closestIdleDrone.setIncidentPosition(eventLocation);
 
