@@ -188,7 +188,7 @@ public class Drone implements Runnable {
         startFaultTimer(); // Start the timer when movement begins
         double cruisingSpeed = 4; // m/s (cruise speed)
         double acceleration = 7; // m/s²
-        double timeStep = 10; // seconds per step (default is 1, for demo use 10)
+        double timeStep = 20; // seconds per step (default is 1, for demo use 10)
         double currentSpeed = 0; // Start at rest
         double timeElapsed = 0; // Time elapsed
         boolean isCruising = false; // Flag to track if the drone has reached cruising speed
