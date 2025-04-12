@@ -112,7 +112,7 @@ public class Scheduler implements Runnable {
                     }
                 }
                 // Avoid tight looping
-                Thread.sleep(2000);
+                Thread.sleep(4000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -295,6 +295,59 @@ package "org.example" {
     }
   }
 }
+package "org.example.DisplayConsole" {
+
+  class Home {
+    + Home()
+  }
+
+  class ConsoleController {
+    - consoleView: ConsoleView
+    - zones: Zones
+    - fireEvents: Map<Integer, Event>
+    - dronePositions: Map<Integer, int[]>
+    - droneStatuses: Map<Integer, String>
+    + ConsoleController(zones: Zones)
+    + updateDrones(position: int[], id: int, status: String): void
+    + updateFireEvent(zoneId: int, event: Event): void
+    + getDroneStatuses(): Map<Integer, String>
+    + getFireEvents(): Map<Integer, Event>
+    + getDronePositions(): Map<Integer, int[]>
+    + getZones(): Zones
+  }
+
+  class ConsoleView {
+    + ConsoleView(controller: ConsoleController)
+    + paintComponent(g: Graphics): void
+  }
+
+  class EventDashboard {
+    + EventDashboard(controller: ConsoleController)
+    + updateDashboard(): void
+  }
+
+  class DroneStatusViewer {
+    + DroneStatusViewer(controller: ConsoleController)
+    + updateStatus(): void
+  }
+
+  class Legend {
+    + Legend()
+  }
+
+  class OperatorView {
+    + OperatorView(controller: ConsoleController)
+  }
+
+  class OperatorController {
+    - controller: ConsoleController
+    - socket: DatagramSocket
+    + OperatorController(controller: ConsoleController)
+    + sendFireEvent(...): void
+    + sendDroneRequest(...): void
+  }
+}
+
 
 ' === Relationships ===
 
@@ -328,5 +381,22 @@ Event --> Drone
 FireIncident --> Event
 Scheduler --> Event
 
+' --- DisplayConsole Relationships ---
+Home --> ConsoleController
+Home --> ConsoleView
+Home --> Legend
+Home --> EventDashboard
+Home --> DroneStatusViewer
+
+OperatorView --> ConsoleController
+OperatorController --> ConsoleController
+OperatorController --> Event
+
+ConsoleView --> ConsoleController
+EventDashboard --> ConsoleController
+DroneStatusViewer --> ConsoleController
+
+ConsoleController --> Zones
+ConsoleController --> Event
 
 @enduml

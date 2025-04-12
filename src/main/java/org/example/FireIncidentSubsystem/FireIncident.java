@@ -8,6 +8,9 @@ import java.net.*;
 
 import java.io.PrintWriter;
 import java.io.FileWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 /**
@@ -20,6 +23,9 @@ public class FireIncident implements Runnable {
     private final InetAddress schedulerAddress; // Address of the Scheduler
     private final int schedulerPort; // Port of the Scheduler
     private OperatorView view;
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
+    private final double simulationSpeed = 2;
+
 
     /**
      * Constructs a FireIncident subsystem with the specified Scheduler host and port.
@@ -43,45 +49,59 @@ public class FireIncident implements Runnable {
     @Override
     public void run() {
         System.out.println("[FireIncident] Listening on Port: " + this.socket.getLocalPort());
-        boolean acknowledged;
-        long startTime = System.nanoTime(); // Start timing
+        System.out.println("[FireIncident] Simulation speed: " + simulationSpeed + "x");
 
         try {
             Event[] events = EventReader.readEvents(EVENT_FILE); // Read events from the file
-            for (Event event : events) {
-                // Serialize the event to a string
-                String eventData = event.serialize();
-                byte[] sendData = eventData.getBytes();
 
-                // Send the event to the Scheduler
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
-                socket.send(sendPacket);
-                System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
-
-                // Wait for acknowledgment from the Scheduler
-                acknowledged = waitForAcknowledgment(event);
-
-                Thread.sleep(10000); // events sent every 10 seconds
+            if (events.length == 0) {
+                System.out.println("No events found in the file.");
+                return;
             }
 
-            long endTime = System.nanoTime(); // End timing
-            double durationMs = (endTime - startTime) / 1_000_000.0;
-            System.out.println("[FireIncident] Total processing time: " + durationMs + " ms");
+            // Send first event immediately
+            sendEvent(events[0]);
 
-            // Append the total time taken to process all fires in the current run to the "timings.csv" file
-            // If the file doesn't exist, create it then append to it
-            try (PrintWriter out = new PrintWriter(new FileWriter("timings.csv", true))) {
-                out.println(durationMs);
-            } catch (IOException e) {
-                System.err.println("Could not write to timings.csv: " + e.getMessage());
+            // Process remaining events with time delays
+            for (int i = 1; i < events.length; i++) {
+                long timeDifference = calculateTimeDifference(events[i-1].getTime(), events[i].getTime());
+                long scaledDelay = (long)(timeDifference / simulationSpeed);
+
+                if (scaledDelay > 0) {
+                    System.out.println("Waiting " + (scaledDelay / 1000) + " seconds before next event...");
+                    Thread.sleep(scaledDelay);
+                }
+
+                sendEvent(events[i]);
             }
-
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | ParseException e) {
             e.printStackTrace();
+        } finally {
+            socket.close(); // Close the socket when done
         }
-//        finally {
-//            socket.close(); // Close the socket when done
-//        }
+    }
+    /**
+     * Sends an event to the scheduler and waits for acknowledgment
+     */
+    private void sendEvent(Event event) throws IOException {
+        String eventData = event.serialize();
+        byte[] sendData = eventData.getBytes();
+
+        // Send the event to the Scheduler
+        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, schedulerAddress, schedulerPort);
+        socket.send(sendPacket);
+        System.out.println("[FireIncident -> Scheduler] Sent event: " + eventData);
+
+        // Wait for acknowledgment from the Scheduler
+        waitForAcknowledgment(event);
+    }
+    /**
+     * Calculates the time difference in milliseconds between two time strings
+     */
+    private long calculateTimeDifference(String time1, String time2) throws ParseException {
+        Date date1 = TIME_FORMAT.parse(time1);
+        Date date2 = TIME_FORMAT.parse(time2);
+        return date2.getTime() - date1.getTime();
     }
 
     /**
